@@ -237,15 +237,10 @@ class HFOEnv(hfo.HFOEnvironment):
         ball = (state[3], state[4])
         return distance.euclidean(agent, ball)
 
-    def strict_state(self, state):
+    def strict_state_def(self, state):
         num_mates = self.num_teammates
         new_state = state[:10].tolist()
-        for i in range(10, 10 + self.choosed_mates):
-            new_state.append(state[i])
         for i in range(10 + num_mates, 10 + num_mates + self.choosed_mates):
-            new_state.append(state[i])
-        for i in range(10 + 2 * num_mates,
-                       10 + 2 * num_mates + self.choosed_mates):
             new_state.append(state[i])
         index = 10 + 3 * num_mates
         for i in range(self.choosed_mates):
@@ -263,7 +258,6 @@ class HFOEnv(hfo.HFOEnvironment):
             index += 1
             new_state.append(state[index])
             index += 1
-        new_state.append(state[-2])
         new_state.append(state[-1])
         new_state = np.array(new_state)
         return new_state
