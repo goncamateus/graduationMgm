@@ -8,6 +8,8 @@ class Config(object):
         self.device = torch.device(
             "cuda" if torch.cuda.is_available() else "cpu")
 
+        self.DISCOUNT_RATE = 0.99
+
         # PPO controls
         self.ppo_epoch = 3
         self.num_mini_batch = 32

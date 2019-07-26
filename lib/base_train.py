@@ -7,7 +7,7 @@ import torch
 import torch.optim as optim
 
 
-class BaseAgent(object):
+class BaseTrain(object):
     def __init__(self, config, env, log_dir='/tmp/RC_test'):
         self.model = None
         self.target_model = None
@@ -51,7 +51,6 @@ class BaseAgent(object):
         if os.path.isfile(fname_model):
             self.model.load_state_dict(torch.load(fname_model,
                                                   map_location=self.device))
-            self.target_model.load_state_dict(self.model.state_dict())
 
         if os.path.isfile(fname_optim):
             self.optimizer.load_state_dict(torch.load(fname_optim,

@@ -6,14 +6,14 @@ import numpy as np
 import torch
 import torch.optim as optim
 
-from Base_Agent import BaseAgent
+from base_train import BaseTrain
 from prioritized_experience_replay import Memory
 
 
-class DQNAgent(BaseAgent):
+class DuelingTrain(BaseTrain):
     def __init__(self, static_policy=False, env=None,
                  config=None, log_dir='/tmp/RC_test'):
-        super(DQNAgent, self).__init__(
+        super(DuelingTrain, self).__init__(
             config=config, env=env, log_dir=log_dir)
 
         self.noisy = config.USE_NOISY_NETS
@@ -58,6 +58,25 @@ class DQNAgent(BaseAgent):
 
         self.nsteps = config.N_STEPS
         self.nstep_buffer = []
+
+    def load_w(self, model_path=None, optim_path=None):
+        if model_path is None:
+            fname_model = "./saved_agents/model.dump"
+        else:
+            fname_model = model_path
+        if optim_path is None:
+            fname_optim = "./saved_agents/optim.dump"
+        else:
+            fname_optim = optim_path
+
+        if os.path.isfile(fname_model):
+            self.model.load_state_dict(torch.load(
+                fname_model, map_location=self.device))
+            self.target_model.load_state_dict(self.model.state_dict())
+
+        if os.path.isfile(fname_optim):
+            self.optimizer.load_state_dict(
+                torch.load(fname_optim, map_location=self.device))
 
     def declare_networks(self):
         pass

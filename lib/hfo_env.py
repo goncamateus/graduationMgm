@@ -9,7 +9,7 @@ class ObservationSpace():
         self.rewards = rewards
         self.nmr_out = 0
         self.taken = 0
-        self.shape = self.state.shape if not shape else shape
+        self.shape = shape if shape else self.state.shape
         self.goals_taken = 0
 
 
@@ -30,28 +30,29 @@ class HFOEnv(hfo.HFOEnvironment):
     max_R = np.sqrt(pitchHalfLength * pitchHalfLength +
                     pitchHalfWidth * pitchHalfWidth)
     stamina_max = 8000
-    choosed_mates = 6
-    choosed_ops = 6
 
     def __init__(self, actions, rewards,
-                 is_offensive=False, play_goalie=False, strict=False, port=6000):
+                 is_offensive=False, play_goalie=False,
+                 strict=False, port=6000):
         super(HFOEnv, self).__init__()
         self.connectToServer(hfo.HIGH_LEVEL_FEATURE_SET, './formations-dt',
                              port, 'localhost',
                              'base_left' if is_offensive else 'base_right',
                              play_goalie=play_goalie)
+        self.num_teammates = self.getNumTeammates()
+        self.num_opponents = self.getNumOpponents()
+        self.choosed_mates = min(6, self.self.num_teammates)
+        self.choosed_ops = min(6, self.self.num_opponents)
         self.play_goalie = play_goalie
         if not strict:
             self.observation_space = ObservationSpace(self, rewards)
         else:
-            shape = 12 + 6 * self.choosed_mates + 3 * self.choosed_ops
+            shape = 11 + 4 * self.choosed_mates + 3 * self.choosed_ops
             shape = (shape,)
             self.observation_space = ObservationSpace(self,
                                                       rewards,
                                                       shape=shape)
         self.action_space = ActionSpace(actions)
-        self.num_teammates = self.getNumTeammates()
-        self.num_opponents = self.getNumOpponents()
         self.stamina_basis = super(HFOEnv, self).getState()[-1]
         self.stamina_basis = self.unnormalize(
             self.stamina_basis, 0, self.stamina_max)
@@ -112,24 +113,19 @@ class HFOEnv(hfo.HFOEnvironment):
         elif 'OUT' in self.statusToString(status):
             self.observation_space.nmr_out += 1
             reward = self.observation_space.rewards[act]
-            if self.observation_space.nmr_out % 5 == 0:
-                reward = reward * 10
         else:
             if done:
                 if not '-{}'.format(self.getUnum())\
                         in self.statusToString(status):
-                    reward = 0
-                else:
                     reward = self.observation_space.rewards[act]
-                    if '-{}'.format(self.getUnum())\
-                            in self.statusToString(status):
-                        self.observation_space.taken += 1
-                        reward = self.observation_space.rewards[act] * 5
-                        if self.observation_space.taken % 5 == 0:
-                            reward = reward * 1000
+                else:
+                    self.observation_space.taken += 1
+                    reward = self.observation_space.rewards[act] * 5
+                    if self.observation_space.taken % 5 == 0:
+                        reward = reward * 1000
             else:
                 reward = self.observation_space.rewards[act]\
-                    - next_state[3] * 3
+                    - min(40, self.get_ball_dist(next_state))*3
 
         return reward
 
