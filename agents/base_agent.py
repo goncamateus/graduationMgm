@@ -108,12 +108,13 @@ class Agent():
             self.logging.info("Memory Saved")
 
     def save_rewards(self):
-        day = datetime.datetime.now().today().day()
-        hour = datetime.datetime.now().hour()
-        minute = datetime.datetime.now().minute()
+        day = datetime.datetime.now().today().day
+        hour = datetime.datetime.now().hour
+        minute = datetime.datetime.now().minute
         final_str = str(day) + "-" + str(hour) + "-" + str(minute)
         with open('saved_agents/rewards_{}.pickle'.format(final_str),
-                  'w+') as fiile:
+                  'wb+') as fiile:
+
             pickle.dump(self.currun_rewards, fiile)
             fiile.close()
 
