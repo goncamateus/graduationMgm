@@ -3,6 +3,7 @@
 #endif
 
 #include "highlevel_feature_extractor.h"
+#include <rcsc/player/intercept_table.h>
 #include <rcsc/common/server_param.h>
 
 using namespace rcsc;
@@ -180,11 +181,20 @@ HighLevelFeatureExtractor::ExtractFeatures(const rcsc::WorldModel& wm,
     addFeature(FEAT_INVALID);
   }
 
-  if (last_action_status) {
-    addFeature(FEAT_MAX);
-  } else {
-    addFeature(FEAT_MIN);
-  }
+  const int self_min = wm.interceptTable()->selfReachCycle();
+  const int mate_min = wm.interceptTable()->teammateReachCycle();
+  const int opp_min = wm.interceptTable()->opponentReachCycle();
+
+  bool isIntercept = false;
+  if ( ! wm.existKickableTeammate()
+        && ( self_min <= 3
+            || ( self_min <= mate_min
+                  && self_min < opp_min + 3 )
+            )
+        )
+    isIntercept = true;
+
+  addFeature(isIntercept);
   addNormFeature(self.stamina(), 0., observedStaminaMax);
 
   assert(featIndx == numFeatures);

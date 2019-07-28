@@ -81,6 +81,7 @@ protected:
   inline std::vector<float>* mutable_params() { return &params; }
   inline void setAction(hfo::action_t a) { requested_action = a; }
   inline void setSayMsg(const std::string& message) { say_msg = message; }
+  bool isIntercept();
 
  private:
   bool doPreprocess();
@@ -99,7 +100,6 @@ protected:
   bool doDefendGoal();
   bool doGoToBall();
   bool doNewAction1();
-
 
   Communication::Ptr M_communication;
   FieldEvaluator::ConstPtr M_field_evaluator;

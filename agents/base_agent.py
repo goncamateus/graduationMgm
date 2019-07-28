@@ -9,8 +9,8 @@ import hfo
 import numpy as np
 import torch
 
-from lib.hfo_env import HFOEnv
-from lib.hyperparameters import Config
+from graduationmgm.lib.hfo_env import HFOEnv
+from graduationmgm.lib.hyperparameters import Config
 
 
 class Agent():
@@ -22,6 +22,7 @@ class Agent():
         self.config_hyper(per)
         self.config_env()
         self.config_model(model)
+
 
     def config_hyper(self, per):
         # epsilon variables
@@ -97,9 +98,6 @@ class Agent():
         self.logging.info('Episode %s reward %d', episode, total_reward)
         self.dqn.finish_nstep()
         self.dqn.reset_hx()
-        # We finished the episode
-        next_state = np.zeros(state.shape)
-        next_frame = np.zeros(frame.shape)
 
     def save_modelmem(self, episode):
         if episode % 100 == 0 and episode > 0 and not self.test:
@@ -145,7 +143,7 @@ class Agent():
                 # If the size of experiences is under max_size*16 runs gen_mem
                 # Biasing the agent for the Agent2d Helios_base
                 if self.gen_mem and self.frame_idx / 16 < self.config.EXP_REPLAY_SIZE:
-                    action = 1 if self.hfo_env.isIntercept() else 0
+                    action = 1 if state[-2] else 0
                 else:
                     # When gen_mem is done, saves experiences and starts a new
                     # frame counting and starts the learning process
@@ -154,12 +152,13 @@ class Agent():
 
                     # Calculates epsilon on frame according to the stack index
                     # and gets the action
-                    epsilon = self.config.epsilon_by_frame(int(self.frame_idx / 16))
+                    epsilon = self.config.epsilon_by_frame(
+                        int(self.frame_idx / 16))
                     action = self.dqn.get_action(frame, epsilon)
 
                 # Calculates results from environment
                 next_state, reward, done, status = self.hfo_env.step(action,
-                                                                strict=True)
+                                                                     strict=True)
                 episode_rewards.append(reward)
 
                 if done:
@@ -167,6 +166,8 @@ class Agent():
                     total_reward = np.sum(episode_rewards)
                     self.currun_rewards.append(total_reward)
                     self.episode_end(total_reward, episode, state, frame)
+                    next_state = np.zeros(state.shape)
+                    next_frame = np.zeros(frame.shape)
                 else:
                     next_frame = self.dqn.stack_frames(next_state, done)
 

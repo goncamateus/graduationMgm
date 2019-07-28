@@ -6,12 +6,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
-from lib.DDQN_train import DuelingTrain
+from graduationmgm.lib.DQN_train import DQNTrain
 
 
-class DuelingDQN(nn.Module):
+class DQN(nn.Module):
     def __init__(self, input_shape, num_outputs):
-        super(DuelingDQN, self).__init__()
+        super(DQN, self).__init__()
 
         self.input_shape = input_shape
         self.num_actions = num_outputs
@@ -21,24 +21,17 @@ class DuelingDQN(nn.Module):
         self.conv2 = nn.Conv1d(32, 64, kernel_size=3, bias=False)
         self.conv3 = nn.Conv1d(64, 64, kernel_size=3, bias=False)
 
-        self.adv1 = nn.Linear(self.feature_size(), 512)
-        self.adv2 = nn.Linear(512, self.num_actions)
-
-        self.val1 = nn.Linear(self.feature_size(), 512)
-        self.val2 = nn.Linear(512, 1)
+        self.mlp1 = nn.Linear(self.feature_size(), 512)
+        self.mlp2 = nn.Linear(512, self.num_actions)
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
         x = F.relu(self.conv3(x))
         x = x.view(x.size(0), -1)
-        adv = F.relu(self.adv1(x))
-        adv = self.adv2(adv)
-
-        val = F.relu(self.val1(x))
-        val = self.val2(val)
-
-        return val + adv - adv.mean()
+        out = F.relu(self.mlp1(x))
+        out = self.mlp2(out)
+        return out
 
     def feature_size(self):
         x = self.conv1(torch.zeros(1, *self.input_shape))
@@ -47,7 +40,7 @@ class DuelingDQN(nn.Module):
         return x.view(1, -1).size(1)
 
 
-class Model(DuelingTrain):
+class Model(DQNTrain):
     def __init__(self, static_policy=False, env=None, config=None):
         self.stacked_frames = deque(
             [np.zeros(env.observation_space.shape, dtype=np.int)
@@ -57,10 +50,7 @@ class Model(DuelingTrain):
                           len(self.stacked_frames))
 
     def declare_networks(self):
-        self.model = DuelingDQN(
-            (*self.env.observation_space.shape,
-             len(self.stacked_frames)), self.env.action_space.n)
-        self.target_model = DuelingDQN(
+        self.model = DQN(
             (*self.env.observation_space.shape,
              len(self.stacked_frames)), self.env.action_space.n)
 

@@ -169,17 +169,6 @@ int HFOEnvironment::getTeammateReachCycle() {
 }
 
 bool HFOEnvironment::isIntercept() {
-      const int self_min = agent->world().interceptTable()->selfReachCycle();
-    const int mate_min = agent->world().interceptTable()->teammateReachCycle();
-    const int opp_min = agent->world().interceptTable()->opponentReachCycle();
-
-    if ( ! agent->world().existKickableTeammate()
-         && ( self_min <= 3
-              || ( self_min <= mate_min
-                   && self_min < opp_min + 3 )
-              )
-         )
-        return true;
-    else
-      return false;    
+  std::cout << "GOT WORLD" << std::endl;
+  return agent->isIntercept();
 }

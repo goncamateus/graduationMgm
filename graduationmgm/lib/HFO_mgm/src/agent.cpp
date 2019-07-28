@@ -168,6 +168,24 @@ int Agent::getUnum() {
   return world().self().unum();
 }
 
+bool Agent::isIntercept() {
+  const WorldModel & wm = world();
+  const int self_min = wm.interceptTable()->selfReachCycle();
+  const int mate_min = wm.interceptTable()->teammateReachCycle();
+  const int opp_min = wm.interceptTable()->opponentReachCycle();
+
+  if ( ! wm.existKickableTeammate()
+        && ( self_min <= 3
+            || ( self_min <= mate_min
+                  && self_min < opp_min + 3 )
+            )
+        )
+      return true;
+  else
+    return false;    
+  return world().self().unum();
+}
+
 bool Agent::initImpl(CmdLineParser & cmd_parser) {
     bool result = PlayerAgent::initImpl(cmd_parser);
 
@@ -1313,3 +1331,4 @@ Agent::createActionGenerator() const
 
     return ActionGenerator::ConstPtr( g );
 }
+

@@ -103,3 +103,4 @@ venv.bak/
 .mypy_cache/
 .vscode/
 agent*.txt
+saved_agents/*

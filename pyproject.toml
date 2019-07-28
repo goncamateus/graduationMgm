@@ -1,9 +1,9 @@
 [tool.poetry]
-name = "RCSoccerSimulation2d-graduation-mgm4"
+name = "graduationMgm"
 version = "0.1.0"
-description = "Graduation MGM4@cin.ufpe.br"
-authors = ["mgm4@cin.ufpe.br"]
-license = ""
+description = "Graduation project goncamateus"
+authors = ["Mateus G Machado"]
+license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.6.7"

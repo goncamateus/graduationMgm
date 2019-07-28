@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string.h>
+#include <iostream>
 #include <HFO.hpp>
 #include <common.hpp>
 
