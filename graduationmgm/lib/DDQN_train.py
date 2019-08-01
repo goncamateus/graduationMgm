@@ -141,7 +141,6 @@ class DuelingTrain(BaseTrain):
             indices, weights = batch_vars
 
         # estimate
-        self.model.sample_noise()
         current_q_values = self.model(batch_state)
         current_q_values = current_q_values.gather(1, batch_action)
 
@@ -153,7 +152,6 @@ class DuelingTrain(BaseTrain):
             if not empty_next_state_values:
                 max_next_action = self.get_max_next_state_action(
                     non_final_next_states)
-                self.target_model.sample_noise()
                 max_next_q_values[non_final_mask] = self.target_model(
                     non_final_next_states).gather(1, max_next_action)
             expected_q_values = batch_reward + \
@@ -198,7 +196,6 @@ class DuelingTrain(BaseTrain):
         with torch.no_grad():
             if np.random.random() >= eps or self.static_policy or self.noisy:
                 X = torch.tensor([s], device=self.device, dtype=torch.float)
-                self.model.sample_noise()
                 out = self.model(X)
                 maxout = out.max(0)
                 maxout = maxout[0]
