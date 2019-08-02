@@ -49,7 +49,7 @@ class Agent():
         self.config.SIGMA_INIT = 0.5
 
         # Learning control variables
-        self.config.LEARN_START = 100000
+        self.config.LEARN_START = 50000
         self.config.MAX_FRAMES = 60000000
         self.config.UPDATE_FREQ = 1
 
