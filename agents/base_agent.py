@@ -38,18 +38,18 @@ class Agent():
         self.config.LR = 0.00025
         # memory
         self.config.TARGET_NET_UPDATE_FREQ = 1000
-        self.config.EXP_REPLAY_SIZE = 100000
+        self.config.EXP_REPLAY_SIZE = 10000
         self.config.BATCH_SIZE = 64
         self.config.PRIORITY_ALPHA = 0.6
         self.config.PRIORITY_BETA_START = 0.4
-        self.config.PRIORITY_BETA_FRAMES = 100000
+        self.config.PRIORITY_BETA_FRAMES = 10000
         self.config.USE_PRIORITY_REPLAY = per
 
         # epsilon variables
         self.config.SIGMA_INIT = 0.5
 
         # Learning control variables
-        self.config.LEARN_START = 50000
+        self.config.LEARN_START = 10000
         self.config.MAX_FRAMES = 60000000
         self.config.UPDATE_FREQ = 1
 
