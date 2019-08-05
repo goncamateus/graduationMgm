@@ -140,7 +140,7 @@ class DuelingTrain(BaseTrain):
             non_final_mask, empty_next_state_values,\
             indices, weights = batch_vars
         
-        weights = torch.Tensor(weights)
+        weights = torch.Tensor(weights).to(self.device)
 
         # estimate
         current_q_values = self.model(batch_state)
