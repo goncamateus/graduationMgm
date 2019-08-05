@@ -181,7 +181,7 @@ class DQNTrain(BaseTrain):
             param.grad.data.clamp_(-1, 1)
         self.optimizer.step()
 
-        self.save_td(loss.item(), frame)
+        # self.save_td(loss.item(), frame)
         self.save_sigma_param_magnitudes(frame)
 
     def get_action(self, s, eps=0.1):  # faster

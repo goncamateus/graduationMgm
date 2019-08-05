@@ -191,7 +191,7 @@ class DuelingTrain(BaseTrain):
         self.optimizer.step()
 
         self.update_target_model()
-        self.save_td(loss.item(), frame)
+        # self.save_td(loss.item(), frame)
         self.save_sigma_param_magnitudes(frame)
 
     def get_action(self, s, eps=0.1):  # faster

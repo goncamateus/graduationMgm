@@ -78,7 +78,7 @@ class BaseTrain(object):
                 writer.writerow((tstep, sum_ / count))
 
     def save_td(self, td, tstep):
-        with open(os.path.join(self.log_dir, 'td.csv'), 'a') as f:
+        with open(os.path.join('./saved_agents', 'td.csv'), 'w+') as f:
             writer = csv.writer(f)
             writer.writerow((tstep, td))
 
