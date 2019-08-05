@@ -12,17 +12,17 @@ import torch
 from graduationmgm.lib.hfo_env import HFOEnv
 from graduationmgm.lib.hyperparameters import Config
 
+logger = logging.getLogger('Agent')
+
 
 class Agent():
 
     config = Config()
-    logger = logging.getLogger('Agent')
 
     def __init__(self, model, per):
         self.config_hyper(per)
         self.config_env()
         self.config_model(model)
-
 
     def config_hyper(self, per):
         # epsilon variables
