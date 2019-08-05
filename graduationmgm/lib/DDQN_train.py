@@ -139,6 +139,8 @@ class DuelingTrain(BaseTrain):
         batch_state, batch_action, batch_reward, non_final_next_states,\
             non_final_mask, empty_next_state_values,\
             indices, weights = batch_vars
+        
+        weights = torch.Tensor(weights)
 
         # estimate
         current_q_values = self.model(batch_state)
