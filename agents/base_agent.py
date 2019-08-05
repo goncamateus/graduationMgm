@@ -16,7 +16,7 @@ from graduationmgm.lib.hyperparameters import Config
 class Agent():
 
     config = Config()
-    logging = logging.getLogger('Agent')
+    logger = logging.getLogger('Agent')
 
     def __init__(self, model, per):
         self.config_hyper(per)
@@ -79,23 +79,23 @@ class Agent():
         if os.path.isfile(self.model_path) and os.path.isfile(self.optim_path):
             self.dqn.load_w(model_path=self.model_path,
                             optim_path=self.optim_path)
-            self.logging.info("Model Loaded")
+            logging.info("Model Loaded")
 
         if not self.test:
             if os.path.isfile(self.mem_path):
                 self.dqn.load_replay(mem_path=self.mem_path)
                 self.dqn.learn_start = 0
-                self.logging.info("Memory Loaded")
+                logging.info("Memory Loaded")
 
     def gen_mem_end(self, episode):
         self.gen_mem = False
         self.frame_idx = 0
         self.dqn.learn_start = 0
-        self.logging.info('Start Learning at Episode %s', episode)
+        logging.info('Start Learning at Episode %s', episode)
 
     def episode_end(self, total_reward, episode, state, frame):
         # Get the total reward of the episode
-        self.logging.info('Episode %s reward %d', episode, total_reward)
+        logging.info('Episode %s reward %d', episode, total_reward)
         self.dqn.finish_nstep()
         self.dqn.reset_hx()
 
@@ -105,7 +105,7 @@ class Agent():
                             path_optim=self.optim_path)
         if episode % 1000 == 0:
             self.dqn.save_replay(mem_path=self.mem_path)
-            self.logging.info("Memory Saved")
+            logging.info("Memory Saved")
 
     def save_rewards(self):
         day = datetime.datetime.now().today().day
