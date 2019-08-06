@@ -44,10 +44,6 @@ extern "C" {
   int getUnum(hfo::HFOEnvironment *hfo) {return hfo->getUnum();}
   int getNumTeammates(hfo::HFOEnvironment *hfo) {return hfo->getNumTeammates();}
   int getNumOpponents(hfo::HFOEnvironment *hfo) {return hfo->getNumOpponents();}
-  int getSelfReachCycle(hfo::HFOEnvironment *hfo) {return hfo->getSelfReachCycle();}
-  int getTeammateReachCycle(hfo::HFOEnvironment *hfo) {return hfo->getTeammateReachCycle();}
-  int getOpponentReachCycle(hfo::HFOEnvironment *hfo) {return hfo->getOpponentReachCycle();}
-  bool isIntercept(hfo::HFOEnvironment *hfo) {return hfo->isIntercept();}
 }
 
 #endif
