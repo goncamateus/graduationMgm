@@ -58,11 +58,6 @@ class HFOEnvironment {
   // Get the current player holding the ball
   virtual Player playerOnBall();
 
-  int getSelfReachCycle();
-  int getTeammateReachCycle();
-  int getOpponentReachCycle();
-  bool isIntercept();
-
   // Indicates the agent is done and the environment should
   // progress. Returns the game status after the step
   virtual status_t step();

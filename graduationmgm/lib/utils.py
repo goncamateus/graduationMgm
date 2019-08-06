@@ -1,27 +1,28 @@
-import numpy as np
-import pickle
 import datetime
+import logging
+import pickle
+
+import numpy as np
+
+logger = logging.getLogger(__name__)
 
 
-def gen_mem_end(gen_mem, episode, model, logging):
+def gen_mem_end(gen_mem, episode, model, frame_idx):
     gen_mem = False
     frame_idx = 0
     model.learn_start = 0
     logging.info('Start Learning at Episode %s', episode)
 
 
-def episode_end(total_reward, episode, model, state, frame, logging):
+def episode_end(total_reward, episode, model):
     # Get the total reward of the episode
     logging.info('Episode %s reward %d', episode, total_reward)
     model.finish_nstep()
     model.reset_hx()
-    # We finished the episode
-    next_state = np.zeros(state.shape)
-    next_frame = np.zeros(frame.shape)
 
 
 def save_modelmem(episode, test, model, model_path,
-                  optim_path, frame_idx, replay_size, logging):
+                  optim_path, mem_path, frame_idx, replay_size):
     if episode % 100 == 0 and episode > 0 and not test:
         model.save_w(path_model=model_path,
                      path_optim=optim_path)

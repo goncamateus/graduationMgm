@@ -155,20 +155,3 @@ status_t HFOEnvironment::step() {
   }
   return status;
 }
-
-int HFOEnvironment::getSelfReachCycle() {
-  return agent->world().interceptTable()->selfReachCycle();
-}
-
-int HFOEnvironment::getOpponentReachCycle() {
-  return agent->world().interceptTable()->opponentReachCycle();
-}
-
-int HFOEnvironment::getTeammateReachCycle() {
-  return agent->world().interceptTable()->teammateReachCycle();
-}
-
-bool HFOEnvironment::isIntercept() {
-  std::cout << "GOT WORLD" << std::endl;
-  return agent->isIntercept();
-}
