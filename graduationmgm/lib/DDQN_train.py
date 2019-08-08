@@ -125,7 +125,7 @@ class DuelingTrain(BaseTrain):
             dtype=torch.float).squeeze().view(-1, 1)
 
         if weights is not None:
-            torch.tensor(weights, device=self.device)
+            weights = torch.tensor(weights, device=self.device)
 
         non_final_mask = torch.tensor(tuple(map(
             lambda s: s is not None, batch_next_state)),
