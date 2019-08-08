@@ -90,8 +90,12 @@ class DQNTrain(BaseTrain):
         self.memory.store((state, action, R, s_))
 
     def prep_minibatch(self):
-        # random transition batch is taken from experience replay memory
-        transitions, indices, weights = self.memory.sample(self.batch_size)
+        if self.priority_replay:
+            # random transition batch is taken from experience replay memory
+            transitions, indices, weights = self.memory.sample(self.batch_size)
+        else:
+            transitions = self.memory.sample(self.batch_size)
+            indices = weights = None
 
         batch_state = np.array([each[0][0]
                                 for each in transitions], ndmin=2)
@@ -112,6 +116,9 @@ class DQNTrain(BaseTrain):
         batch_reward = torch.tensor(
             batch_reward, device=self.device,
             dtype=torch.float).squeeze().view(-1, 1)
+
+        if weights:
+            torch.tensor(weights, device=self.device)
 
         non_final_mask = torch.tensor(tuple(map(
             lambda s: s is not None, batch_next_state)),

@@ -97,8 +97,12 @@ class DuelingTrain(BaseTrain):
         self.memory.store((state, action, R, s_))
 
     def prep_minibatch(self):
-        # random transition batch is taken from experience replay memory
-        transitions, indices, weights = self.memory.sample(self.batch_size)
+        if self.priority_replay:
+            # random transition batch is taken from experience replay memory
+            transitions, indices, weights = self.memory.sample(self.batch_size)
+        else:
+            transitions = self.memory.sample(self.batch_size)
+            indices = weights = None
 
         batch_state = np.array([each[0][0]
                                 for each in transitions], ndmin=2)
@@ -120,6 +124,9 @@ class DuelingTrain(BaseTrain):
             batch_reward, device=self.device,
             dtype=torch.float).squeeze().view(-1, 1)
 
+        if weights:
+            torch.tensor(weights, device=self.device)
+
         non_final_mask = torch.tensor(tuple(map(
             lambda s: s is not None, batch_next_state)),
             device=self.device, dtype=torch.uint8)
@@ -139,8 +146,6 @@ class DuelingTrain(BaseTrain):
         batch_state, batch_action, batch_reward, non_final_next_states,\
             non_final_mask, empty_next_state_values,\
             indices, weights = batch_vars
-        
-        weights = torch.Tensor(weights).to(self.device)
 
         # estimate
         current_q_values = self.model(batch_state)
