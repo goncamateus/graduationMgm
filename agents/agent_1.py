@@ -4,7 +4,7 @@ from graduationmgm.Deep_Q_Networks.Dueling_DQN import Model as DuelingDQN
 
 
 def main():
-    agent = Agent(DQN, False)
+    agent = Agent(DuelingDQN, True)
     agent.run()
 
 

@@ -124,7 +124,7 @@ class DuelingTrain(BaseTrain):
             batch_reward, device=self.device,
             dtype=torch.float).squeeze().view(-1, 1)
 
-        if weights:
+        if weights is not None:
             torch.tensor(weights, device=self.device)
 
         non_final_mask = torch.tensor(tuple(map(

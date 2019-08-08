@@ -103,7 +103,7 @@ class Agent():
         if episode % 100 == 0 and episode > 0 and not self.test:
             self.dqn.save_w(path_model=self.model_path,
                             path_optim=self.optim_path)
-        if episode % 1000 == 0:
+        if episode % 1000 == 0 and episode > 2:
             self.dqn.save_replay(mem_path=self.mem_path)
             logging.info("Memory Saved")
 
