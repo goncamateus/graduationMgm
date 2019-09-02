@@ -23,6 +23,7 @@ class Config(object):
         self.grad_norm_max = 0.5
         self.USE_GAE = True
         self.gae_tau = 0.95
+        self.tau = 1e-2
 
         # algorithm control
         self.USE_NOISY_NETS = False

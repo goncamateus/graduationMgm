@@ -127,6 +127,7 @@ class Agent():
                 self.dqn.save_replay(mem_path=self.mem_path)
                 print("Memory Saved")
             self.save_rewards()
+            self.dqn.save_losses()
             self.hfo_env.act(hfo.QUIT)
             exit()
 

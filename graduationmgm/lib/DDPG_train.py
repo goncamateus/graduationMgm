@@ -1,10 +1,10 @@
 import os.path
-import pickle
 
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torch.autograd import Variable
 
 from graduationmgm.lib.base_train import BaseTrain
 from graduationmgm.lib.prioritized_experience_replay import Memory
@@ -27,7 +27,7 @@ class DDPGTrain(BaseTrain):
         self.priority_beta_start = config.PRIORITY_BETA_START
         self.priority_beta_frames = config.PRIORITY_BETA_FRAMES
         self.priority_alpha = config.PRIORITY_ALPHA
-
+        self.tau = config.tau
         self.static_policy = static_policy
         self.num_feats = env.observation_space.shape
         self.num_actions = env.action_space.n
@@ -67,30 +67,56 @@ class DDPGTrain(BaseTrain):
         self.nsteps = config.N_STEPS
         self.nstep_buffer = []
 
-    def load_w(self, model_path=None, optim_path=None):
-        if model_path is None:
-            fname_model = "./saved_agents/model_ddpg.dump"
-        else:
-            fname_model = model_path
-        if optim_path is None:
-            fname_optim = "./saved_agents/optim.dump"
-        else:
-            fname_optim = optim_path
+    def save_w(self, path_models=('./saved_agents/actor.dump',
+                                  './saved_agents/critic.dump'),
+               path_optims=('./saved_agents/actor_optim.dump',
+                            './saved_agents/critic_optim.dump')):
+        torch.save(self.actor.state_dict(), path_models[0])
+        torch.save(self.critic.state_dict(), path_models[1])
+        torch.save(self.actor_optimizer.state_dict(), path_optims[0])
+        torch.save(self.critic_optimizer.state_dict(), path_optims[1])
 
-        if os.path.isfile(fname_model):
-            self.model.load_state_dict(torch.load(
-                fname_model, map_location=self.device))
-            self.target_model.load_state_dict(self.model.state_dict())
+    def load_w(self, path_models=('./saved_agents/actor.dump',
+                                  './saved_agents/critic.dump'),
+               path_optims=('./saved_agents/actor_optim.dump',
+                            './saved_agents/critic_optim.dump')):
+        fname_actor = path_models[0]
+        fname_critic = path_models[1]
+        fname_actor_optim = path_optims[0]
+        fname_critic_optim = path_optims[1]
 
-        if os.path.isfile(fname_optim):
-            self.optimizer.load_state_dict(
-                torch.load(fname_optim, map_location=self.device))
+        if os.path.isfile(fname_actor):
+            self.model.load_state_dict(torch.load(fname_actor,
+                                                  map_location=self.device))
+            for target_param, param in zip(self.target_actor.parameters(),
+                                           self.actor.parameters()):
+                target_param.data.copy_(param.data)
+
+        if os.path.isfile(fname_critic):
+            self.model.load_state_dict(torch.load(fname_critic,
+                                                  map_location=self.device))
+            for target_param, param in zip(self.target_critic.parameters(),
+                                           self.critic.parameters()):
+                target_param.data.copy_(param.data)
+
+        if os.path.isfile(fname_actor_optim):
+            self.optimizer.load_state_dict(torch.load(fname_actor_optim,
+                                                      map_location=self.device)
+                                           )
+
+        if os.path.isfile(fname_critic_optim):
+            self.optimizer.load_state_dict(torch.load(fname_critic_optim,
+                                                      map_location=self.device)
+                                           )
 
     def declare_networks(self):
         pass
 
     def declare_memory(self):
-        self.memory = Memory(self.experience_replay_size)
+        if self.priority_replay:
+            self.memory = Memory(self.experience_replay_size)
+        else:
+            self.memory = MemoryDeque(self.experience_replay_size)
 
     def append_to_replay(self, s, a, r, s_):
         self.nstep_buffer.append((s, a, r, s_))
@@ -133,7 +159,7 @@ class DDPGTrain(BaseTrain):
             dtype=torch.float).squeeze().view(-1, 1)
 
         if weights is not None:
-            weights = torch.tensor(weights, device=self.device)
+            torch.tensor(weights, device=self.device)
 
         non_final_mask = torch.tensor(tuple(map(
             lambda s: s is not None, batch_next_state)),
@@ -155,72 +181,72 @@ class DDPGTrain(BaseTrain):
             non_final_mask, empty_next_state_values,\
             indices, weights = batch_vars
 
-        # estimate
-        current_q_values = self.model(batch_state)
-        current_q_values = current_q_values.gather(1, batch_action)
-
-        # target
+        Qvals = self.critic.forward(batch_state, batch_action)
         with torch.no_grad():
-            max_next_q_values = torch.zeros(
+            next_Q = torch.zeros(
                 self.batch_size, device=self.device,
                 dtype=torch.float).unsqueeze(dim=1)
             if not empty_next_state_values:
-                max_next_action = self.get_max_next_state_action(
-                    non_final_next_states)
-                max_next_q_values[non_final_mask] = self.target_model(
-                    non_final_next_states).gather(1, max_next_action)
-            expected_q_values = batch_reward + \
-                ((self.gamma**self.nsteps) * max_next_q_values)
+                next_actions = self.target_actor.forward(non_final_next_states)
+                next_Q[non_final_mask] = self.target_critic.forward(
+                    non_final_next_states, next_actions.detach())
+            Qprime = batch_reward + self.gamma * next_Q
 
-        diff = (expected_q_values - current_q_values)
+        critic_loss = self.critic_criterion(Qvals, Qprime)
+        policy_loss = - \
+            self.critic.forward(
+                batch_state, self.actor.forward(batch_state)).mean()
+
         if self.priority_replay:
             self.memory.batch_update(
-                indices, diff.detach().squeeze().abs().cpu().numpy())
-            loss = self.MSE(diff).squeeze() * weights
-        else:
-            loss = self.MSE(diff)
-        loss = loss.mean()
+                indices, critic_loss.detach().squeeze().abs().cpu().numpy())
+        self.critic_optimizer.zero_grad()
+        critic_loss.backward()
+        self.critic_optimizer.step()
+        self.actor_optimizer.zero_grad()
+        policy_loss.backward()
+        self.actor_optimizer.step()
 
-        return loss
+        return critic_loss, policy_loss
 
-    def update(self, s, a, r, s_, frame=0):
+    def update(self, s, a, r, s_, frame=0, store=True):
         if self.static_policy:
             return None
 
-        self.append_to_replay(s, a, r, s_)
+        if store:
+            self.append_to_replay(s, a, r, s_)
 
-        if frame < self.learn_start:
+        if self.priority_replay:
+            data = [x for x in self.memory.tree.data if isinstance(
+                x, int) and x != 0]
+            if len(data) < self.batch_size:
+                return None
+        elif len(self.memory) < self.batch_size:
             return None
 
         batch_vars = self.prep_minibatch()
 
-        loss = self.compute_loss(batch_vars)
+        critic_loss, policy_loss = self.compute_loss(batch_vars)
+        for target_param, param in zip(self.target_actor.parameters(),
+                                       self.actor.parameters()):
+            target_param.data.copy_(
+                self.tau * param.data + (1.0 - self.tau) * target_param.data)
 
-        # Optimize the model
-        self.optimizer.zero_grad()
-        loss.backward()
-        for param in self.model.parameters():
-            param.grad.data.clamp_(-1, 1)
-        self.optimizer.step()
-
-        self.update_target_model()
+        for target_param, param in zip(self.target_critic.parameters(),
+                                       self.critic.parameters()):
+            target_param.data.copy_(
+                self.tau * param.data + (1.0 - self.tau) * target_param.data)
         self.save_sigma_param_magnitudes(frame)
+        self.critic_losses.append(critic_loss)
+        self.policy_losses.append(policy_loss)
 
-    def get_action(self, s, eps=0.1):  # faster
+    def get_action(self, s):
         with torch.no_grad():
-            if np.random.uniform() >= eps or self.static_policy or self.noisy:
-                X = torch.tensor([s], device=self.device, dtype=torch.float)
-                out = self.model(X)
-                maxout = out.max(0)
-                maxout = maxout[0]
-                maxout = maxout.max(0)[1]
-                a = maxout.view(1, 1)
-                return a.item()
-            else:
-                return np.random.randint(0, self.num_actions)
-
-    def get_max_next_state_action(self, next_states):
-        return self.target_model(next_states).max(dim=1)[1].view(-1, 1)
+            state = Variable(torch.from_numpy(s).float().unsqueeze(0))
+            state = state.to(self.device)
+            action = self.actor.forward(state)
+            action = action.detach().cpu().numpy()[0, 0]
+            return action
 
     def finish_nstep(self):
         while len(self.nstep_buffer) > 0:

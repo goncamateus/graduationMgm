@@ -4,7 +4,6 @@ import pickle
 
 import numpy as np
 import torch
-import torch.optim as optim
 
 
 class BaseTrain(object):
@@ -17,9 +16,10 @@ class BaseTrain(object):
         self.actor = None
         self.target_actor = None
         self.critic = None
-        self.target_critic = None        
+        self.target_critic = None
 
         self.rewards = []
+        self.losses = self.critic_losses = self.policy_losses = []
 
         self.action_log_frequency = config.ACTION_SELECTION_COUNT_FREQUENCY
         self.action_selections = [0 for _ in range(env.action_space.n)]
@@ -97,3 +97,13 @@ class BaseTrain(object):
                 writer.writerow(list([tstep] + self.action_selections))
             self.action_selections = [
                 0 for _ in range(len(self.action_selections))]
+
+    def save_losses(self):
+        if self.losses:
+            pickle.dump(self.losses, open('./saved_agents/losses.pkl', 'wb'))
+        if self.critic_losses:
+            pickle.dump(self.critic_losses, open(
+                './saved_agents/critic_losses.pkl', 'wb'))
+        if self.policy_losses:
+            pickle.dump(self.policy_losses, open(
+                './saved_agents/policy_losses.pkl', 'wb'))
