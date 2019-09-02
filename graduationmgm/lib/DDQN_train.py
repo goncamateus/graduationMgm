@@ -1,4 +1,3 @@
-import csv
 import os.path
 import pickle
 
@@ -8,6 +7,7 @@ import torch.optim as optim
 
 from graduationmgm.lib.base_train import BaseTrain
 from graduationmgm.lib.prioritized_experience_replay import Memory
+from graduationmgm.lib.utils import MemoryDeque
 
 
 class DuelingTrain(BaseTrain):
@@ -196,12 +196,11 @@ class DuelingTrain(BaseTrain):
         self.optimizer.step()
 
         self.update_target_model()
-        # self.save_td(loss.item(), frame)
         self.save_sigma_param_magnitudes(frame)
 
     def get_action(self, s, eps=0.1):  # faster
         with torch.no_grad():
-            if np.random.random() >= eps or self.static_policy or self.noisy:
+            if np.random.uniform() >= eps or self.static_policy or self.noisy:
                 X = torch.tensor([s], device=self.device, dtype=torch.float)
                 out = self.model(X)
                 maxout = out.max(0)

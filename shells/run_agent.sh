@@ -4,7 +4,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 graduationmgm/lib/HFO_mgm/bin/HFO --fullstate --no-logging --headless --defense-agents=1 --offense-npcs=1 --defense-npcs=1 --trials $1 &
 sleep 10
 # Sleep is needed to make sure doesn't get connected too soon, as unum 1 (goalie)
-python ./agents/agent_1.py &
+python ./agents/agent.py &
 sleep 5
 
 # The magic line

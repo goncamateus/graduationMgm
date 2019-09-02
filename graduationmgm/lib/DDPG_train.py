@@ -1,9 +1,9 @@
-import csv
 import os.path
 import pickle
 
 import numpy as np
 import torch
+import torch.nn as nn
 import torch.optim as optim
 
 from graduationmgm.lib.base_train import BaseTrain
@@ -11,23 +11,19 @@ from graduationmgm.lib.prioritized_experience_replay import Memory
 from graduationmgm.lib.utils import MemoryDeque
 
 
-class DQNTrain(BaseTrain):
+class DDPGTrain(BaseTrain):
     def __init__(self, static_policy=False, env=None,
                  config=None, log_dir='/tmp/RC_test'):
-        super(DQNTrain, self).__init__(
+        super(DDPGTrain, self).__init__(
             config=config, env=env, log_dir=log_dir)
 
-        self.noisy = config.USE_NOISY_NETS
         self.priority_replay = config.USE_PRIORITY_REPLAY
 
         self.gamma = config.GAMMA
         self.lr = config.LR
-        self.target_net_update_freq = config.TARGET_NET_UPDATE_FREQ
         self.experience_replay_size = config.EXP_REPLAY_SIZE
         self.batch_size = config.BATCH_SIZE
         self.learn_start = config.LEARN_START
-        self.update_freq = config.UPDATE_FREQ
-        self.sigma_init = config.SIGMA_INIT
         self.priority_beta_start = config.PRIORITY_BETA_START
         self.priority_beta_frames = config.PRIORITY_BETA_FRAMES
         self.priority_alpha = config.PRIORITY_ALPHA
@@ -38,16 +34,31 @@ class DQNTrain(BaseTrain):
         self.env = env
 
         self.declare_networks()
+        actor_learning_rate = 1e-4
+        critic_learning_rate = 1e-3
 
-        self.optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
+        self.critic_criterion = nn.MSELoss()
+        self.actor_optimizer = optim.Adam(
+            self.actor.parameters(), lr=actor_learning_rate)
+        self.critic_optimizer = optim.Adam(
+            self.critic.parameters(), lr=critic_learning_rate)
 
         # move to correct device
-        self.model = self.model.to(self.device)
+        self.actor = self.actor.to(self.device)
+        self.target_actor = self.target_actor.to(self.device)
+        self.critic = self.critic.to(self.device)
+        self.target_critic = self.target_critic.to(self.device)
 
         if self.static_policy:
-            self.model.eval()
+            self.actor.eval()
+            self.target_actor.eval()
+            self.critic.eval()
+            self.target_critic.eval()
         else:
-            self.model.train()
+            self.actor.train()
+            self.target_actor.train()
+            self.critic.train()
+            self.target_critic.train()
 
         self.update_count = 0
 
@@ -56,14 +67,30 @@ class DQNTrain(BaseTrain):
         self.nsteps = config.N_STEPS
         self.nstep_buffer = []
 
+    def load_w(self, model_path=None, optim_path=None):
+        if model_path is None:
+            fname_model = "./saved_agents/model_ddpg.dump"
+        else:
+            fname_model = model_path
+        if optim_path is None:
+            fname_optim = "./saved_agents/optim.dump"
+        else:
+            fname_optim = optim_path
+
+        if os.path.isfile(fname_model):
+            self.model.load_state_dict(torch.load(
+                fname_model, map_location=self.device))
+            self.target_model.load_state_dict(self.model.state_dict())
+
+        if os.path.isfile(fname_optim):
+            self.optimizer.load_state_dict(
+                torch.load(fname_optim, map_location=self.device))
+
     def declare_networks(self):
         pass
 
     def declare_memory(self):
-        if self.priority_replay:
-            self.memory = Memory(self.experience_replay_size)
-        else:
-            self.memory = MemoryDeque(self.experience_replay_size)
+        self.memory = Memory(self.experience_replay_size)
 
     def append_to_replay(self, s, a, r, s_):
         self.nstep_buffer.append((s, a, r, s_))
@@ -106,7 +133,7 @@ class DQNTrain(BaseTrain):
             dtype=torch.float).squeeze().view(-1, 1)
 
         if weights is not None:
-            torch.tensor(weights, device=self.device)
+            weights = torch.tensor(weights, device=self.device)
 
         non_final_mask = torch.tensor(tuple(map(
             lambda s: s is not None, batch_next_state)),
@@ -140,7 +167,7 @@ class DQNTrain(BaseTrain):
             if not empty_next_state_values:
                 max_next_action = self.get_max_next_state_action(
                     non_final_next_states)
-                max_next_q_values[non_final_mask] = self.model(
+                max_next_q_values[non_final_mask] = self.target_model(
                     non_final_next_states).gather(1, max_next_action)
             expected_q_values = batch_reward + \
                 ((self.gamma**self.nsteps) * max_next_q_values)
@@ -157,13 +184,13 @@ class DQNTrain(BaseTrain):
         return loss
 
     def update(self, s, a, r, s_, frame=0):
-        # if self.static_policy:
-        #     return None
+        if self.static_policy:
+            return None
 
         self.append_to_replay(s, a, r, s_)
 
-        # if frame < self.learn_start or frame % self.update_freq != 0:
-        #     return None
+        if frame < self.learn_start:
+            return None
 
         batch_vars = self.prep_minibatch()
 
@@ -176,14 +203,13 @@ class DQNTrain(BaseTrain):
             param.grad.data.clamp_(-1, 1)
         self.optimizer.step()
 
-        # self.save_td(loss.item(), frame)
+        self.update_target_model()
         self.save_sigma_param_magnitudes(frame)
 
     def get_action(self, s, eps=0.1):  # faster
         with torch.no_grad():
             if np.random.uniform() >= eps or self.static_policy or self.noisy:
                 X = torch.tensor([s], device=self.device, dtype=torch.float)
-
                 out = self.model(X)
                 maxout = out.max(0)
                 maxout = maxout[0]
@@ -194,7 +220,7 @@ class DQNTrain(BaseTrain):
                 return np.random.randint(0, self.num_actions)
 
     def get_max_next_state_action(self, next_states):
-        return self.model(next_states).max(dim=1)[1].view(-1, 1)
+        return self.target_model(next_states).max(dim=1)[1].view(-1, 1)
 
     def finish_nstep(self):
         while len(self.nstep_buffer) > 0:

@@ -14,6 +14,10 @@ class BaseTrain(object):
         self.optimizer = None
         self.device = config.device
         self.log_dir = log_dir
+        self.actor = None
+        self.target_actor = None
+        self.critic = None
+        self.target_critic = None        
 
         self.rewards = []
 

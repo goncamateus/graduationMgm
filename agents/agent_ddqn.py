@@ -9,14 +9,14 @@ from pathlib import Path
 import hfo
 import numpy as np
 import torch
-from Deep_Q_Networks.Dueling_DQN import Model as DuelingDQN
-from lib.hfo_env import HFOEnv
-from lib.hyperparameters import Config
-from lib.utils import gen_mem_end, episode_end, save_modelmem, save_rewards
+from graduationmgm.Deep_Q_Networks.Dueling_DQN import Model as DuelingDQN
+from graduationmgm.lib.hfo_env import HFOEnv
+from graduationmgm.lib.hyperparameters import Config
+from graduationmgm.lib.utils import gen_mem_end, episode_end, save_modelmem, save_rewards
 
 
 def main():
-# ------------------------ HYPER PARAMETERS --------------------------------- #
+    # ------------------------ HYPER PARAMETERS --------------------------------- #
     config = Config()
     # epsilon variables
     config.epsilon_start = 1.0
@@ -36,7 +36,7 @@ def main():
     config.PRIORITY_ALPHA = 0.6
     config.PRIORITY_BETA_START = 0.4
     config.PRIORITY_BETA_FRAMES = 100000
-    config.USE_PRIORITY_REPLAY = False
+    config.USE_PRIORITY_REPLAY = True
 
     # epsilon variables
     config.SIGMA_INIT = 0.5
@@ -60,21 +60,10 @@ def main():
     gen_mem = True
     unum = hfo_env.getUnum()
 
-    log_dir = "/tmp/RC_test"
-    try:
-        os.makedirs(log_dir)
-    except OSError:
-        files = glob.glob(os.path.join(log_dir, '*.monitor.csv'))
-        for f in files:
-            os.remove(f)
-    logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s | %(levelname)s : %(message)s',
-                        handlers=[logging.FileHandler(
-                            "agent{}.log".format(unum)),
-                            logging.StreamHandler()])
+    logging.basicConfig(level=logging.INFO)
 
 # ------------------------ MODEL CONFIG ------------------------------------- #
-    
+
     ddqn = DuelingDQN(env=hfo_env, config=config, static_policy=test)
     currun_rewards = list()
 
@@ -106,16 +95,17 @@ def main():
             # If the size of experiences is under max_size*16 runs gen_mem
             # Biasing the agent for the Agent2d Helios_base
             if gen_mem and frame_idx / 16 < config.EXP_REPLAY_SIZE:
-                action = 1 if hfo_env.isIntercept() else 0
+                action = 1 if state[-2] else 0
             else:
                 # When gen_mem is done, saves experiences and starts a new
                 # frame counting and starts the learning process
                 if gen_mem:
-                    gen_mem_end(gen_mem, episode, ddqn, logging)
+                    gen_mem_end(gen_mem, episode, ddqn, frame_idx)
 
                 # Calculates epsilon on frame according to the stack index
                 # and gets the action
-                epsilon = config.epsilon_by_frame(int(frame_idx / 16))
+                epsilon = config.epsilon_by_frame(
+                    int(frame_idx / 16))
                 action = ddqn.get_action(frame, epsilon)
 
             # Calculates results from environment
@@ -127,19 +117,20 @@ def main():
                 # Resets frame_stack and states
                 total_reward = np.sum(episode_rewards)
                 currun_rewards.append(total_reward)
-                episode_end(total_reward, episode, ddqn, state, frame, logging)
+                episode_end(total_reward, episode, ddqn)
+                next_state = np.zeros(state.shape)
+                next_frame = np.zeros(frame.shape)
             else:
                 next_frame = ddqn.stack_frames(next_state, done)
 
             ddqn.update(frame, action, reward,
-                         next_frame, int(frame_idx / 16))
+                        next_frame, int(frame_idx / 16))
             frame = next_frame
             state = next_state
 
             frame_idx += 1
-            save_modelmem(episode, test, ddqn, model_path, optim_path,
-                          frame_idx, config.EXP_REPLAY_SIZE, logging)
-
+        save_modelmem(episode, test, ddqn, model_path, optim_path,
+                        mem_path, frame_idx, ddqn.experience_replay_size)
 # ------------------------ QUIT --------------------------------------------- #
         if status == hfo.SERVER_DOWN:
             if not test:
