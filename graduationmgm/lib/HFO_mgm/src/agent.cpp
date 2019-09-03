@@ -23,6 +23,8 @@
 #include "bhv_set_play_indirect_free_kick.h"
 #include "shoot_generator.h"
 #include "bhv_force_pass.h"
+#include "bhv_block.h"
+#include "bhv_basic_move.h"
 
 #include "bhv_custom_before_kick_off.h"
 #include "bhv_strict_check_shoot.h"
@@ -341,7 +343,8 @@ void Agent::actionImpl() {
       last_action_status = this->doDribble();
       break;
     case CATCH:
-      last_action_status = this->doCatch();
+      // last_action_status = this->doCatch();
+      last_action_status = Bhv_Block().execute(this);
       break;
     case NOOP:
       last_action_status = false;

@@ -86,28 +86,30 @@ class DDPGTrain(BaseTrain):
         fname_critic_optim = path_optims[1]
 
         if os.path.isfile(fname_actor):
-            self.model.load_state_dict(torch.load(fname_actor,
+            self.actor.load_state_dict(torch.load(fname_actor,
                                                   map_location=self.device))
             for target_param, param in zip(self.target_actor.parameters(),
                                            self.actor.parameters()):
                 target_param.data.copy_(param.data)
 
         if os.path.isfile(fname_critic):
-            self.model.load_state_dict(torch.load(fname_critic,
-                                                  map_location=self.device))
+            self.critic.load_state_dict(torch.load(fname_critic,
+                                                   map_location=self.device))
             for target_param, param in zip(self.target_critic.parameters(),
                                            self.critic.parameters()):
                 target_param.data.copy_(param.data)
 
         if os.path.isfile(fname_actor_optim):
-            self.optimizer.load_state_dict(torch.load(fname_actor_optim,
-                                                      map_location=self.device)
-                                           )
+            self.actor_optimizer.load_state_dict(
+                torch.load(fname_actor_optim,
+                           map_location=self.device)
+            )
 
         if os.path.isfile(fname_critic_optim):
-            self.optimizer.load_state_dict(torch.load(fname_critic_optim,
-                                                      map_location=self.device)
-                                           )
+            self.critic_optimizer.load_state_dict(torch.load(
+                fname_critic_optim,
+                map_location=self.device)
+            )
 
     def declare_networks(self):
         pass

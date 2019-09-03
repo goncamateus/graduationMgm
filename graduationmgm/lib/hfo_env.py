@@ -1,3 +1,5 @@
+import math
+
 import hfo
 import numpy as np
 from scipy.spatial import distance
@@ -30,6 +32,8 @@ class HFOEnv(hfo.HFOEnvironment):
     max_R = np.sqrt(pitchHalfLength * pitchHalfLength +
                     pitchHalfWidth * pitchHalfWidth)
     stamina_max = 8000
+    w_ball_grad = 0.8
+    prev_ball_potential = None
 
     def __init__(self, actions, rewards,
                  is_offensive=False, play_goalie=False,
@@ -103,30 +107,32 @@ class HFOEnv(hfo.HFOEnvironment):
 
     def get_reward_def(self, act, next_state, done, status):
         reward = 0
+        ball_potential = self.ball_potential(next_state[3], next_state[4])
+
+        if self.prev_ball_potential is not None:
+            grad_ball_potential = self.clip(
+                (ball_potential - self.prev_ball_potential), -1.0,
+                1.0)
+        else:
+            grad_ball_potential = 0
+
         if status == hfo.GOAL:
-            reward = -200000
+            reward = -10
             self.observation_space.goals_taken += 1
             if self.observation_space.goals_taken % 5 == 0:
-                reward -= 1000000
+                reward = -100
             if '-{}'.format(self.getUnum()) in self.statusToString(status):
-                reward -= 1000000
-        elif 'OUT' in self.statusToString(status):
-            self.observation_space.nmr_out += 1
-            reward = self.observation_space.rewards[act]
+                reward = -200
         else:
             if done:
-                if not '-{}'.format(self.getUnum())\
-                        in self.statusToString(status):
-                    reward = self.observation_space.rewards[act]
-                else:
-                    self.observation_space.taken += 1
-                    reward = self.observation_space.rewards[act] * 5
-                    if self.observation_space.taken % 5 == 0:
-                        reward = reward * 1000
+                self.observation_space.taken += 1
+                reward = 10
+                if self.observation_space.taken % 5 == 0:
+                    reward = 100
             else:
-                reward = self.observation_space.rewards[act]\
-                    - min(40, self.get_ball_dist(next_state))*3
-
+                if abs(next_state[10]) <= 1:
+                    reward = -1
+        self.prev_ball_potential = grad_ball_potential
         return reward
 
     def get_reward_goalie(self, act, next_state, done, status):
@@ -258,3 +264,24 @@ class HFOEnv(hfo.HFOEnvironment):
         new_state.append(state[-1])
         new_state = np.array(new_state)
         return new_state
+
+    def ball_potential(self, ball_x, ball_y):
+        """
+            Calculate ball potential according to this formula:
+            pot = ((-sqrt((52.5-x)^2 + 2*(0-y)^2) +
+                    sqrt((-52.5- x)^2 + 2*(0-y)^2))/52.5 - 1)/2
+            the potential is zero (maximum) at the center of attack goal
+            (52.5,0) and -1 at the defense goal (-52.5,0)
+            it changes twice as fast on y coordinate than on the x coordinate
+        """
+
+        dx_d = -self.pitchHalfLength - ball_x  # distance to defence
+        dx_a = self.pitchHalfLength - ball_x  # distance to attack
+        dy = 0 - ball_y
+        potential = ((-math.sqrt(dx_a ** 2 + 2 * dy ** 2) +
+                      math.sqrt(dx_d ** 2 + 2 * dy ** 2)) / self.pitchHalfLength - 1) / 2  # noqa
+
+        return potential
+
+    def clip(self, val, vmin, vmax):
+        return min(max(val, vmin), vmax)

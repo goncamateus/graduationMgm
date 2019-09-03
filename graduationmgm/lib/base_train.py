@@ -98,12 +98,10 @@ class BaseTrain(object):
             self.action_selections = [
                 0 for _ in range(len(self.action_selections))]
 
-    def save_losses(self):
+    def save_losses(self, path):
         if self.losses:
-            pickle.dump(self.losses, open('./saved_agents/losses.pkl', 'wb'))
+            pickle.dump(self.losses, open(path, 'wb'))
         if self.critic_losses:
-            pickle.dump(self.critic_losses, open(
-                './saved_agents/critic_losses.pkl', 'wb'))
+            pickle.dump(self.critic_losses, open(path[0], 'wb'))
         if self.policy_losses:
-            pickle.dump(self.policy_losses, open(
-                './saved_agents/policy_losses.pkl', 'wb'))
+            pickle.dump(self.policy_losses, open(path[1], 'wb'))

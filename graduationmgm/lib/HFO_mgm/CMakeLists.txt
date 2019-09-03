@@ -77,7 +77,8 @@ set(PLAYER_CPP bhv_basic_move.cpp bhv_basic_offensive_kick.cpp
   role_side_back.cpp role_side_forward.cpp role_side_half.cpp
   role_keepaway_keeper.cpp role_keepaway_taker.cpp
   sample_communication.cpp keepaway_communication.cpp
-  sample_field_evaluator.cpp sample_player.cpp strategy.cpp)
+  sample_field_evaluator.cpp sample_player.cpp strategy.cpp
+  bhv_block.cpp)
 
 foreach(src ${PLAYER_CPP})
   list(APPEND PLAYER_SOURCES ${SOURCE_DIR}/${src})

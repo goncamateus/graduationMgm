@@ -56,10 +56,10 @@ class Model(DDPGTrain):
                           len(self.stacked_frames))
 
     def declare_networks(self):
-        self.actor = Actor(
-            self.env.observation_space.shape[0], 256, self.env.action_space.n)
-        self.target_actor = Actor(
-            self.env.observation_space.shape[0], 256, self.env.action_space.n)
+        self.actor = Actor(self.env.observation_space.shape[0], 256,
+                           self.env.action_space.n)
+        self.target_actor = Actor(self.env.observation_space.shape[0], 256,
+                                  self.env.action_space.n)
         self.critic = Critic(
             self.env.observation_space.shape[0] + self.env.action_space.n,
             256, self.env.action_space.n)
@@ -79,7 +79,7 @@ class Model(DDPGTrain):
                 self.stacked_frames.append(frame)
 
             # Stack the frames
-            stacked_state = np.stack(self.stacked_frames, axis=1)
+            stacked_state = np.stack(self.stacked_frames, axis=0)
 
         else:
             # Append frame to deque, automatically removes the oldest frame
@@ -87,6 +87,6 @@ class Model(DDPGTrain):
 
             # Build the stacked state (first dimension specifies different
             # frames)
-            stacked_state = np.stack(self.stacked_frames, axis=1)
+            stacked_state = np.stack(self.stacked_frames, axis=0)
 
         return stacked_state
