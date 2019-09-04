@@ -100,8 +100,11 @@ class BaseTrain(object):
 
     def save_losses(self, path):
         if self.losses:
-            pickle.dump(self.losses, open(path, 'wb'))
+            with open(path, 'wb') as loss_file:
+                pickle.dump(self.losses, loss_file)
         if self.critic_losses:
-            pickle.dump(self.critic_losses, open(path[0], 'wb'))
+            with open(path[0], 'wb') as critic_loss_file:
+                pickle.dump(self.critic_losses, critic_loss_file)
         if self.policy_losses:
-            pickle.dump(self.policy_losses, open(path[1], 'wb'))
+            with open(path[1], 'wb') as policy_loss_file:
+                pickle.dump(self.policy_losses, policy_loss_file)
