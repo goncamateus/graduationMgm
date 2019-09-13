@@ -102,8 +102,8 @@ class Agent():
 
     def save_modelmem(self, episode=0, bye=False):
         if (episode % 100 == 0 and episode > 0 and not self.test) or bye:
-            self.dqn.save_w(path_models=self.model_path,
-                            path_optims=self.optim_path)
+            self.dqn.save_w(path_model=self.model_path,
+                            path_optim=self.optim_path)
             print("Model Saved")
         if (episode % 1000 == 0 and episode > 2) or bye:
             self.dqn.save_replay(mem_path=self.mem_path)
@@ -181,6 +181,6 @@ class Agent():
                 state = next_state
 
                 self.frame_idx += 1
-                self.save_modelmem(episode)
+            self.save_modelmem(episode)
 
             self.bye(status)
