@@ -50,7 +50,6 @@ bool Bhv_Block::execute(PlayerAgent * agent)
 
 void Bhv_Block::updateBlockerUnum()
 {
-    ServerParam::i().ourTeamGoalPos()
     int blockC = INT_MAX;
     for(int unum = 2; unum <= 11; unum++){
         if(blockCycle[unum] < blockC)
