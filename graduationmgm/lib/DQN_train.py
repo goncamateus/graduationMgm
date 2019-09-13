@@ -106,7 +106,7 @@ class DQNTrain(BaseTrain):
             dtype=torch.float).squeeze().view(-1, 1)
 
         if weights is not None:
-            torch.tensor(weights, device=self.device)
+            weights = torch.tensor(weights, device=self.device)
 
         non_final_mask = torch.tensor(tuple(map(
             lambda s: s is not None, batch_next_state)),
@@ -157,13 +157,13 @@ class DQNTrain(BaseTrain):
         return loss
 
     def update(self, s, a, r, s_, frame=0):
-        # if self.static_policy:
-        #     return None
+        if self.static_policy:
+            return None
 
         self.append_to_replay(s, a, r, s_)
 
-        # if frame < self.learn_start or frame % self.update_freq != 0:
-        #     return None
+        if frame < self.learn_start or frame % self.update_freq != 0:
+            return None
 
         batch_vars = self.prep_minibatch()
 

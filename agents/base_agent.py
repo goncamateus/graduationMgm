@@ -59,8 +59,9 @@ class Agent():
             "cuda" if torch.cuda.is_available() else "cpu")
 
     def config_env(self):
-        self.actions = [hfo.MOVE, hfo.GO_TO_BALL]
-        self.rewards = [700, 1000]
+        BLOCK = hfo.CATCH
+        self.actions = [hfo.MOVE, hfo.GO_TO_BALL, BLOCK, hfo.DEFEND_GOAL]
+        self.rewards = [0, 0, 0, 0]
         self.hfo_env = HFOEnv(self.actions, self.rewards, strict=True)
         self.test = False
         self.gen_mem = True
@@ -99,22 +100,23 @@ class Agent():
         self.dqn.finish_nstep()
         self.dqn.reset_hx()
 
-    def save_modelmem(self, episode):
-        if episode % 100 == 0 and episode > 0 and not self.test:
-            self.dqn.save_w(path_model=self.model_path,
-                            path_optim=self.optim_path)
-        if episode % 1000 == 0 and episode > 2:
+    def save_modelmem(self, episode=0, bye=False):
+        if (episode % 100 == 0 and episode > 0 and not self.test) or bye:
+            self.dqn.save_w(path_models=self.model_path,
+                            path_optims=self.optim_path)
+            print("Model Saved")
+        if (episode % 1000 == 0 and episode > 2) or bye:
             self.dqn.save_replay(mem_path=self.mem_path)
-            logging.info("Memory Saved")
+            print("Memory Saved")
 
     def save_rewards(self):
         day = datetime.datetime.now().today().day
         hour = datetime.datetime.now().hour
         minute = datetime.datetime.now().minute
         final_str = str(day) + "-" + str(hour) + "-" + str(minute)
-        with open('saved_agents/rewards_{}.pickle'.format(final_str),
+        with open('saved_agents/rewards_{}_{}.pickle'.format(self.unum,
+                                                             final_str),
                   'wb+') as fiile:
-
             pickle.dump(self.currun_rewards, fiile)
             fiile.close()
 
@@ -142,9 +144,9 @@ class Agent():
                 if done:
                     state = self.hfo_env.get_state(strict=True)
                     frame = self.dqn.stack_frames(state, done)
-                # If the size of experiences is under max_size*16 runs gen_mem
+                # If the size of experiences is under max_size*8 runs gen_mem
                 # Biasing the agent for the Agent2d Helios_base
-                if self.gen_mem and self.frame_idx / 16 < self.config.EXP_REPLAY_SIZE:
+                if self.gen_mem and self.frame_idx / 8 < self.config.EXP_REPLAY_SIZE:
                     action = 1 if state[-2] else 0
                 else:
                     # When gen_mem is done, saves experiences and starts a new
@@ -155,7 +157,7 @@ class Agent():
                     # Calculates epsilon on frame according to the stack index
                     # and gets the action
                     epsilon = self.config.epsilon_by_frame(
-                        int(self.frame_idx / 16))
+                        int(self.frame_idx / 8))
                     action = self.dqn.get_action(frame, epsilon)
 
                 # Calculates results from environment
@@ -174,7 +176,7 @@ class Agent():
                     next_frame = self.dqn.stack_frames(next_state, done)
 
                 self.dqn.update(frame, action, reward,
-                                next_frame, int(self.frame_idx / 16))
+                                next_frame, int(self.frame_idx / 8))
                 frame = next_frame
                 state = next_state
 

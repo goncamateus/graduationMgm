@@ -28,7 +28,6 @@ class DDPGAgent(Agent):
         self.rewards = [0, 0, 0, 0]
         self.hfo_env = HFOEnv(self.actions, self.rewards, strict=True)
         self.test = False
-        self.gen_mem = True
         self.unum = self.hfo_env.getUnum()
 
     def config_model(self, model):
