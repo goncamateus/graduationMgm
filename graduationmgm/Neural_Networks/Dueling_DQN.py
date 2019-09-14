@@ -72,7 +72,7 @@ class Model(DuelingTrain):
                 self.stacked_frames.append(frame)
 
             # Stack the frames
-            stacked_state = np.stack(self.stacked_frames, axis=1)
+            stacked_state = np.stack(self.stacked_frames, axis=0)
 
         else:
             # Append frame to deque, automatically removes the oldest frame
@@ -80,6 +80,6 @@ class Model(DuelingTrain):
 
             # Build the stacked state (first dimension specifies different
             # frames)
-            stacked_state = np.stack(self.stacked_frames, axis=1)
+            stacked_state = np.stack(self.stacked_frames, axis=0)
 
         return stacked_state

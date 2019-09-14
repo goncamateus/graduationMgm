@@ -74,7 +74,7 @@ class Model(DDPGTrain):
                 frame.shape,
                 dtype=np.int) for i in range(8)], maxlen=8)
 
-            # Because we're in a new episode, copy the same frame 4x
+            # Because we're in a new episode, copy the same frame 8x
             for _ in range(8):
                 self.stacked_frames.append(frame)
 

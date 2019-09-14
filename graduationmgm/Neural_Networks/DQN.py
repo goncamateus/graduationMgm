@@ -58,12 +58,12 @@ class Model(DQNTrain):
                 frame.shape,
                 dtype=np.int) for i in range(8)], maxlen=8)
 
-            # Because we're in a new episode, copy the same frame 4x
+            # Because we're in a new episode, copy the same frame 8x
             for _ in range(8):
                 self.stacked_frames.append(frame)
 
             # Stack the frames
-            stacked_state = np.stack(self.stacked_frames, axis=1)
+            stacked_state = np.stack(self.stacked_frames, axis=0)
 
         else:
             # Append frame to deque, automatically removes the oldest frame
@@ -71,6 +71,6 @@ class Model(DQNTrain):
 
             # Build the stacked state (first dimension specifies different
             # frames)
-            stacked_state = np.stack(self.stacked_frames, axis=1)
+            stacked_state = np.stack(self.stacked_frames, axis=0)
 
         return stacked_state
