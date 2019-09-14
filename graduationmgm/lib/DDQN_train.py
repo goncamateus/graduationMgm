@@ -32,7 +32,6 @@ class DuelingTrain(BaseTrain):
         self.priority_alpha = config.PRIORITY_ALPHA
 
         self.static_policy = static_policy
-        self.num_feats = env.observation_space.shape
         self.num_actions = env.action_space.n
         self.env = env
 
@@ -114,7 +113,6 @@ class DuelingTrain(BaseTrain):
                                      for each in transitions], ndmin=2)
 
         shape = (self.batch_size,) + self.num_feats
-        print(shape)
         batch_state = torch.tensor(
             np.array(batch_state),
             device=self.device, dtype=torch.float).view(shape)
