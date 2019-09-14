@@ -112,6 +112,7 @@ class DuelingTrain(BaseTrain):
         batch_next_state = np.array([each[0][3]
                                      for each in transitions], ndmin=2)
 
+        print(batch_state.dtype)
         shape = (self.batch_size,) + self.num_feats
         batch_state = torch.from_numpy(
             batch_state).float().view(shape).to(self.device)
