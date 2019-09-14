@@ -113,9 +113,8 @@ class DuelingTrain(BaseTrain):
                                      for each in transitions], ndmin=2)
 
         shape = (self.batch_size,) + self.num_feats
-        batch_state = torch.tensor(
-            batch_state,
-            device=self.device, dtype=torch.float).view(shape)
+        batch_state = torch.from_numpy(
+            batch_state).float().view(shape).to(self.device)
         batch_action = torch.tensor(
             batch_action, device=self.device,
             dtype=torch.long).squeeze().view(-1, 1)
