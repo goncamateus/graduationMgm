@@ -114,7 +114,7 @@ class DuelingTrain(BaseTrain):
 
         shape = (self.batch_size,) + self.num_feats
         batch_state = torch.tensor(
-            np.array(batch_state),
+            batch_state,
             device=self.device, dtype=torch.float).view(shape)
         batch_action = torch.tensor(
             batch_action, device=self.device,
