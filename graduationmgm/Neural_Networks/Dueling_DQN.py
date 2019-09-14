@@ -52,6 +52,7 @@ class Model(DuelingTrain):
              for i in range(8)], maxlen=8)
         self.env = env
         self.num_feats = (8 * self.env.observation_space.shape[0],)
+        print(self.num_feats)
         super(Model, self).__init__(static_policy, env, config)
 
     def declare_networks(self):
