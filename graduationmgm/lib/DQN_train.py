@@ -182,13 +182,10 @@ class DQNTrain(BaseTrain):
         with torch.no_grad():
             if np.random.uniform() >= eps or self.static_policy or self.noisy:
                 X = torch.tensor([s], device=self.device, dtype=torch.float)
-
+                X = X.view(1, -1)
                 out = self.model(X)
-                maxout = out.max(0)
-                maxout = maxout[0]
-                maxout = maxout.max(0)[1]
-                a = maxout.view(1, 1)
-                return a.item()
+                maxout = out.argmax()
+                return maxout.item()
             else:
                 return np.random.randint(0, self.num_actions)
 
