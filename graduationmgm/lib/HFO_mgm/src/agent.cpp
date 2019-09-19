@@ -1115,17 +1115,21 @@ bool Agent::doReduceAngleToGoal() {
 
 bool Agent::doDefendGoal() {
   const WorldModel & wm = this->world();
-  const Vector2D target_point = Strategy::i().getPosition( wm.self().unum() );
-  // Vector2D goal_pos1( -ServerParam::i().pitchHalfLength() + ServerParam::i().goalAreaLength(), ServerParam::i().goalHalfWidth() );
-  // Vector2D goal_pos2( -ServerParam::i().pitchHalfLength() + ServerParam::i().goalAreaLength(), -ServerParam::i().goalHalfWidth() );
-  Vector2D goal_pos1( target_point.x, ServerParam::i().goalHalfWidth() );
-  Vector2D goal_pos2( target_point.x, -ServerParam::i().goalHalfWidth() );
+  Vector2D self_pos = Strategy::i().getPosition( wm.self().unum() );
+  double dist = self_pos.dist(Vector2D(-ServerParam::i().pitchHalfLength(), self_pos.y));
+  Vector2D goal_pos1( -ServerParam::i().pitchHalfLength() + dist, ServerParam::i().goalHalfWidth() );
+  Vector2D goal_pos2( -ServerParam::i().pitchHalfLength() + dist, -ServerParam::i().goalHalfWidth() );
+  Vector2D goal_pos_center( -ServerParam::i().pitchHalfLength(), 0);
+
   const BallObject& ball = wm.ball();
   if (! ball.posValid()) {
     return false;
   }
 
   Vector2D ball_pos = ball.pos();
+
+
+
   double dist_to_post1 = goal_pos1.dist2(ball_pos);
   double dist_to_post2 = goal_pos2.dist2(ball_pos);
   double ratio = dist_to_post2/(dist_to_post1+dist_to_post2);
