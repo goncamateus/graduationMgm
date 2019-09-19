@@ -1115,8 +1115,9 @@ bool Agent::doReduceAngleToGoal() {
 
 bool Agent::doDefendGoal() {
   const WorldModel & wm = this->world();
-  Vector2D goal_pos1( -ServerParam::i().pitchHalfLength() + ServerParam::i().goalAreaLength(), ServerParam::i().goalHalfWidth() );
-  Vector2D goal_pos2( -ServerParam::i().pitchHalfLength() + ServerParam::i().goalAreaLength(), -ServerParam::i().goalHalfWidth() );
+  const Vector2D formation_target_point = Strategy::i().getPosition( wm.self().unum() );
+  Vector2D goal_pos1( -ServerParam::i().pitchHalfLength() + formation_target_point.x, ServerParam::i().goalHalfWidth() );
+  Vector2D goal_pos2( -ServerParam::i().pitchHalfLength() + formation_target_point.x, -ServerParam::i().goalHalfWidth() );
   const BallObject& ball = wm.ball();
   if (! ball.posValid()) {
     return false;
@@ -1149,7 +1150,7 @@ bool Agent::doGoToBall() {
   if (! ball.posValid()) {
     return false;
   }
-  if ( Bhv_BasicTackle( 0.8, 80.0 ).execute( this ) )
+  if ( Bhv_BasicTackle( 0.65, 80.0 ).execute( this ) )
   {
     return true;
   }

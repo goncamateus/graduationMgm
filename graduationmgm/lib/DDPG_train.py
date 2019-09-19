@@ -201,7 +201,7 @@ class DDPGTrain(BaseTrain):
 
         if self.priority_replay:
             self.memory.batch_update(
-                indices, critic_loss.detach().squeeze().abs().cpu().numpy())
+                indices, policy_loss.detach().squeeze().abs().cpu().numpy())
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
         self.critic_optimizer.step()
