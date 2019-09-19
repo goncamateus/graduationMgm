@@ -159,6 +159,7 @@ class Agent():
                     epsilon = self.config.epsilon_by_frame(
                         int(self.frame_idx / 8))
                     action = self.dqn.get_action(frame, epsilon)
+                    action = action if not state[-2] else 1
 
                 # Calculates results from environment
                 next_state, reward, done, status = self.hfo_env.step(action,
