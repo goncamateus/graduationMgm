@@ -106,6 +106,8 @@ class DDPGAgent(Agent):
                 action = self.ddpg.get_action(frame)
                 action = self.noise.get_action(action, step)
                 action = action.argmax()
+                if state[-2]:
+                    action = 1
                 step += 1
 
                 # Calculates results from environment
