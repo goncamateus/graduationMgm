@@ -45,7 +45,7 @@ public:
   // Find the opponent closest to the given point. Returns the
   // distance and angle (in radians) from point to the closest
   // opponent.
-  static void calcClosestOpp(const rcsc::WorldModel &wm,
+  static const rcsc::PlayerObject* calcClosestOpp(const rcsc::WorldModel &wm,
                              const rcsc::Vector2D &point,
                              float &ang, float &dist);
 

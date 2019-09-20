@@ -81,8 +81,9 @@ HighLevelFeatureExtractor::ExtractFeatures(const rcsc::WorldModel& wm,
   // Feature[8]: largest open goal angle
   addNormFeature(calcLargestGoalAngle(wm, self_pos), 0, M_PI);
   // Feature[9]: Dist to our closest opp
+  const PlayerObject* closest_opp;
   if (numOpponents > 0) {
-    calcClosestOpp(wm, self_pos, th, r);
+    closest_opp = calcClosestOpp(wm, self_pos, th, r);
     addNormFeature(r, 0, maxR);
   } else {
     addFeature(FEAT_INVALID);
@@ -109,6 +110,7 @@ HighLevelFeatureExtractor::ExtractFeatures(const rcsc::WorldModel& wm,
       const PlayerObject* teammate = *it;
       if (valid(teammate) && teammate->unum() > 0 && detected_teammates < numTeammates) {
         calcClosestOpp(wm, teammate->pos(), th, r);
+        r = teammate->pos().dist(closest_opp->pos());
         addNormFeature(r, 0, maxR);
         detected_teammates++;
       }

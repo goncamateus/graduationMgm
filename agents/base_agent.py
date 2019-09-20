@@ -142,12 +142,14 @@ class Agent():
             while status == hfo.IN_GAME:
                 # Every time when game resets starts a zero frame
                 if done:
-                    state = self.hfo_env.get_state(strict=True)
+                    state_ori = self.hfo_env.get_state(strict=True)
+                    interceptable = state_ori[-1]
+                    state = state_ori[:-1]
                     frame = self.dqn.stack_frames(state, done)
                 # If the size of experiences is under max_size*8 runs gen_mem
                 # Biasing the agent for the Agent2d Helios_base
                 if self.gen_mem and self.frame_idx / 8 < self.config.EXP_REPLAY_SIZE:
-                    action = 1 if state[-2] else 0
+                    action = 1 if interceptable else 0
                 else:
                     # When gen_mem is done, saves experiences and starts a new
                     # frame counting and starts the learning process
@@ -159,7 +161,7 @@ class Agent():
                     epsilon = self.config.epsilon_by_frame(
                         int(self.frame_idx / 8))
                     action = self.dqn.get_action(frame, epsilon)
-                    action = action if not state[-2] else 1
+                    action = action if not interceptable else 1
 
                 # Calculates results from environment
                 next_state, reward, done, status = self.hfo_env.step(action,

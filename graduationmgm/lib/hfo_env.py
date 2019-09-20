@@ -249,19 +249,14 @@ class HFOEnv(hfo.HFOEnvironment):
             new_state.append(state[index])
             index += 1
             new_state.append(state[index])
-            index += 1
-            new_state.append(state[index])
-            index += 1
+            index += 2
         index = 10 + 6 * num_mates
         for i in range(self.choosed_ops):
             new_state.append(state[index])
             index += 1
             new_state.append(state[index])
-            index += 1
-            new_state.append(state[index])
-            index += 1
+            index += 2
         new_state.append(state[-2])
-        new_state.append(state[-1])
         new_state = np.array(new_state)
         return new_state
 

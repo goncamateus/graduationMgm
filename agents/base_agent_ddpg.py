@@ -99,14 +99,16 @@ class DDPGAgent(Agent):
             while status == hfo.IN_GAME:
                 # Every time when game resets starts a zero frame
                 if done:
-                    state = self.hfo_env.get_state(strict=True)
+                    state_ori = self.hfo_env.get_state(strict=True)
+                    interceptable = state_ori[-1]
+                    state = state_ori[:-1]
                     frame = self.ddpg.stack_frames(state, done)
 
                 # Gets the action
                 action = self.ddpg.get_action(frame)
                 action = self.noise.get_action(action, step)
                 action = action.argmax()
-                if state[-2]:
+                if interceptable:
                     action = 1
                 step += 1
 
