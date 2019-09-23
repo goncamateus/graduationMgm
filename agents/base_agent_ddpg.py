@@ -62,6 +62,9 @@ class DDPGAgent(Agent):
         if (episode % 100 == 0 and episode > 0 and not self.test) or bye:
             self.ddpg.save_w(path_models=self.model_paths,
                              path_optims=self.optim_paths)
+            self.ddpg.save_losses(path=(
+                f'./saved_agents/critic_losses_{self.unum}.pkl',
+                f'./saved_agents/policy_losses_{self.unum}.pkl'))
             print("Model Saved")
         if (episode % 1000 == 0 and episode > 2) or bye:
             self.ddpg.save_replay(mem_path=self.mem_path)
