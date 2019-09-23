@@ -51,7 +51,7 @@ class HFOEnv(hfo.HFOEnvironment):
         if not strict:
             self.observation_space = ObservationSpace(self, rewards)
         else:
-            shape = 11 + 3 * self.choosed_mates + 2 * self.choosed_ops
+            shape = 10 + 3 * self.choosed_mates + 2 * self.choosed_ops
             shape = (shape,)
             self.observation_space = ObservationSpace(self,
                                                       rewards,

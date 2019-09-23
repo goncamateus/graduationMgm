@@ -9,7 +9,7 @@ from pathlib import Path
 import hfo
 import numpy as np
 import torch
-from graduationmgm.Neural_Networks.Dueling_DQN import Model as DuelingDQN
+from graduationmgm.lib.Neural_Networks.Dueling_DQN import Model as DuelingDQN
 from graduationmgm.lib.hfo_env import HFOEnv
 from graduationmgm.lib.hyperparameters import Config
 from graduationmgm.lib.utils import gen_mem_end, episode_end, save_modelmem, save_rewards

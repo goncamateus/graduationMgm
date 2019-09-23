@@ -113,8 +113,9 @@ class DDPGAgent(Agent):
                 step += 1
 
                 # Calculates results from environment
-                next_state, reward, done, status = self.hfo_env.step(action,
+                next_state_ori, reward, done, status = self.hfo_env.step(action,
                                                                      strict=True)
+                next_state = next_state_ori[:-1]
                 episode_rewards.append(reward)
 
                 if done:
