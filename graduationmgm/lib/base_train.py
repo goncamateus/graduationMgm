@@ -100,14 +100,14 @@ class BaseTrain(object):
 
     def save_losses(self, path):
         if self.losses:
-            print(self.losses.mean())
+            print(np.array(self.losses).mean())
             with open(path, 'wb') as loss_file:
                 pickle.dump(self.losses, loss_file)
-        print('critic losses:', self.critic_losses.mean())
         if self.critic_losses:
+            print('critic losses:', np.array(self.critic_losses).mean())
             with open(path[0], 'wb') as critic_loss_file:
                 pickle.dump(self.critic_losses, critic_loss_file)
-        print('actor losses:', self.policy_losses.mean())
         if self.policy_losses:
+            print('actor losses:', np.array(self.policy_losses).mean())
             with open(path[1], 'wb') as policy_loss_file:
                 pickle.dump(self.policy_losses, policy_loss_file)

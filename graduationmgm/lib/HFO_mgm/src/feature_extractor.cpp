@@ -99,9 +99,9 @@ void FeatureExtractor::addFeature(float val) {
 
 float FeatureExtractor::normalize(float val, float min_val, float max_val) {
   if (val < min_val || val > max_val) {
-    std::cout << "Feature " << featIndx << " Violated Feature Bounds: " << val
-              << " Expected min/max: [" << min_val << ", "
-              << max_val << "]" << std::endl;
+    // std::cout << "Feature " << featIndx << " Violated Feature Bounds: " << val
+    //           << " Expected min/max: [" << min_val << ", "
+    //           << max_val << "]" << std::endl;
     val = std::min(std::max(val, min_val), max_val);
   }
   return ((val - min_val) / (max_val - min_val))
@@ -110,9 +110,9 @@ float FeatureExtractor::normalize(float val, float min_val, float max_val) {
 
 float FeatureExtractor::unnormalize(float val, float min_val, float max_val) {
   if (val < FEAT_MIN || val > FEAT_MAX) {
-    std::cout << "Unnormalized value Violated Feature Bounds: " << val
-              << " Expected min/max: [" << FEAT_MIN << ", "
-              << FEAT_MAX << "]" << std::endl;
+    // std::cout << "Unnormalized value Violated Feature Bounds: " << val
+    //           << " Expected min/max: [" << FEAT_MIN << ", "
+    //           << FEAT_MAX << "]" << std::endl;
     float ft_max = FEAT_MAX; // Linker error on OSX otherwise...?
     float ft_min = FEAT_MIN;
     val = std::min(std::max(val, ft_min), ft_max);
