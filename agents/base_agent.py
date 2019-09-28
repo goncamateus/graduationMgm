@@ -25,7 +25,7 @@ class Agent():
         self.config_env()
         self.config_model(model)
         self.episodes = 10000
-        self.goals
+        self.goals = 0
 
     def config_hyper(self, per):
         # epsilon variables
