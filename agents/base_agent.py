@@ -153,7 +153,7 @@ class Agent():
                         self.dqn.writer.add_scalar('Rewards/epi_reward', episode_rewards, global_step=episode)
                     if status == hfo.GOAL:
                         self.goals += 1
-                        if episode%100:
+                        if episode%100 == 0:
                             self.dqn.writer.add_scalar('Rewards/goals', self.goals, global_step=episode/100)
                             self.goals = 0
                     self.currun_rewards.append(episode_rewards)
