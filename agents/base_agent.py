@@ -81,6 +81,7 @@ class Agent():
             if os.path.isfile(self.mem_path):
                 self.dqn.load_replay(mem_path=self.mem_path)
                 self.dqn.learn_start = 0
+                self.gen_mem = False
                 logging.info("Memory Loaded")
 
     def gen_mem_end(self, episode):
