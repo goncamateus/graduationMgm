@@ -75,20 +75,19 @@ class Agent():
         if os.path.isfile(self.model_path) and os.path.isfile(self.optim_path):
             self.dqn.load_w(model_path=self.model_path,
                             optim_path=self.optim_path)
-            logging.info("Model Loaded")
+            print("Model Loaded")
 
         if not self.test:
             if os.path.isfile(self.mem_path):
                 self.dqn.load_replay(mem_path=self.mem_path)
-                self.dqn.learn_start = 0
-                self.gen_mem = False
-                logging.info("Memory Loaded")
+                self.gen_mem_end(0)
+                print("Memory Loaded")
 
     def gen_mem_end(self, episode):
         self.gen_mem = False
         self.frame_idx = 0
         self.dqn.learn_start = 0
-        logging.info('Start Learning at Episode %s', episode)
+        print('Start Learning at Episode %s', episode)
 
     def save_modelmem(self, episode=0, bye=False):
         if (episode % 100 == 0 and episode > 0 and not self.test) or bye:
