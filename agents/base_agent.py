@@ -157,7 +157,7 @@ class Agent():
                     next_frame = self.dqn.stack_frames(next_state, done)
 
                 self.dqn.append_to_replay(
-                    frame, action, reward, next_frame, done)
+                    frame, action, reward, next_frame, int(done))
                 frame = next_frame
                 state = next_state
                 if done:
