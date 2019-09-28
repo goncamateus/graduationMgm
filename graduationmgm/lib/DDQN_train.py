@@ -119,8 +119,9 @@ class DuelingTrain(BaseTrain):
 
     def update(self, frame=0):
         loss = self.compute_td_loss()
+        unum = self.env.getUnum()
         self.writer.add_scalar(
-            'Loss/loss', loss, global_step=self.update_iteration)
+            f'Loss/loss_{unum}', loss, global_step=self.update_iteration)
         self.update_iteration += 1
 
         self.update_target_model()

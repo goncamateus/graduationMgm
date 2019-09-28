@@ -150,7 +150,7 @@ class Agent():
                 if done:
                     # Resets frame_stack and states
                     if not self.gen_mem:
-                        self.dqn.writer.add_scalar('Rewards/epi_reward', episode_rewards, global_step=episode)
+                        self.dqn.writer.add_scalar(f'Rewards/epi_reward_{self.unum}', episode_rewards, global_step=episode)
                     if status == hfo.GOAL:
                         self.goals += 1
                         if episode%100 == 0:
