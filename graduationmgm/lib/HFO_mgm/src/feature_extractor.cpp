@@ -170,12 +170,11 @@ float FeatureExtractor::angleBetween3Points(const rcsc::Vector2D &point1,
   return fabs(angle1 - angle2);
 }
 
-const rcsc::PlayerObject* FeatureExtractor::calcClosestOpp(const rcsc::WorldModel &wm,
+void FeatureExtractor::calcClosestOpp(const rcsc::WorldModel &wm,
                                       const rcsc::Vector2D &point,
                                       float &ang, float &minDist) {
   minDist = std::numeric_limits<float>::max();
   const PlayerCont& opps = wm.opponents();
-  const rcsc::PlayerObject *target_player = static_cast<rcsc::PlayerObject *>(0);
   for (PlayerCont::const_iterator it=opps.begin(); it != opps.end(); ++it) {
     const PlayerObject& opponent = *it;
     if (valid(opponent)) {
@@ -185,11 +184,9 @@ const rcsc::PlayerObject* FeatureExtractor::calcClosestOpp(const rcsc::WorldMode
       if (dist < minDist) {
         minDist = dist;
         ang = th;
-        target_player = &opponent;
       }
     }
   }
-  return target_player;
 }
 
 float FeatureExtractor::calcLargestTeammateAngle(const rcsc::WorldModel &wm,

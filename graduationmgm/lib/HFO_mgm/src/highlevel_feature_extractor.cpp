@@ -81,16 +81,9 @@ HighLevelFeatureExtractor::ExtractFeatures(const rcsc::WorldModel& wm,
   // Feature[8]: largest open goal angle
   addNormFeature(calcLargestGoalAngle(wm, self_pos), 0, M_PI);
   // Feature[9]: Dist to our closest opp
-  const PlayerObject* closest_opp = static_cast<rcsc::PlayerObject *>(0);
   if (numOpponents > 0) {
-    closest_opp = calcClosestOpp(wm, self_pos, th, r);
-    if (closest_opp)
-      addNormFeature(r, 0, maxR);
-    else
-    {
-      addFeature(FEAT_INVALID);
-    }
-    
+    calcClosestOpp(wm, self_pos, th, r);
+    addNormFeature(r, 0, maxR);
   } else {
     addFeature(FEAT_INVALID);
   }
@@ -115,17 +108,9 @@ HighLevelFeatureExtractor::ExtractFeatures(const rcsc::WorldModel& wm,
     for (PlayerPtrCont::const_iterator it=teammates.begin(); it != teammates.end(); ++it) {
       const PlayerObject* teammate = *it;
       if (valid(teammate) && teammate->unum() > 0 && detected_teammates < numTeammates) {
-        // calcClosestOpp(wm, teammate->pos(), th, r);
-        if (closest_opp)
-        {
-          r = teammate->pos().dist(closest_opp->pos());
-          addNormFeature(r, 0, maxR);
-          detected_teammates++;
-        }
-        else
-        {
-          addFeature(FEAT_INVALID);
-        }
+        calcClosestOpp(wm, teammate->pos(), th, r);
+        addNormFeature(r, 0, maxR);
+        detected_teammates++;
       }
     }
     // Add zero features for any missing teammates
@@ -225,4 +210,3 @@ bool HighLevelFeatureExtractor::valid(const rcsc::PlayerObject* player) {
   }
   return pos.isValid();
 }
-
