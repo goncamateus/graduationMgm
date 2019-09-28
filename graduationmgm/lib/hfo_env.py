@@ -51,7 +51,7 @@ class HFOEnv(hfo.HFOEnvironment):
         if not strict:
             self.observation_space = ObservationSpace(self, rewards)
         else:
-            shape = 10 + 3 * self.choosed_mates + 2 * self.choosed_ops
+            shape = 9 + 3 * self.choosed_mates + 2 * self.choosed_ops
             shape = (shape,)
             self.observation_space = ObservationSpace(self,
                                                       rewards,
@@ -241,7 +241,8 @@ class HFOEnv(hfo.HFOEnvironment):
 
     def strict_state(self, state):
         num_mates = self.num_teammates
-        new_state = state[:10].tolist()
+        new_state = state[:8].tolist()
+        new_state.append(state[9])
         for i in range(10 + num_mates, 10 + num_mates + self.choosed_mates):
             new_state.append(state[i])
         index = 10 + 3 * num_mates

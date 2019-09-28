@@ -10,18 +10,40 @@ logger = logging.getLogger(__name__)
 
 
 class MemoryDeque():
-    def __init__(self, length):
-        self.mem = deque(maxlen=length)
+    '''
+    Code based on:
+    https://github.com/openai/baselines/blob/master/baselines/deepq/replay_buffer.py
+    Expects tuples of (state, next_state, action, reward, done)
+    '''
 
-    def store(self, mem):
-        self.mem.append(mem)
+    def __init__(self, max_size=50000):
+        self.storage = []
+        self.max_size = max_size
+        self.ptr = 0
+
+    def store(self, data):
+        if len(self.storage) == self.max_size:
+            self.storage[int(self.ptr)] = data
+            self.ptr = (self.ptr + 1) % self.max_size
+        else:
+            self.storage.append(data)
 
     def sample(self, batch_size):
-        batch_size = min(batch_size, len(self.mem))
-        return random.sample(self.mem, batch_size)
+        ind = np.random.randint(0, len(self.storage), size=batch_size)
+        x, y, u, r, d = [], [], [], [], []
+
+        for i in ind:
+            X, U, R, Y, D = self.storage[i]
+            x.append(np.array(X, copy=False))
+            y.append(np.array(Y, copy=False))
+            u.append(np.array(U, copy=False))
+            r.append(np.array(R, copy=False))
+            d.append(np.array(D, copy=False))
+
+        return np.array(x), np.array(y), np.array(u), np.array(r), np.array(d)
 
     def __len__(self):
-        return len(self.mem)
+        return len(self.storage)
 
 
 class OUNoise(object):

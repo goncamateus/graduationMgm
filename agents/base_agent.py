@@ -8,6 +8,7 @@ import pickle
 import hfo
 import numpy as np
 import torch
+from tensorboardX import SummaryWriter
 
 from graduationmgm.lib.hfo_env import HFOEnv
 from graduationmgm.lib.hyperparameters import Config
@@ -23,6 +24,7 @@ class Agent():
         self.config_hyper(per)
         self.config_env()
         self.config_model(model)
+        self.episodes = 10000
 
     def config_hyper(self, per):
         # epsilon variables
@@ -38,15 +40,8 @@ class Agent():
         self.config.LR = 0.00025
         # memory
         self.config.TARGET_NET_UPDATE_FREQ = 1000
-        self.config.EXP_REPLAY_SIZE = 100000
+        self.config.EXP_REPLAY_SIZE = 50000
         self.config.BATCH_SIZE = 64
-        self.config.PRIORITY_ALPHA = 0.6
-        self.config.PRIORITY_BETA_START = 0.4
-        self.config.PRIORITY_BETA_FRAMES = 100000
-        self.config.USE_PRIORITY_REPLAY = per
-
-        # epsilon variables
-        self.config.SIGMA_INIT = 0.5
 
         # Learning control variables
         self.config.LEARN_START = 100000
@@ -94,12 +89,6 @@ class Agent():
         self.dqn.learn_start = 0
         logging.info('Start Learning at Episode %s', episode)
 
-    def episode_end(self, total_reward, episode, state, frame):
-        # Get the total reward of the episode
-        logging.info('Episode %s reward %d', episode, total_reward)
-        self.dqn.finish_nstep()
-        self.dqn.reset_hx()
-
     def save_modelmem(self, episode=0, bye=False):
         if (episode % 100 == 0 and episode > 0 and not self.test) or bye:
             self.dqn.save_w(path_model=self.model_path,
@@ -109,17 +98,6 @@ class Agent():
             self.dqn.save_replay(mem_path=self.mem_path)
             print("Memory Saved")
 
-    def save_rewards(self):
-        day = datetime.datetime.now().today().day
-        hour = datetime.datetime.now().hour
-        minute = datetime.datetime.now().minute
-        final_str = str(day) + "-" + str(hour) + "-" + str(minute)
-        with open('saved_agents/rewards_{}_{}.pickle'.format(self.unum,
-                                                             final_str),
-                  'wb+') as fiile:
-            pickle.dump(self.currun_rewards, fiile)
-            fiile.close()
-
     def bye(self, status):
         if status == hfo.SERVER_DOWN:
             if not self.test:
@@ -128,8 +106,6 @@ class Agent():
                 print("Model Saved")
                 self.dqn.save_replay(mem_path=self.mem_path)
                 print("Memory Saved")
-            self.save_rewards()
-            self.dqn.save_losses(path=f'./saved_agents/losses_{self.unum}.pkl')
             self.hfo_env.act(hfo.QUIT)
             exit()
 
@@ -138,7 +114,7 @@ class Agent():
         for episode in itertools.count():
             status = hfo.IN_GAME
             done = True
-            episode_rewards = list()
+            episode_rewards = 0
             while status == hfo.IN_GAME:
                 # Every time when game resets starts a zero frame
                 if done:
@@ -148,8 +124,8 @@ class Agent():
                     frame = self.dqn.stack_frames(state, done)
                 # If the size of experiences is under max_size*8 runs gen_mem
                 # Biasing the agent for the Agent2d Helios_base
-                if self.gen_mem and self.frame_idx / 8 < self.config.EXP_REPLAY_SIZE:
-                    action = 1 if interceptable else 0
+                if self.gen_mem and self.frame_idx < self.config.EXP_REPLAY_SIZE:
+                    action = np.random.randint(0, 4)
                 else:
                     # When gen_mem is done, saves experiences and starts a new
                     # frame counting and starts the learning process
@@ -159,31 +135,34 @@ class Agent():
                     # Calculates epsilon on frame according to the stack index
                     # and gets the action
                     epsilon = self.config.epsilon_by_frame(
-                        int(self.frame_idx / 8))
+                        self.frame_idx)
                     action = self.dqn.get_action(frame, epsilon)
-                    action = action if not interceptable else 1
+                action = action if not interceptable else 1
 
                 # Calculates results from environment
-                next_state, reward, done, status = self.hfo_env.step(action,
+                next_state_ori, reward, done, status = self.hfo_env.step(action,
                                                                      strict=True)
-                episode_rewards.append(reward)
+                next_state = next_state_ori[:-1]
+                episode_rewards += reward
 
                 if done:
                     # Resets frame_stack and states
-                    total_reward = np.sum(episode_rewards)
-                    self.currun_rewards.append(total_reward)
-                    self.episode_end(total_reward, episode, state, frame)
+                    if not self.gen_mem:
+                        self.dqn.writer.add_scalar('epi_reward', episode_rewards, global_step=episode)
+                    self.currun_rewards.append(episode_rewards)
                     next_state = np.zeros(state.shape)
                     next_frame = np.zeros(frame.shape)
                 else:
                     next_frame = self.dqn.stack_frames(next_state, done)
 
-                self.dqn.update(frame, action, reward,
-                                next_frame, int(self.frame_idx / 8))
+                self.dqn.append_to_replay(
+                    frame, action, reward, next_frame, done)
                 frame = next_frame
                 state = next_state
-
+                if done:
+                    break
                 self.frame_idx += 1
+            if not self.gen_mem:
+                self.dqn.update(self.frame_idx)
             self.save_modelmem(episode)
-
             self.bye(status)
