@@ -25,6 +25,7 @@ class Agent():
         self.config_env()
         self.config_model(model)
         self.episodes = 10000
+        self.goals
 
     def config_hyper(self, per):
         # epsilon variables
@@ -111,6 +112,7 @@ class Agent():
 
     def run(self):
         self.frame_idx = 1
+        self.goals = 0
         for episode in itertools.count():
             status = hfo.IN_GAME
             done = True
@@ -148,7 +150,12 @@ class Agent():
                 if done:
                     # Resets frame_stack and states
                     if not self.gen_mem:
-                        self.dqn.writer.add_scalar('epi_reward', episode_rewards, global_step=episode)
+                        self.dqn.writer.add_scalar('Rewards/epi_reward', episode_rewards, global_step=episode)
+                    if status == hfo.GOAL:
+                        self.goals += 1
+                        if episode%100:
+                            self.dqn.writer.add_scalar('Rewards/goals', self.goals, global_step=episode)
+                            self.goals = 0
                     self.currun_rewards.append(episode_rewards)
                     next_state = np.zeros(state.shape)
                     next_frame = np.zeros(frame.shape)
