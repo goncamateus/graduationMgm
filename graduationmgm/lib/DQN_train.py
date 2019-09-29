@@ -39,7 +39,8 @@ class DQNTrain(BaseTrain):
         self.env = env
 
         self.declare_networks()
-        self.writer = SummaryWriter(f'./saved_agents/agent_{self.env.getUnum()}')
+        self.writer = SummaryWriter(
+            f'./saved_agents/agent_{self.env.getUnum()}')
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
 
@@ -118,8 +119,6 @@ class DQNTrain(BaseTrain):
         self.writer.add_scalar(
             f'Loss/loss_{unum}', loss, global_step=self.update_iteration)
         self.update_iteration += 1
-
-        self.update_target_model()
 
     def get_action(self, s, eps=0.1):  # faster
         with torch.no_grad():
