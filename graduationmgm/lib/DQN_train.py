@@ -1,14 +1,18 @@
-import csv
 import os.path
 import pickle
 
 import numpy as np
 import torch
+import torch.autograd as autograd
 import torch.optim as optim
+import torch.nn.functional as F
+from tensorboardX import SummaryWriter
 
 from graduationmgm.lib.base_train import BaseTrain
 from graduationmgm.lib.prioritized_experience_replay import Memory
 from graduationmgm.lib.utils import MemoryDeque
+
+Variable = lambda *args, **kwargs: autograd.Variable(*args, **kwargs).cuda()
 
 
 class DQNTrain(BaseTrain):
@@ -16,13 +20,11 @@ class DQNTrain(BaseTrain):
                  config=None, log_dir='/tmp/RC_test'):
         super(DQNTrain, self).__init__(
             config=config, env=env, log_dir=log_dir)
-
         self.noisy = config.USE_NOISY_NETS
         self.priority_replay = config.USE_PRIORITY_REPLAY
 
         self.gamma = config.GAMMA
         self.lr = config.LR
-        self.target_net_update_freq = config.TARGET_NET_UPDATE_FREQ
         self.experience_replay_size = config.EXP_REPLAY_SIZE
         self.batch_size = config.BATCH_SIZE
         self.learn_start = config.LEARN_START
@@ -37,6 +39,7 @@ class DQNTrain(BaseTrain):
         self.env = env
 
         self.declare_networks()
+        self.writer = SummaryWriter(f'./saved_agents/agent_{self.env.getUnum()}')
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
 
@@ -48,135 +51,75 @@ class DQNTrain(BaseTrain):
         else:
             self.model.train()
 
-        self.update_count = 0
+        self.update_iteration = 0
 
         self.declare_memory()
 
         self.nsteps = config.N_STEPS
         self.nstep_buffer = []
 
+    def load_w(self, model_path=None, optim_path=None):
+        if model_path is None:
+            fname_model = "./saved_agents/model.dump"
+        else:
+            fname_model = model_path
+        if optim_path is None:
+            fname_optim = "./saved_agents/optim.dump"
+        else:
+            fname_optim = optim_path
+
+        if os.path.isfile(fname_model):
+            self.model.load_state_dict(torch.load(
+                fname_model, map_location=self.device))
+
+        if os.path.isfile(fname_optim):
+            self.optimizer.load_state_dict(
+                torch.load(fname_optim, map_location=self.device))
+
     def declare_networks(self):
         pass
 
     def declare_memory(self):
-        if self.priority_replay:
-            self.memory = Memory(self.experience_replay_size)
-        else:
-            self.memory = MemoryDeque(self.experience_replay_size)
+        self.memory = MemoryDeque(self.experience_replay_size)
 
-    def append_to_replay(self, s, a, r, s_):
-        self.nstep_buffer.append((s, a, r, s_))
+    def append_to_replay(self, s, a, r, s_, d):
+        self.memory.store((s, a, r, s_, d))
 
-        if len(self.nstep_buffer) < self.nsteps:
-            return
+    def compute_td_loss(self):
+        state, next_state, action, reward, done = self.memory.sample(
+            self.batch_size)
+        num_feat = state.shape[1] * state.shape[2]
+        state = Variable(torch.FloatTensor(
+            np.float32(state))).view(64, num_feat)
+        next_state = Variable(torch.FloatTensor(
+            np.float32(next_state))).view(64, num_feat)
+        action = Variable(torch.LongTensor(action))
+        reward = Variable(torch.FloatTensor(reward))
+        done = Variable(torch.FloatTensor(done))
 
-        R = sum([self.nstep_buffer[i][2] * (self.gamma**i)
-                 for i in range(self.nsteps)])
-        state, action, _, _ = self.nstep_buffer.pop(0)
+        q_values = self.model(state)
+        next_q_values = self.model(next_state)
 
-        self.memory.store((state, action, R, s_))
+        q_value = q_values.gather(1, action.unsqueeze(1)).squeeze(1)
+        next_q_value = next_q_values.max(1)[0]
+        expected_q_value = reward + self.gamma * next_q_value * (1 - done)
 
-    def prep_minibatch(self):
-        if self.priority_replay:
-            # random transition batch is taken from experience replay memory
-            transitions, indices, weights = self.memory.sample(self.batch_size)
-        else:
-            transitions = self.memory.sample(self.batch_size)
-            indices = weights = None
-
-        batch_state = np.array([each[0][0]
-                                for each in transitions], ndmin=2)
-        batch_action = np.array(
-            [each[0][1] for each in transitions])
-        batch_reward = np.array(
-            [each[0][2] for each in transitions])
-        batch_next_state = np.array([each[0][3]
-                                     for each in transitions], ndmin=2)
-
-        shape = (self.batch_size,) + self.num_feats
-        batch_state = torch.tensor(
-            np.array(batch_state),
-            device=self.device, dtype=torch.float).view(shape)
-        batch_action = torch.tensor(
-            batch_action, device=self.device,
-            dtype=torch.long).squeeze().view(-1, 1)
-        batch_reward = torch.tensor(
-            batch_reward, device=self.device,
-            dtype=torch.float).squeeze().view(-1, 1)
-
-        if weights is not None:
-            weights = torch.tensor(weights, device=self.device)
-
-        non_final_mask = torch.tensor(tuple(map(
-            lambda s: s is not None, batch_next_state)),
-            device=self.device, dtype=torch.uint8)
-        try:  # sometimes all next states are false
-            non_final_next_states = torch.tensor(
-                [s for s in batch_next_state if s is not None],
-                device=self.device, dtype=torch.float).view(shape)
-            empty_next_state_values = False
-        except Exception:
-            non_final_next_states = None
-            empty_next_state_values = True
-
-        return batch_state, batch_action, batch_reward, non_final_next_states,\
-            non_final_mask, empty_next_state_values, indices, weights
-
-    def compute_loss(self, batch_vars):  # faster
-        batch_state, batch_action, batch_reward, non_final_next_states,\
-            non_final_mask, empty_next_state_values,\
-            indices, weights = batch_vars
-
-        # estimate
-        current_q_values = self.model(batch_state)
-        current_q_values = current_q_values.gather(1, batch_action)
-
-        # target
-        with torch.no_grad():
-            max_next_q_values = torch.zeros(
-                self.batch_size, device=self.device,
-                dtype=torch.float).unsqueeze(dim=1)
-            if not empty_next_state_values:
-                max_next_action = self.get_max_next_state_action(
-                    non_final_next_states)
-                max_next_q_values[non_final_mask] = self.model(
-                    non_final_next_states).gather(1, max_next_action)
-            expected_q_values = batch_reward + \
-                ((self.gamma**self.nsteps) * max_next_q_values)
-
-        diff = (expected_q_values - current_q_values)
-        if self.priority_replay:
-            self.memory.batch_update(
-                indices, diff.detach().squeeze().abs().cpu().numpy())
-            loss = self.MSE(diff).squeeze() * weights
-        else:
-            loss = self.MSE(diff)
-        loss = loss.mean()
+        # loss = (q_value - expected_q_value.detach()).pow(2).mean()
+        loss = F.smooth_l1_loss(q_value, expected_q_value)
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
 
         return loss
 
-    def update(self, s, a, r, s_, frame=0):
-        if self.static_policy:
-            return None
+    def update(self, frame=0):
+        loss = self.compute_td_loss()
+        unum = self.env.getUnum()
+        self.writer.add_scalar(
+            f'Loss/loss_{unum}', loss, global_step=self.update_iteration)
+        self.update_iteration += 1
 
-        self.append_to_replay(s, a, r, s_)
-
-        if frame < self.learn_start or frame % self.update_freq != 0:
-            return None
-
-        batch_vars = self.prep_minibatch()
-
-        loss = self.compute_loss(batch_vars)
-
-        # Optimize the model
-        self.optimizer.zero_grad()
-        loss.backward()
-        for param in self.model.parameters():
-            param.grad.data.clamp_(-1, 1)
-        self.optimizer.step()
-
-        # self.save_td(loss.item(), frame)
-        self.save_sigma_param_magnitudes(frame)
+        self.update_target_model()
 
     def get_action(self, s, eps=0.1):  # faster
         with torch.no_grad():
@@ -188,17 +131,3 @@ class DQNTrain(BaseTrain):
                 return maxout.item()
             else:
                 return np.random.randint(0, self.num_actions)
-
-    def get_max_next_state_action(self, next_states):
-        return self.model(next_states).max(dim=1)[1].view(-1, 1)
-
-    def finish_nstep(self):
-        while len(self.nstep_buffer) > 0:
-            R = sum([self.nstep_buffer[i][2] * (self.gamma**i)
-                     for i in range(len(self.nstep_buffer))])
-            state, action, _, _ = self.nstep_buffer.pop(0)
-
-            self.memory.store((state, action, R, None))
-
-    def reset_hx(self):
-        pass
