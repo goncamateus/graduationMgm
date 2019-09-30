@@ -21,8 +21,8 @@ class Agent():
     config = Config()
 
     def __init__(self, model, per):
-        self.config_hyper(per)
         self.config_env()
+        self.config_hyper(per)
         self.config_model(model)
         self.episodes = 10000
         self.goals = 0
@@ -51,8 +51,11 @@ class Agent():
 
         # Nstep controls
         self.config.N_STEPS = 1
-        self.config.device = torch.device(
-            "cuda" if torch.cuda.is_available() else "cpu")
+        if not self.test:
+            self.config.device = torch.device(
+                "cuda" if torch.cuda.is_available() else "cpu")
+        else:
+            self.config.device = torch.device("cpu")
 
     def config_env(self):
         BLOCK = hfo.CATCH
