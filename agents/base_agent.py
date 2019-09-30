@@ -63,20 +63,19 @@ class Agent():
         self.gen_mem = True
         self.unum = self.hfo_env.getUnum()
 
-    def config_model(self, model):
-
+    def load_model(self, model):
         self.dqn = model(env=self.hfo_env, config=self.config,
                          static_policy=self.test)
-        self.currun_rewards = list()
         self.model_path = './saved_agents/model_{}.dump'.format(self.unum)
         self.optim_path = './saved_agents/optim_{}.dump'.format(self.unum)
-        self.mem_path = './saved_agents/exp_replay_agent_{}.dump'.format(
-            self.unum)
-
         if os.path.isfile(self.model_path) and os.path.isfile(self.optim_path):
             self.dqn.load_w(model_path=self.model_path,
                             optim_path=self.optim_path)
             print("Model Loaded")
+
+    def load_memory(self):
+        self.mem_path = './saved_agents/exp_replay_agent_{}.dump'.format(
+            self.unum)
 
         if not self.test:
             if os.path.isfile(self.mem_path):
@@ -84,29 +83,35 @@ class Agent():
                 self.gen_mem_end(0)
                 print("Memory Loaded")
 
-    def gen_mem_end(self, episode):
-        self.gen_mem = False
-        self.frame_idx = 0
-        self.dqn.learn_start = 0
-        print('Start Learning at Episode %s', episode)
-
-    def save_modelmem(self, episode=0, bye=False):
+    def save_model(self, episode=0, bye=False):
         if (episode % 100 == 0 and episode > 0 and not self.test) or bye:
             self.dqn.save_w(path_model=self.model_path,
                             path_optim=self.optim_path)
             print("Model Saved")
+
+    def save_mem(self, episode=0, bye=False):
         if (episode % 1000 == 0 and episode > 2) or bye:
             self.dqn.save_replay(mem_path=self.mem_path)
             print("Memory Saved")
 
+    def config_model(self, model):
+        self.load_model(model)
+        self.load_memory()
+        self.currun_rewards = list()
+
+    def gen_mem_end(self, episode):
+        self.gen_mem = False
+        self.frame_idx = 0
+        print('Start Learning at Episode %s', episode)
+
+    def save_modelmem(self, episode=0, bye=False):
+        self.save_model(episode, bye)
+        self.save_mem(episode, bye)
+
     def bye(self, status):
         if status == hfo.SERVER_DOWN:
             if not self.test:
-                self.dqn.save_w(path_model=self.model_path,
-                                path_optim=self.optim_path)
-                print("Model Saved")
-                self.dqn.save_replay(mem_path=self.mem_path)
-                print("Memory Saved")
+                self.save_modelmem(0, True)
             self.hfo_env.act(hfo.QUIT)
             exit()
 
@@ -125,7 +130,6 @@ class Agent():
                     state = state_ori[:-1]
                     frame = self.dqn.stack_frames(state, done)
                 # If the size of experiences is under max_size*8 runs gen_mem
-                # Biasing the agent for the Agent2d Helios_base
                 if self.gen_mem and self.frame_idx < self.config.EXP_REPLAY_SIZE:
                     action = np.random.randint(0, 4)
                 else:
@@ -143,18 +147,20 @@ class Agent():
 
                 # Calculates results from environment
                 next_state_ori, reward, done, status = self.hfo_env.step(action,
-                                                                     strict=True)
+                                                                         strict=True)
                 next_state = next_state_ori[:-1]
                 episode_rewards += reward
 
                 if done:
                     # Resets frame_stack and states
                     if not self.gen_mem:
-                        self.dqn.writer.add_scalar(f'Rewards/epi_reward_{self.unum}', episode_rewards, global_step=episode)
+                        self.dqn.writer.add_scalar(
+                            f'Rewards/epi_reward_{self.unum}', episode_rewards, global_step=episode)
                     if status == hfo.GOAL:
                         self.goals += 1
-                        if episode%100 == 0:
-                            self.dqn.writer.add_scalar('Rewards/goals', self.goals, global_step=episode/100)
+                        if episode % 100 == 0:
+                            self.dqn.writer.add_scalar(
+                                'Rewards/goals', self.goals, global_step=episode/100)
                             self.goals = 0
                     self.currun_rewards.append(episode_rewards)
                     next_state = np.zeros(state.shape)

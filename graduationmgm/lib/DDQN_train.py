@@ -27,7 +27,6 @@ class DuelingTrain(BaseTrain):
         self.target_net_update_freq = config.TARGET_NET_UPDATE_FREQ
         self.experience_replay_size = config.EXP_REPLAY_SIZE
         self.batch_size = config.BATCH_SIZE
-        self.learn_start = config.LEARN_START
         self.update_freq = config.UPDATE_FREQ
         self.sigma_init = config.SIGMA_INIT
         self.priority_beta_start = config.PRIORITY_BETA_START
