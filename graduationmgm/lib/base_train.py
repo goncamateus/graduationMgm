@@ -22,7 +22,8 @@ class BaseTrain(object):
         self.losses = self.critic_losses = self.policy_losses = []
 
         self.action_log_frequency = config.ACTION_SELECTION_COUNT_FREQUENCY
-        self.action_selections = [0 for _ in range(env.action_space.n)]
+        if not env.continuous:
+            self.action_selections = [0 for _ in range(env.action_space.n)]
 
     def huber(self, x):
         cond = (x.abs() < 1.0).float().detach()

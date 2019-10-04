@@ -6,8 +6,8 @@ from graduationmgm.lib.Neural_Networks.DDPG import Model as DDPG
 
 
 def main():
-    agent = DQNAgent(DuelingDQN, False)
-    # agent = DDPGAgent(DDPG, True)
+    # agent = DQNAgent(DuelingDQN, False)
+    agent = DDPGAgent(DDPG, False)
     try:
         agent.run()
     except KeyboardInterrupt:

@@ -66,7 +66,7 @@ class HFOEnv(hfo.HFOEnvironment):
                                                       shape=shape)
         if self.continuous:
             self.action_space = ActionSpaceContinuous(
-                -1, 1, actions, shape=(len(actions),))
+                -1, 1, actions, shape=(1,))
         else:
             self.action_space = ActionSpace(actions)
         self.stamina_basis = super(HFOEnv, self).getState()[-1]
@@ -82,13 +82,14 @@ class HFOEnv(hfo.HFOEnvironment):
         if not self.continuous:
             action = self.action_space.actions[action]
         else:
+            action = action[0]
             if action < -0.5:
                 action = self.action_space.actions[0]
             elif action >= -0.5 and action < 0:
                 action = self.action_space.actions[1]
             elif action >= 0 and action < 0.5:
                 action = self.action_space.actions[2]
-            elif action >= 0.5 and action < 1:
+            elif action >= 0.5 and action <= 1:
                 action = self.action_space.actions[3]
 
         self.act(action)

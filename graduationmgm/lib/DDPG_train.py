@@ -139,18 +139,15 @@ class DDPGTrain(BaseTrain):
 
         # Compute the target Q value
         acts = self.target_actor(next_state)
-        concat = torch.cat([next_state, acts], 1)
-        target_Q = self.target_critic(concat)
+        target_Q = self.target_critic(next_state, acts)
         target_Q = reward + (self.gamma * target_Q * (1 - done)).detach()
 
         # Get current Q estimate
-        concat = torch.cat([state, action], 1)
-        current_Q = self.critic(concat)
+        current_Q = self.critic(state, action)
 
-        # Compute critic loss
-        critic_loss = F.smooth_l1_loss(current_Q, target_Q)
-        self.writer.add_scalar(
-            'Loss/critic_loss', critic_loss, global_step=self.num_critic_update_iteration)
+        # Compute critic loss       
+        critic_loss = (current_Q - target_Q).pow(2).mean()
+        self.writer.add_scalar('Loss/critic_loss', critic_loss, global_step=self.num_critic_update_iteration)
         # Optimize the critic
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
@@ -158,10 +155,8 @@ class DDPGTrain(BaseTrain):
 
         # Compute actor loss
         acts = self.actor(state)
-        concat = torch.cat([state, acts], 1)
-        actor_loss = -self.critic(concat).mean()
-        self.writer.add_scalar('Loss/actor_loss', actor_loss,
-                               global_step=self.num_actor_update_iteration)
+        actor_loss = -self.critic(state, acts).mean()
+        self.writer.add_scalar('Loss/actor_loss', actor_loss, global_step=self.num_actor_update_iteration)
 
         # Optimize the actor
         self.actor_optimizer.zero_grad()
@@ -170,12 +165,10 @@ class DDPGTrain(BaseTrain):
 
         # Update the frozen target models
         for param, target_param in zip(self.critic.parameters(), self.target_critic.parameters()):
-            target_param.data.copy_(
-                self.tau * param.data + (1 - self.tau) * target_param.data)
+            target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
 
         for param, target_param in zip(self.actor.parameters(), self.target_actor.parameters()):
-            target_param.data.copy_(
-                self.tau * param.data + (1 - self.tau) * target_param.data)
+            target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
 
         self.num_actor_update_iteration += 1
         self.num_critic_update_iteration += 1

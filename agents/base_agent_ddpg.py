@@ -17,8 +17,9 @@ logger = logging.getLogger('Agent')
 class DDPGAgent(Agent):
 
     def __init__(self, model, per):
-        self.config_hyper(per)
         self.config_env()
+        self.config_hyper(per)
+        self.config.EXP_REPLAY_SIZE = 1000
         self.config_model(model)
         self.goals = 0
 
@@ -44,6 +45,15 @@ class DDPGAgent(Agent):
             self.ddpg.load_w(path_models=self.model_paths,
                              path_optims=self.optim_paths)
             print("Model Loaded")
+
+    def load_memory(self):
+        self.mem_path = './saved_agents/exp_replay_agent.dump'
+
+        if not self.test:
+            if os.path.isfile(self.mem_path):
+                self.ddpg.load_replay(mem_path=self.mem_path)
+                self.gen_mem_end(0)
+                print("Memory Loaded")
 
     def save_model(self, episode=0, bye=False):
         if (episode % 100 == 0 and episode > 0 and not self.test) or bye:
@@ -73,7 +83,7 @@ class DDPGAgent(Agent):
                     frame = self.ddpg.stack_frames(state, done)
                 # If the size of experiences is under max_size*8 runs gen_mem
                 if self.gen_mem and self.frame_idx < self.config.EXP_REPLAY_SIZE:
-                    action = self.env.action_space.sample()
+                    action = self.hfo_env.action_space.sample()
                 else:
                     # When gen_mem is done, saves experiences and starts a new
                     # frame counting and starts the learning process
@@ -81,11 +91,13 @@ class DDPGAgent(Agent):
                         self.gen_mem_end(episode)
                     # Gets the action
                     action = self.ddpg.get_action(frame)
-                    action = (action + np.random.normal(0, 0.1, size=self.env.action_space.shape[0])).clip(
-                        self.env.action_space.low, self.env.action_space.high)
+                    action = (action + np.random.normal(0, 0.1, size=self.hfo_env.action_space.shape[0])).clip(
+                        self.hfo_env.action_space.low, self.hfo_env.action_space.high)
+                    action = action.astype(np.float32)
                     step += 1
 
-                action = 1 if interceptable else action
+                if interceptable:
+                    action = np.array([np.random.uniform(-0.5, 0)], dtype=np.float32)
 
                 # Calculates results from environment
                 next_state_ori, reward, done, status = self.hfo_env.step(action,
