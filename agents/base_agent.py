@@ -178,7 +178,7 @@ class Agent():
                 if done:
                     break
                 self.frame_idx += 1
-            if not self.gen_mem:
+            if not self.gen_mem and not self.test:
                 self.dqn.update(self.frame_idx)
             self.save_modelmem(episode)
             self.bye(status)

@@ -20,84 +20,49 @@ class DDPGAgent(Agent):
         self.config_hyper(per)
         self.config_env()
         self.config_model(model)
-        self.noise = OUNoise(self.hfo_env.action_space)
+        self.goals = 0
 
     def config_env(self):
         BLOCK = hfo.CATCH
         self.actions = [hfo.MOVE, hfo.GO_TO_BALL, BLOCK, hfo.DEFEND_GOAL]
         self.rewards = [0, 0, 0, 0]
-        self.hfo_env = HFOEnv(self.actions, self.rewards, strict=True)
+        self.hfo_env = HFOEnv(self.actions, self.rewards,
+                              strict=True, continuous=True)
         self.test = False
+        self.gen_mem = True
         self.unum = self.hfo_env.getUnum()
 
-    def config_model(self, model):
-
+    def load_model(self, model):
         self.ddpg = model(env=self.hfo_env, config=self.config,
                           static_policy=self.test)
-        self.currun_rewards = list()
         self.model_paths = (f'./saved_agents/actor_{self.unum}.dump',
                             f'./saved_agents/critic_{self.unum}.dump')
         self.optim_paths = (f'./saved_agents/actor_optim_{self.unum}.dump',
                             f'./saved_agents/critic_optim_{self.unum}.dump')
-        self.mem_path = f'./saved_agents/exp_replay_agent_{self.unum}.dump'
-
         if os.path.isfile(self.model_paths[0]) \
                 and os.path.isfile(self.optim_paths[0]):
             self.ddpg.load_w(path_models=self.model_paths,
                              path_optims=self.optim_paths)
             print("Model Loaded")
 
-        if not self.test:
-            if os.path.isfile(self.mem_path):
-                self.ddpg.load_replay(mem_path=self.mem_path)
-                self.ddpg.learn_start = 0
-                print("Memory Loaded")
-
-    def episode_end(self, total_reward, episode, state, frame):
-        # Get the total reward of the episode
-        print(f'Player {self.unum} episode {episode} reward {total_reward}')
-        self.ddpg.finish_nstep()
-
-    def save_modelmem(self, episode=0, bye=False):
+    def save_model(self, episode=0, bye=False):
         if (episode % 100 == 0 and episode > 0 and not self.test) or bye:
             self.ddpg.save_w(path_models=self.model_paths,
                              path_optims=self.optim_paths)
-            self.ddpg.save_losses(path=(
-                f'./saved_agents/critic_losses_{self.unum}.pkl',
-                f'./saved_agents/policy_losses_{self.unum}.pkl'))
             print("Model Saved")
+
+    def save_mem(self, episode=0, bye=False):
         if (episode % 1000 == 0 and episode > 2) or bye:
             self.ddpg.save_replay(mem_path=self.mem_path)
             print("Memory Saved")
 
-    def save_rewards(self):
-        day = datetime.datetime.now().today().day
-        hour = datetime.datetime.now().hour
-        minute = datetime.datetime.now().minute
-        final_str = str(day) + "-" + str(hour) + "-" + str(minute)
-        with open('saved_agents/rewards_{}_{}.pickle'.format(self.unum,
-                                                             final_str),
-                  'wb+') as fiile:
-            pickle.dump(self.currun_rewards, fiile)
-            fiile.close()
-
-    def bye(self, status):
-        if status == hfo.SERVER_DOWN:
-            if not self.test:
-                self.save_modelmem(0, True)
-            self.save_rewards()
-            self.ddpg.save_losses(path=(
-                f'./saved_agents/critic_losses_{self.unum}.pkl',
-                f'./saved_agents/policy_losses_{self.unum}.pkl'))
-            self.hfo_env.act(hfo.QUIT)
-            exit()
-
     def run(self):
         self.frame_idx = 1
+        self.goals = 0
         for episode in itertools.count():
             status = hfo.IN_GAME
             done = True
-            episode_rewards = list()
+            episode_rewards = 0
             step = 0
             while status == hfo.IN_GAME:
                 # Every time when game resets starts a zero frame
@@ -106,38 +71,53 @@ class DDPGAgent(Agent):
                     interceptable = state_ori[-1]
                     state = state_ori[:-1]
                     frame = self.ddpg.stack_frames(state, done)
+                # If the size of experiences is under max_size*8 runs gen_mem
+                if self.gen_mem and self.frame_idx < self.config.EXP_REPLAY_SIZE:
+                    action = self.env.action_space.sample()
+                else:
+                    # When gen_mem is done, saves experiences and starts a new
+                    # frame counting and starts the learning process
+                    if self.gen_mem:
+                        self.gen_mem_end(episode)
+                    # Gets the action
+                    action = self.ddpg.get_action(frame)
+                    action = (action + np.random.normal(0, 0.1, size=self.env.action_space.shape[0])).clip(
+                        self.env.action_space.low, self.env.action_space.high)
+                    step += 1
 
-                # Gets the action
-                action = self.ddpg.get_action(frame)
-                action = self.noise.get_action(action, step)
-                action = action.argmax()
-                if interceptable:
-                    action = 1
-                step += 1
+                action = 1 if interceptable else action
 
                 # Calculates results from environment
                 next_state_ori, reward, done, status = self.hfo_env.step(action,
-                                                                     strict=True)
+                                                                         strict=True)
                 next_state = next_state_ori[:-1]
-                episode_rewards.append(reward)
+                episode_rewards += reward
 
                 if done:
                     # Resets frame_stack and states
-                    total_reward = np.sum(episode_rewards)
-                    self.currun_rewards.append(total_reward)
-                    self.episode_end(total_reward, episode, state, frame)
+                    if not self.gen_mem:
+                        self.ddpg.writer.add_scalar(
+                            f'Rewards/epi_reward_{self.unum}', episode_rewards, global_step=episode)
+                    if status == hfo.GOAL:
+                        self.goals += 1
+                        if episode % 100 == 0:
+                            self.ddpg.writer.add_scalar(
+                                'Rewards/goals', self.goals, global_step=episode/100)
+                            self.goals = 0
+                    self.currun_rewards.append(episode_rewards)
                     next_state = np.zeros(state.shape)
                     next_frame = np.zeros(frame.shape)
                 else:
                     next_frame = self.ddpg.stack_frames(next_state, done)
 
-                self.ddpg.update(frame, action, reward,
-                                 next_frame, int(self.frame_idx / 8),
-                                 store=not done)
-
+                self.ddpg.append_to_replay(
+                    frame, action, reward, next_frame, int(done))
                 frame = next_frame
                 state = next_state
-
+                if done:
+                    break
                 self.frame_idx += 1
+            if not self.gen_mem:
+                self.ddpg.update()
             self.save_modelmem(episode)
             self.bye(status)

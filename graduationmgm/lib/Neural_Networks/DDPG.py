@@ -5,44 +5,38 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from graduationmgm.lib.DDPG_train import DDPGTrain
-
-
-class Critic(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size):
-        super(Critic, self).__init__()
-        self.linear1 = nn.Linear(input_size, hidden_size)
-        self.linear2 = nn.Linear(hidden_size, hidden_size)
-        self.linear3 = nn.Linear(hidden_size, output_size)
-
-    def forward(self, state, action):
-        """
-        Params state and actions are torch tensors
-        """
-        x = torch.cat([state, action], 1)
-        x = F.relu(self.linear1(x))
-        x = F.relu(self.linear2(x))
-        x = self.linear3(x)
-
-        return x
+from DDPG_train import DDPGTrain
 
 
 class Actor(nn.Module):
-    def __init__(self, input_size, hidden_size,
-                 output_size, learning_rate=3e-4):
+    def __init__(self, state_dim, action_dim):
         super(Actor, self).__init__()
-        self.linear1 = nn.Linear(input_size, hidden_size)
-        self.linear2 = nn.Linear(hidden_size, hidden_size)
-        self.linear3 = nn.Linear(hidden_size, output_size)
 
-    def forward(self, state):
-        """
-        Param state is a torch tensor
-        """
-        x = F.relu(self.linear1(state))
-        x = F.relu(self.linear2(x))
-        x = torch.tanh(self.linear3(x))
+        self.l1 = nn.Linear(state_dim, 400)
+        self.l2 = nn.Linear(400, 300)
+        self.l3 = nn.Linear(300, action_dim)
 
+        self.max_action = action_dim
+
+    def forward(self, x):
+        x = F.relu(self.l1(x))
+        x = F.relu(self.l2(x))
+        x = self.max_action * torch.tanh(self.l3(x))
+        return x
+
+
+class Critic(nn.Module):
+    def __init__(self, state_dim, action_dim):
+        super(Critic, self).__init__()
+
+        self.l1 = nn.Linear(state_dim + action_dim, 400)
+        self.l2 = nn.Linear(400, 300)
+        self.l3 = nn.Linear(300, 1)
+
+    def forward(self, x):
+        x = F.relu(self.l1(x))
+        x = F.relu(self.l2(x))
+        x = self.l3(x)
         return x
 
 
@@ -56,16 +50,19 @@ class Model(DDPGTrain):
                           len(self.stacked_frames))
 
     def declare_networks(self):
-        self.actor = Actor(self.env.observation_space.shape[0], 256,
-                           self.env.action_space.n)
-        self.target_actor = Actor(self.env.observation_space.shape[0], 256,
-                                  self.env.action_space.n)
+        self.actor = Actor(
+            self.env.observation_space.shape[0]*8, self.env.action_space.shape[0])
+        self.target_actor = Actor(
+            self.env.observation_space.shape[0]*8, self.env.action_space.shape[0])
+        self.target_actor.load_state_dict(self.actor.state_dict())
+
         self.critic = Critic(
-            self.env.observation_space.shape[0] + self.env.action_space.n,
-            256, self.env.action_space.n)
+            self.env.observation_space.shape[0]*8,
+            self.env.action_space.shape[0])
         self.target_critic = Critic(
-            self.env.observation_space.shape[0] + self.env.action_space.n,
-            256, self.env.action_space.n)
+            self.env.observation_space.shape[0]*8,
+            self.env.action_space.shape[0])
+        self.target_critic.load_state_dict(self.critic.state_dict())
 
     def stack_frames(self, frame, is_new_episode):
         if is_new_episode:

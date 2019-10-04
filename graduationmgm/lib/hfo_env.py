@@ -3,6 +3,7 @@ import math
 import hfo
 import numpy as np
 from scipy.spatial import distance
+from gym import spaces
 
 
 class ObservationSpace():
@@ -21,6 +22,12 @@ class ActionSpace():
         self.n = len(actions)
 
 
+class ActionSpaceContinuous(spaces.Box):
+    def __init__(self, low, high, actions, shape=None, dtype=np.float32):
+        super().__init__(low, high, shape=shape, dtype=dtype)
+        self.actions = actions
+
+
 class HFOEnv(hfo.HFOEnvironment):
     pitchHalfLength = 52.5
     pitchHalfWidth = 34
@@ -37,7 +44,7 @@ class HFOEnv(hfo.HFOEnvironment):
 
     def __init__(self, actions, rewards,
                  is_offensive=False, play_goalie=False,
-                 strict=False, port=6000):
+                 strict=False, port=6000, continuous=False):
         super(HFOEnv, self).__init__()
         self.connectToServer(hfo.HIGH_LEVEL_FEATURE_SET, './formations-dt',
                              port, 'localhost',
@@ -48,6 +55,7 @@ class HFOEnv(hfo.HFOEnvironment):
         self.choosed_mates = min(6, self.num_teammates)
         self.choosed_ops = min(6, self.num_opponents)
         self.play_goalie = play_goalie
+        self.continuous = continuous
         if not strict:
             self.observation_space = ObservationSpace(self, rewards)
         else:
@@ -56,18 +64,34 @@ class HFOEnv(hfo.HFOEnvironment):
             self.observation_space = ObservationSpace(self,
                                                       rewards,
                                                       shape=shape)
-        self.action_space = ActionSpace(actions)
+        if self.continuous:
+            self.action_space = ActionSpaceContinuous(
+                -1, 1, actions, shape=(len(actions),))
+        else:
+            self.action_space = ActionSpace(actions)
         self.stamina_basis = super(HFOEnv, self).getState()[-1]
         self.stamina_basis = self.unnormalize(
             self.stamina_basis, 0, self.stamina_max)
 
     def step(self, action, is_offensive=False, strict=False):
-        if isinstance(action, tuple):
-            self.act(self.action_space.actions[action[0]], action[1])
-            action = self.action_space.actions[action[0]]
-        else:
+        # Prepared when get discrete space with pass
+        # if isinstance(action, tuple):
+        #     self.act(self.action_space.actions[action[0]], action[1])
+        #     action = self.action_space.actions[action[0]]
+        # else:
+        if not self.continuous:
             action = self.action_space.actions[action]
-            self.act(action)
+        else:
+            if action < -0.5:
+                action = self.action_space.actions[0]
+            elif action >= -0.5 and action < 0:
+                action = self.action_space.actions[1]
+            elif action >= 0 and action < 0.5:
+                action = self.action_space.actions[2]
+            elif action >= 0.5 and action < 1:
+                action = self.action_space.actions[3]
+
+        self.act(action)
         act = self.action_space.actions.index(action)
         status = super(HFOEnv, self).step()
         done = True
