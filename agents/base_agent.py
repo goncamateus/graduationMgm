@@ -162,8 +162,7 @@ class Agent():
                     if status == hfo.GOAL:
                         self.goals += 1
                         if episode % 100 == 0:
-                            self.dqn.writer.add_scalar(
-                                'Rewards/goals', self.goals, global_step=episode/100)
+                            print(self.goals)
                             self.goals = 0
                     self.currun_rewards.append(episode_rewards)
                     next_state = np.zeros(state.shape)

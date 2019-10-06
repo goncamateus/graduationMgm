@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.12)
 project(hfo)
 include(ExternalProject)
 
-option(BUILD_SOCCERWINDOW "Build Soccerwindow Visualizer" ON)
+option(BUILD_SOCCERWINDOW "Build Soccerwindow Visualizer" OFF)
 option(INSTALL_ADDITIONAL_TEAMS "Install additional team binaries" ON)
 
 add_definitions(-DELOG)
