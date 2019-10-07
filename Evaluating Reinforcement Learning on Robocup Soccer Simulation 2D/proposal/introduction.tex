@@ -1,0 +1,12 @@
+\chapter{Introduction}
+The Simulation 2D Football league of \cite{robocup} (Sim2d) is one of the most matures leagues of the competition having started in 1996. Supervised Learning and deterministic algorithms are the usual techniques used by the TOP 5 teams. Recent researches using Deep Reinforcement Learning to train autonomous agents in multi-agent systems have shown that it outperforms agents based on supervised or deterministic algorithms. The team CYRUS2019, \cite{cyrus}, has released defensive players trained with Deep Reinforcement Learning achieving in third place on RoboCup2019. This work intents to compare three DRL techniques for defensive agents based on CYRUS2019 adapting the Half Field Offensive environment to an OpenAI GYM, \cite{gym}, environment and apply the best technique on \cite{robocin} agents.
+
+\cite{deepmind} researchers \cite{dqn} have shown that Deep Q Learning was so effective on Atari games that it outplays human controlled agents. In 2015 Deepmind's AlphaGo agent, \cite{alphago}, won from the European Go Champion Fan Hui and later on 2016 from Lee Sedol, one of the best worldwide. Since then OpenAI and DeepMind has invested a lot of effort on Reinforcement Learning and Autonomous Agents systems. Recently \cite{openai5} has become the best agent on \cite{dota2} on 1v1 games and it has a great teamwork performance on 5v5 games winning from most of amateur teams and a few professionals.
+
+\cite{hfo} developed an environment to train SARSA (state, action, reward, next state, next action) agents based on the usual OpenAI environments. It provides 2 spaces of states and 3 spaces of actions:
+\begin{itemize}
+    \item Low-Level Features and Actions- Uses raw features from Sim2d server and provides raw actions.
+    \item Mid-Level Actions - Uses raw features but some complex and chained actions.
+    \item High-Level Features and Actions - Uses processed features and only complex or chained actions.
+\end{itemize}
+Using \cite{DDPG} and the Half Field Offensive environment with High Level Features and actions, \cite{cyrus} got a reduction of 20\% of goals taken. Our intent on this work is replicate the paper, use two other DRL techniques and optimize the defenders for teams from Brazil to use on the \cite{larc}.

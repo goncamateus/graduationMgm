@@ -1,0 +1,257 @@
+%% RiSE Latex Template - version 0.5
+%%
+%% RiSE's latex template for thesis and dissertations
+%% http://risetemplate.sourceforge.net
+%%
+%% (c) 2012 Yguaratã Cerqueira Cavalcanti (yguarata@gmail.com)
+%%          Vinicius Cardoso Garcia (vcg@cin.ufpe.br)
+%%
+%% This document was initially based on UFPEThesis template, from Paulo Gustavo
+%% S. Fonseca.
+%%
+%% ACKNOWLEDGEMENTS
+%%
+%% We would like to thanks the RiSE's researchers community, the 
+%% students from Federal University of Pernambuco, and other users that have
+%% been contributing to this projects with comments and patches.
+%%
+%% GENERAL INSTRUCTIONS
+%%
+%% We strongly recommend you to compile your documents using pdflatex command.
+%% It is also recommend use the texlipse plugin for Eclipse to edit your documents.
+%%
+%% Options for \documentclass command:
+%%         * Idiom
+%%           pt   - Portguese (default)
+%%           en   - English
+%%
+%%         * Text type
+%%           bsc  - B.Sc. Thesis
+%%           msc  - M.Sc. Thesis (default)
+%%           qual - PHD qualification (not tested yet)
+%%           prop - PHD proposal (not tested yet)
+%%           phd  - PHD thesis
+%%
+%%         * Media
+%%           scr  - to eletronic version (PDF) / see the users guide
+%%
+%%         * Pagination
+%%           oneside - unique face press
+%%           twoside - two faces press
+%%
+%%		   * Line spacing
+%%           singlespacing  - the same as using \linespread{1}
+%%           onehalfspacing - the same as using \linespread{1.3}
+%%           doublespacing  - the same as using \linespread{1.6}
+%%
+%% Reference commands. Use the following commands to make references in your
+%% text:
+%%          \figref  -- for Figure reference
+%%          \tabref  -- for Table reference
+%%          \eqnref  -- for equation reference
+%%          \chapref -- for chapter reference
+%%          \secref  -- for section reference
+%%          \appref  -- for appendix reference
+%%          \axiref  -- for axiom reference
+%%          \conjref -- for conjecture reference
+%%          \defref  -- for definition reference
+%%          \lemref  -- for lemma reference
+%%          \theoref -- for theorem reference
+%%          \corref  -- for corollary reference
+%%          \propref -- for proprosition reference
+%%          \pgref   -- for page reference
+%%
+%%          Example: See \chapref{chap:introduction}. It will produce 
+%%                   'See Chapter 1', in case of English language.
+%%
+%% Citation commands:
+%%          \citet (from natbib) -- To cite a reference as part of the narrative
+%%          \citep (from natbib) -- To cite a reference between parenthesis
+%%          citationblock environment -- To produce direct citation blocks according to the ABNT
+
+\documentclass[pt,oneside,onehalfspacing,bscprop]{risethesis}
+\usepackage{colortbl}
+\usepackage{color}
+\usepackage[table,xcdraw]{xcolor}
+\usepackage{longtable}
+\usepackage{microtype}
+\usepackage{bibentry}
+\usepackage{subfig}
+\usepackage{multirow}
+\usepackage{multicol}
+\usepackage{rotating}
+\usepackage{booktabs}
+\usepackage{pdfpages}
+\usepackage{caption}
+\usepackage{lipsum}
+\usepackage{sectsty}
+\usepackage{listings}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+  language=C++,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+\usepackage{tikz}
+\usetikzlibrary{calc,trees,positioning,arrows,chains,shapes.geometric,%
+    decorations.pathreplacing,decorations.pathmorphing,shapes,%
+    matrix,shapes.symbols}
+\tikzset{
+>=stealth',
+  punktchain/.style={
+    rectangle, 
+    rounded corners, 
+    % fill=black!10,
+    draw=black, very thick,
+    text width=7em, 
+    minimum height=3em, 
+    text centered, 
+    on chain},
+  line/.style={draw, thick, <-},
+  element/.style={
+    tape,
+    top color=white,
+    bottom color=blue!50!black!60!,
+    minimum width=8em,
+    draw=blue!40!black!90, very thick,
+    text width=10em, 
+    minimum height=3.5em, 
+    text centered, 
+    on chain},
+  every join/.style={->, thick,shorten >=1pt},
+  decoration={brace},
+  tuborg/.style={decorate},
+  tubnode/.style={midway, right=2pt},
+}
+
+\captionsetup[table]{position=top,justification=centering,width=.85\textwidth,labelfont=bf,font=footnotesize}
+\captionsetup[lstlisting]{position=top,justification=centering,width=.85\textwidth,labelfont=bf,font=footnotesize}
+\captionsetup[figure]{position=bottom,justification=centering,width=.85\textwidth,labelfont=bf,font=footnotesize}
+
+%% Chapter and (Sub)Section fonts must be same size as text (12)
+\sectionfont{\fontsize{12}{15}\selectfont}
+\subsectionfont{\fontsize{12}{15}\selectfont}
+\subsubsectionfont{\fontsize{12}{15}\selectfont}
+
+%% Change the following pdf author attribute name to your name.
+\usepackage[linkcolor=black,
+            citecolor=black,
+            urlcolor=black,
+            colorlinks,
+            pdfpagelabels,
+            pdftitle={Rise Thesis Template (ABNT)},
+            pdfauthor={Rise Thesis Template (ABNT)},
+            breaklinks=true]{hyperref}
+
+\address{RECIFE}
+
+\universitypt{Universidade Federal de Pernambuco}
+\universityen{Federal University of Pernambuco}
+
+\departmentpt{Centro de Informática}
+\departmenten{Center for Informatics}
+
+\programpt{Graduação em Engenharia da computaç}
+\programen{Undergraduate in Computer Engineering}
+
+\majorfieldpt{Engenharia da computação}
+\majorfielden{Computer Engineering}
+
+\title{Evaluating Reinforcement Learning on Robocup Soccer Simulation 2D}
+
+\date{2019}
+
+\author{Mateus Gonçalves Machado}
+\adviser{Tsang Ing Ren}
+
+% Macros (defines your own macros here, if needed)
+\def\x{\checkmark}
+
+\begin{document}
+
+\frontmatter
+
+\frontpage
+
+%\presentationpage
+
+%\begin{dedicatory}
+%I dedicate this thesis to all my family, friends and professors who gave me the
+%necessary support to get here.
+%\end{dedicatory}
+
+%\acknowledgements
+%\input{agradecimentos}
+
+\let\cleardoublepage\clearpage
+
+\resumo
+% Escreva seu resumo no arquivo resumo.tex
+{\parindent0pt
+	\input{resumo}
+}
+
+\abstract
+% Write your abstract in a file called abstract.tex
+{\parindent0pt
+	\input{abstract}
+}
+
+% List of figures
+% \listoffigures
+
+% List of tables
+% \listoftables
+
+% List of acronyms
+% Acronyms manual: http://linorg.usp.br/CTAN/macros/latex/contrib/acronym/acronym.pdf
+% \listofacronyms
+% \input{acronyms}
+
+% Summary (tables of contents)
+% \tableofcontents
+
+\mainmatter
+
+% Uncomment to graduation
+% \include{chapters/introduction}
+% \include{chapters/background}
+\include{chapters/architecture}
+% \include{chapters/results}
+% \include{chapters/conclusion}
+
+
+% Uncomment to proposal
+% \include{proposal/introduction}
+% \include{proposal/objectives}
+% \include{proposal/methodology}
+% \include{proposal/schedule}
+% \include{proposal/avaliadores}
+% \include{proposal/assinaturas}
+\begin{references}
+  \bibliography{references}
+\end{references}
+
+% References
+
+% Appendix
+
+% \theappendix
+% \include{appendix/table-features}
+
+\end{document}

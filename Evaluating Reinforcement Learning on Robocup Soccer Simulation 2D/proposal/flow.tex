@@ -1,0 +1,39 @@
+\begin{tikzpicture} [node distance=.9cm, start chain=going below]
+    \node[punktchain] (ext) {Feature extractor};
+    \node[punktchain, join] (dset) {Dataset};
+    \node[punktchain, below left = of dset] (sdset2) at (0.5, -3) {Sampled Dataset 2};
+
+    %We need to redefine the join-style to have the -> turn out right
+    \begin{scope}[start branch=venstre, every join/.style={->, thick, shorten <=1pt}]
+        \node[punktchain, on chain=going left] (sdset1) {Sampled Dataset 1};
+    \end{scope}
+
+    \node[punktchain, right = of sdset2] (dots) {$\cdots$};
+
+    \begin{scope}[start branch=hoejre]
+        \node[punktchain, on chain=going right] (sdset30) {Sampled Dataset 30};
+    \end{scope}
+    
+    \node[punktchain, below = of dset] (class) at (0, -5.5) {Classifiers};
+    % Now that we have finished the main figure let us add some "after-drawings"
+    %% First, let us connect (finans) with (disk). We want it to have
+    %% square corners.
+    \draw[|-,-|,->, thick,] (sdset1.south) |-+(0,-1em)-| (class.north);
+    \draw[|-,-|,->, thick,] (sdset30.south) |-+(0,-1em)-| (class.north);
+    \draw[|-,-|,->, thick,] (dots.south) |-+(0,-1em)-| (class.north);
+    \draw[|-,-|,->, thick,] (sdset2.south) |-+(0,-1em)-| (class.north);
+    % Now, let us add some braches. 
+    %% No. 1
+    \draw[tuborg] let \p1=(sdset1.west), \p2=(sdset30.east) in ($(\x1,\y1+2.5em)$) -- ($(\x2,\y2+2.5em)$);
+
+    \begin{scope}
+        \node[punktchain, above left = of ext] (meth) at (0, 1) {Android Methods};
+        \node[punktchain, above right = of ext] (api) at (0, 1) {Android APIs};
+
+        \draw[|-,-|,->, thick,] (meth.south) |-+(0,-1em)-| (ext.north);
+        \draw[|-,-|,->, thick,] (api.south) |-+(0,-1em)-| (ext.north);
+    \end{scope}
+
+    \node[punktchain, below = of class] (res) {Results};
+    \draw[|-,-|,->, thick,] (class.south) |-+(0,-1em)-| (res.north);
+\end{tikzpicture}
