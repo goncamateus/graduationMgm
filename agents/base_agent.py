@@ -160,7 +160,7 @@ class Agent():
                             f'Rewards/epi_reward_{self.unum}', episode_rewards, global_step=episode)
                     if status == hfo.GOAL:
                         self.goals += 1
-                        if episode % 100 == 0:
+                        if episode % 100 == 0 and episode > 10:
                             print(self.goals)
                             self.goals = 0
                     self.currun_rewards.append(episode_rewards)

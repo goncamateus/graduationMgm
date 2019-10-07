@@ -95,7 +95,7 @@ class DDPGAgent(Agent):
                         self.hfo_env.action_space.low, self.hfo_env.action_space.high)
                     action = action.astype(np.float32)
                     step += 1
-                    
+
                 if interceptable:
                     action = np.array([np.random.uniform(-0.5, 0)], dtype=np.float32)
 
@@ -111,7 +111,7 @@ class DDPGAgent(Agent):
                             f'Rewards/epi_reward_{self.unum}', episode_rewards, global_step=episode)
                     if status == hfo.GOAL:
                         self.goals += 1
-                        if episode % 100 == 0:
+                        if episode % 100 == 0 and episode > 10:
                             print(self.goals)
                             self.goals = 0
                     self.currun_rewards.append(episode_rewards)
