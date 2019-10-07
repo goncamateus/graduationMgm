@@ -18,8 +18,7 @@ extern "C" {
   }
   int getStateSize(hfo::HFOEnvironment *hfo) { return hfo->getState().size(); }
   void getState(hfo::HFOEnvironment *hfo, float *state_data) {
-    auto state = hfo->getState();
-    const float* state_features = state.data();
+    const float* state_features = hfo->getState().data();
     memcpy(state_data, state_features, getStateSize(hfo) * sizeof(float));
   }
   void act(hfo::HFOEnvironment *hfo, hfo::action_t action, float* params) {
