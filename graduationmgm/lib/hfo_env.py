@@ -73,7 +73,7 @@ class HFOEnv(hfo.HFOEnvironment):
         self.stamina_basis = self.unnormalize(
             self.stamina_basis, 0, self.stamina_max)
 
-    def step(self, action, is_offensive=False, strict=False):
+    def step(self, action, is_offensive=False):
         # Prepared when get discrete space with pass
         # if isinstance(action, tuple):
         #     self.act(self.action_space.actions[action[0]], action[1])
@@ -98,7 +98,7 @@ class HFOEnv(hfo.HFOEnvironment):
         done = True
         if status == hfo.IN_GAME:
             done = False
-        next_state = self.get_state(is_offensive, strict=strict)
+        next_state = self.get_state()
         # -----------------------------
         reward = 0
         if is_offensive:
@@ -109,10 +109,8 @@ class HFOEnv(hfo.HFOEnvironment):
             reward = self.get_reward_def(act, next_state, done, status)
         return next_state, reward, done, status
 
-    def get_state(self, is_offensive=False, strict=False):
-        state = self.remake_state(self.getState(), is_offensive=is_offensive)
-        if strict:
-            state = self.strict_state(state)
+    def get_state(self):
+        state = self.strict_state(self.getState())
         return state
 
     def get_reward_off(self, act, next_state, done, status):

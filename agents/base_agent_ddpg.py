@@ -77,7 +77,7 @@ class DDPGAgent(Agent):
             while status == hfo.IN_GAME:
                 # Every time when game resets starts a zero frame
                 if done:
-                    state_ori = self.hfo_env.get_state(strict=True)
+                    state_ori = self.hfo_env.get_state()
                     interceptable = state_ori[-1]
                     state = state_ori[:-1]
                     frame = self.ddpg.stack_frames(state, done)
@@ -95,13 +95,12 @@ class DDPGAgent(Agent):
                         self.hfo_env.action_space.low, self.hfo_env.action_space.high)
                     action = action.astype(np.float32)
                     step += 1
-
+                    
                 if interceptable:
                     action = np.array([np.random.uniform(-0.5, 0)], dtype=np.float32)
 
                 # Calculates results from environment
-                next_state_ori, reward, done, status = self.hfo_env.step(action,
-                                                                         strict=True)
+                next_state_ori, reward, done, status = self.hfo_env.step(action)
                 next_state = next_state_ori[:-1]
                 episode_rewards += reward
 
