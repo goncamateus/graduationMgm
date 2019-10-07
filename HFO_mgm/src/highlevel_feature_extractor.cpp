@@ -5,6 +5,8 @@
 #include "highlevel_feature_extractor.h"
 #include <rcsc/player/intercept_table.h>
 #include <rcsc/common/server_param.h>
+#include "strategy.h"
+
 
 using namespace rcsc;
 
@@ -40,11 +42,8 @@ HighLevelFeatureExtractor::ExtractFeatures(const rcsc::WorldModel& wm,
   float tolerance_x = .1 * SP.pitchHalfLength();
   float tolerance_y = .1 * SP.pitchHalfWidth();
   // Feature[0]: X-postion
-  if (playingOffense) {
-    addFeature(self_pos.x);
-  } else {
-    addFeature(self_pos.x);
-  }
+  addFeature(self_pos.x);
+
   // Feature[1]: Y-Position
   addFeature(self_pos.y);
 
@@ -85,8 +84,14 @@ HighLevelFeatureExtractor::ExtractFeatures(const rcsc::WorldModel& wm,
   } else {
     addFeature(FEAT_INVALID);
   }
+  const Vector2D formation_point = Strategy::i().getPosition( wm.self().unum() );
+  // Feature[10]: X-postion
+  addFeature(self_pos.x);
 
-  // Features[9 - 9+T]: teammate's open angle to goal
+  // Feature[11]: Y-Position
+  addFeature(self_pos.y);
+
+  // Features[11 - 11+T]: teammate's open angle to goal
   int detected_teammates = 0;
   for (PlayerPtrCont::const_iterator it=teammates.begin(); it != teammates.end(); ++it) {
     const PlayerObject* teammate = *it;
@@ -100,7 +105,7 @@ HighLevelFeatureExtractor::ExtractFeatures(const rcsc::WorldModel& wm,
     addFeature(FEAT_INVALID);
   }
 
-  // Features[9+T - 9+2T]: teammates' dists to closest opps
+  // Features[11+T - 11+2T]: teammates' dists to closest opps
   if (numOpponents > 0) {
     detected_teammates = 0;
     for (PlayerPtrCont::const_iterator it=teammates.begin(); it != teammates.end(); ++it) {
@@ -121,7 +126,7 @@ HighLevelFeatureExtractor::ExtractFeatures(const rcsc::WorldModel& wm,
     }
   }
 
-  // Features [9+2T - 9+3T]: open angle to teammates
+  // Features [11+2T - 11+3T]: open angle to teammates
   detected_teammates = 0;
   for (PlayerPtrCont::const_iterator it=teammates.begin(); it != teammates.end(); ++it) {
     const PlayerObject* teammate = *it;
@@ -135,7 +140,7 @@ HighLevelFeatureExtractor::ExtractFeatures(const rcsc::WorldModel& wm,
     addFeature(FEAT_INVALID);
   }
 
-  // Features [9+3T - 9+6T]: x, y, unum of teammates
+  // Features [11+3T - 11+6T]: x, y, unum of teammates
   detected_teammates = 0;
   for (PlayerPtrCont::const_iterator it=teammates.begin(); it != teammates.end(); ++it) {
     const PlayerObject* teammate = *it;
@@ -157,7 +162,7 @@ HighLevelFeatureExtractor::ExtractFeatures(const rcsc::WorldModel& wm,
     addFeature(FEAT_INVALID);
   }
 
-  // Features [9+6T - 9+6T+3O]: x, y, unum of opponents
+  // Features [11+6T - 11+6T+3O]: x, y, unum of opponents
   int detected_opponents = 0;
   for (PlayerPtrCont::const_iterator it = opponents.begin(); it != opponents.end(); ++it) {
     const PlayerObject* opponent = *it;

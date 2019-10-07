@@ -10,7 +10,7 @@ def main():
     agent = DDPGAgent(DDPG, False)
     try:
         agent.run()
-    except KeyboardInterrupt:
+    except:
         agent.bye()
 
 
