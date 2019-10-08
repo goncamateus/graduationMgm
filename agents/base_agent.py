@@ -133,7 +133,7 @@ class Agent():
                     state = state_ori[:-1]
                     frame = self.dqn.stack_frames(state, done)
                 # If the size of experiences is under max_size*8 runs gen_mem
-                if self.gen_mem and self.frame_idx < self.config.EXP_REPLAY_SIZE:
+                if self.gen_mem and len(self.ddpg.memory) < self.config.EXP_REPLAY_SIZE:
                     action = np.random.randint(0, 4)
                 else:
                     # When gen_mem is done, saves experiences and starts a new

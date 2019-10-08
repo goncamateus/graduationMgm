@@ -47,7 +47,7 @@ class DDPGAgent(Agent):
             print("Model Loaded")
 
     def load_memory(self):
-        self.mem_path = './saved_agents/exp_replay_agent.dump'
+        self.mem_path = f'./saved_agents/exp_replay_agent_{self.unum}.dump'
 
         if not self.test:
             if os.path.isfile(self.mem_path):
@@ -82,7 +82,7 @@ class DDPGAgent(Agent):
                     state = state_ori[:-1]
                     frame = self.ddpg.stack_frames(state, done)
                 # If the size of experiences is under max_size*8 runs gen_mem
-                if self.gen_mem and self.frame_idx < self.config.EXP_REPLAY_SIZE:
+                if self.gen_mem and len(self.ddpg.memory) < self.config.EXP_REPLAY_SIZE:
                     action = self.hfo_env.action_space.sample()
                 else:
                     # When gen_mem is done, saves experiences and starts a new
