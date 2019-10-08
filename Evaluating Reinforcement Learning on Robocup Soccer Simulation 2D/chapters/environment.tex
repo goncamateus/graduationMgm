@@ -1,0 +1,59 @@
+\chapter{Environment}\label{chapter:environment}
+
+The Half Field Offensive (HFO), \cite{hfo}, is an interface environment designed specifically to train SARSA (state, action, reward, next state, next action) agents based on the usual OpenAI environments. See figure \ref{images/HFO_diagram.png}. It provides 2 spaces of states and 3 spaces of actions:
+\begin{itemize}
+    \item Low-Level Features and Actions- Uses raw features from Sim2d server and provides raw actions.
+    \item Mid-Level Actions - Uses raw features but some complex and chained actions.
+    \item High-Level Features and Actions - Uses processed features and only complex or chained actions.
+\end{itemize}
+We adapted this environment to our problem changing the server's referee, the feature set and the actions that the agents can perform.
+
+\section{Server's Referee}
+\begin{itemize}
+    \item Half Field Offensive's referee restricts all agents on the right side of the field. Our problem is more complex due to defending on opponent's side as well. Our referee covers the whole field.
+    \item Given two areas O and T, opponents spawns randomly on O and the same for teammates on T. We need a spawn similar to a real attack situation in Soccer Simulation 2D. For the defender team We fixed specifics X axis for types of agent and randomizes the Y axis. The midfielders starts in front of the defenders. For the attacking team, is the same logic for attackers and midfielders. We decided to do not randomize the Y axis and fix it on 0 for all attackers.   
+    \item The ball always starts near the midfielders of the attacking team in our environment. Doing so, We simulate a counterattack of the opponent.
+\end{itemize}
+
+\section{Feature Set}
+HFO's high-level features set returns many features that is not relevant for our problem, such as opening angle to opponent's goal or pass opening angle to a teammate. We decided to remove those variables for the models understand more easier what to do. Another change was in the normalization of the features. The original environment returned normalized features in relation due to the half field problem. Once our problem is more comprehensive and the agents are in the same space and the features are strict, We maintained the without normalization. 
+
+Let $T$ denote the number of teammates in game and $O$ the
+number of opponents. There are a total of $11 + 3T + 2O + 1$ high-level
+features in our environment.
+
+\begin{enumerate}[noitemsep]
+\setcounter{enumi}{-1}
+\item{\textbf{X position} - The agent’s x-position on the field.}
+\item{\textbf{Y position} - The agent’s y-position on the field.}
+\item{\textbf{Orientation} - The global direction that the agent is facing.}
+\item{\textbf{Ball X} - The ball's x-position on the field.}
+\item{\textbf{Ball Y} - The ball's y-position on the field.}
+\item{\textbf{Able to Kick} - Boolean indicating if the agent can kick the ball.}
+\item{\textbf{Goal Center Proximity} - Agent's proximity to the center of the goal.}
+\item{\textbf{Goal Center Angle} - Angle from the agent to the center of the goal.}
+\item{\textbf{Proximity to Opponent} - If an opponent is present,
+  proximity to the closest opponent. Invalid if there are no
+  opponents.}
+\item{\textbf{Formation X position} - Agent’s x-position according to team's formation.}
+\item{\textbf{Formation Y position} - Agent’s y-position according to team's formation.}
+\item [$T$] {\textbf{Proximity from Teammate i to Opponent} - For each
+  teammate i: the proximity from the teammate to the closest
+  opponent. This feature is invalid if there are no opponents or if
+  teammates are present but not detected.}
+\item [$2T$] {\textbf{X, Y of Teammates} - For each teammate: the x-position, y-position.}
+\item [$2O$] {\textbf{X, Y of Opponents} - For each opponent: the x-position, y-position.}
+\item [$+1$] {\textbf{Interceptable} - Whether the agent can intercept the ball or
+ not.}
+\end{enumerate}
+
+\section{Actions}
+Based on \cite{cyrus}, We chose four actions:
+\begin{enumerate}
+    \item Move: Performs the basic move, going to the position according to the formation file.
+    \item Go to ball: Performs an interception move, tackling the opponent when it can.
+    \item Block: Blocks a shoot or a pass from an opponent to another.
+    \item Defend Goal: Blocks a shoot at the same line of the goalkeeper.
+\end{enumerate}
+
+Once the action "Catch" does not fit in our problem yet, We decided to exchange it for Block. We used the algorithm of \cite{cyrus2014}.
