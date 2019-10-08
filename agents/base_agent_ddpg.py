@@ -19,7 +19,7 @@ class DDPGAgent(Agent):
     def __init__(self, model, per):
         self.config_env()
         self.config_hyper(per)
-        self.config.EXP_REPLAY_SIZE = 1000
+        self.config.EXP_REPLAY_SIZE = 100000
         self.config_model(model)
         self.goals = 0
 
