@@ -85,11 +85,11 @@ HighLevelFeatureExtractor::ExtractFeatures(const rcsc::WorldModel& wm,
     addFeature(FEAT_INVALID);
   }
   const Vector2D formation_point = Strategy::i().getPosition( wm.self().unum() );
-  // Feature[10]: X-postion
-  addFeature(self_pos.x);
+  // Feature[10]: formation X-postion
+  addFeature(formation_point.x);
 
-  // Feature[11]: Y-Position
-  addFeature(self_pos.y);
+  // Feature[11]: formation Y-Position
+  addFeature(formation_point.y);
 
   // Features[11 - 11+T]: teammate's open angle to goal
   int detected_teammates = 0;
