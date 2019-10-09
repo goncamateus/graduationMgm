@@ -98,6 +98,9 @@ class DDPGAgent(Agent):
 
                 if interceptable:
                     action = np.array([np.random.uniform(-0.5, 0)], dtype=np.float32)
+                    action = (action + np.random.normal(0, 0.1, size=self.hfo_env.action_space.shape[0])).clip(
+                        self.hfo_env.action_space.low, self.hfo_env.action_space.high)
+                    action = action.astype(np.float32)
 
                 # Calculates results from environment
                 next_state_ori, reward, done, status = self.hfo_env.step(action)

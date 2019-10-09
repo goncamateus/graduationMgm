@@ -111,7 +111,7 @@ class Agent():
         self.save_model(episode, bye)
         self.save_mem(episode, bye)
 
-    def bye(self, status):
+    def bye(self, status=hfo.SERVER_DOWN):
         if status == hfo.SERVER_DOWN:
             if not self.test:
                 self.save_modelmem(0, True)
