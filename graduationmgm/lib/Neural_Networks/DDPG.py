@@ -9,19 +9,21 @@ from graduationmgm.lib.DDPG_train import DDPGTrain
 
 
 class Actor(nn.Module):
-    def __init__(self, state_dim, action_dim):
+    def __init__(self, state_dim, action_dim, max_action):
         super(Actor, self).__init__()
 
-        self.l1 = nn.Linear(state_dim, 400)
-        self.l2 = nn.Linear(400, 300)
-        self.l3 = nn.Linear(300, action_dim)
+        self.l1 = nn.Linear(state_dim, 512)
+        self.l2 = nn.Linear(512, 1024)
+        self.l3 = nn.Linear(1024, 512)
+        self.l4 = nn.Linear(512, action_dim)
 
-        self.max_action = action_dim
+        self.max_action = max_action
 
     def forward(self, x):
         x = F.relu(self.l1(x))
         x = F.relu(self.l2(x))
-        x = self.max_action * torch.tanh(self.l3(x))
+        x = F.relu(self.l3(x))
+        x = self.max_action * torch.tanh(self.l4(x))
         return x
 
 
@@ -29,14 +31,16 @@ class Critic(nn.Module):
     def __init__(self, state_dim, action_dim):
         super(Critic, self).__init__()
 
-        self.l1 = nn.Linear(state_dim + action_dim, 400)
-        self.l2 = nn.Linear(400 , 300)
-        self.l3 = nn.Linear(300, 1)
+        self.l1 = nn.Linear(state_dim + action_dim, 512)
+        self.l2 = nn.Linear(512, 1024)
+        self.l3 = nn.Linear(1024, 512)
+        self.l4 = nn.Linear(512, 1)
 
     def forward(self, x, u):
         x = F.relu(self.l1(torch.cat([x, u], 1)))
         x = F.relu(self.l2(x))
-        x = self.l3(x)
+        x = F.relu(self.l3(x))
+        x = self.l4(x)
         return x
 
 
@@ -45,15 +49,16 @@ class Model(DDPGTrain):
         self.stacked_frames = deque(
             [np.zeros(env.observation_space.shape, dtype=np.int)
              for i in range(8)], maxlen=8)
+        self.max_action = float(env.action_space.high[0])
         super(Model, self).__init__(static_policy, env, config)
         self.num_feats = (*self.env.observation_space.shape,
                           len(self.stacked_frames))
 
     def declare_networks(self):
-        self.actor = Actor(
-            self.env.observation_space.shape[0]*8, self.env.action_space.shape[0])
-        self.target_actor = Actor(
-            self.env.observation_space.shape[0]*8, self.env.action_space.shape[0])
+        self.actor = Actor(self.env.observation_space.shape[0]*8,
+                           self.env.action_space.shape[0], self.max_action)
+        self.target_actor = Actor(self.env.observation_space.shape[0]*8,
+                                  self.env.action_space.shape[0], self.max_action)
         self.target_actor.load_state_dict(self.actor.state_dict())
 
         self.critic = Critic(
