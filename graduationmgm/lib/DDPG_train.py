@@ -128,6 +128,8 @@ class DDPGTrain(BaseTrain):
     def update(self):  # faster
         state, next_state, action, reward, done = self.memory.sample(
             self.batch_size)
+        reward = reward.reshape(-1, 1)
+        done = done.reshape(-1, 1)
         num_feat = state.shape[1] * state.shape[2]
         state = Variable(torch.FloatTensor(
             np.float32(state))).view(self.batch_size, num_feat)
@@ -146,7 +148,7 @@ class DDPGTrain(BaseTrain):
         current_Q = self.critic(state, action)
 
         # Compute critic loss       
-        critic_loss = (current_Q - target_Q).pow(2).mean()
+        critic_loss = F.smooth_l1_loss(current_Q, target_Q)
         self.writer.add_scalar('Loss/critic_loss', critic_loss, global_step=self.num_critic_update_iteration)
         # Optimize the critic
         self.critic_optimizer.zero_grad()

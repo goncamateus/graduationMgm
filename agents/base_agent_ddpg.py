@@ -112,17 +112,17 @@ class DDPGAgent(Agent):
                     if not self.gen_mem:
                         self.ddpg.writer.add_scalar(
                             f'Rewards/epi_reward_{self.unum}', episode_rewards, global_step=episode)
-                    if status == hfo.GOAL:
-                        self.goals += 1
-                        if episode % 100 == 0 and episode > 10:
-                            print(self.goals)
-                            self.goals = 0
                     self.currun_rewards.append(episode_rewards)
                     next_state = np.zeros(state.shape)
                     next_frame = np.zeros(frame.shape)
                 else:
                     next_frame = self.ddpg.stack_frames(next_state, done)
 
+                if status == hfo.GOAL:
+                    self.goals += 1
+                    if episode % 100 == 0 and episode > 10:
+                        print(self.goals)
+                        self.goals = 0
                 self.ddpg.append_to_replay(
                     frame, action, reward, next_frame, int(done))
                 frame = next_frame
