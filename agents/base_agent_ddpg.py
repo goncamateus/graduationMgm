@@ -19,7 +19,6 @@ class DDPGAgent(Agent):
     def __init__(self, model, per, port=6000):
         self.config_env(port=port)
         self.config_hyper(per)
-        self.config.EXP_REPLAY_SIZE = 100000
         self.config_model(model)
         self.goals = 0
 
@@ -35,10 +34,10 @@ class DDPGAgent(Agent):
     def load_model(self, model):
         self.ddpg = model(env=self.hfo_env, config=self.config,
                           static_policy=self.test)
-        self.model_paths = (f'./saved_agents/ddpg/actor_{self.unum}.dump',
-                            f'./saved_agents/ddpg/critic_{self.unum}.dump')
-        self.optim_paths = (f'./saved_agents/ddpg/actor_optim_{self.unum}.dump',
-                            f'./saved_agents/ddpg/critic_optim_{self.unum}.dump')
+        self.model_paths = (f'./saved_agents/DDPG/actor_{self.unum}.dump',
+                            f'./saved_agents/DDPG/critic_{self.unum}.dump')
+        self.optim_paths = (f'./saved_agents/DDPG/actor_optim_{self.unum}.dump',
+                            f'./saved_agents/DDPG/critic_optim_{self.unum}.dump')
         if os.path.isfile(self.model_paths[0]) \
                 and os.path.isfile(self.optim_paths[0]):
             self.ddpg.load_w(path_models=self.model_paths,
@@ -46,7 +45,7 @@ class DDPGAgent(Agent):
             print("Model Loaded")
 
     def load_memory(self):
-        self.mem_path = f'./saved_agents/ddpg/exp_replay_agent_{self.unum}_ddpg.dump'
+        self.mem_path = f'./saved_agents/DDPG/exp_replay_agent_{self.unum}_ddpg.dump'
 
         if not self.test:
             if os.path.isfile(self.mem_path):
@@ -64,6 +63,19 @@ class DDPGAgent(Agent):
         if (episode % 1000 == 0 and episode > 2) or bye:
             self.ddpg.save_replay(mem_path=self.mem_path)
             print("Memory Saved")
+
+    def save_loss(self, episode=0, bye=False):
+        losses = (self.ddpg.critic_loss, self.ddpg.actor_loss)
+        if (episode % 100 == 0 and episode > 0 and not self.test) or bye:
+            with open(f'./saved_agents/{self.ddpg.__name__}/{self.ddpg.__name__}.loss', 'wb') as lf:
+                pickle.dump(losses, lf)
+                lf.close()
+
+    def save_rewards(self, episode=0, bye=False):
+        if (episode % 100 == 0 and episode > 0 and not self.test) or bye:
+            with open(f'./saved_agents/{self.ddpg.__name__}/{self.ddpg.__name__}.reward', 'wb') as lf:
+                pickle.dump(self.currun_rewards, lf)
+                lf.close()
 
     def run(self):
         self.frame_idx = 1
@@ -112,18 +124,18 @@ class DDPGAgent(Agent):
                     # Resets frame_stack and states
                     if not self.gen_mem:
                         self.ddpg.writer.add_scalar(
-                            f'Rewards/ddpg/epi_reward_{self.unum}', episode_rewards, global_step=episode)
+                            f'Rewards/epi_reward_{self.unum}', episode_rewards, global_step=episode)
                     self.currun_rewards.append(episode_rewards)
                     next_state = np.zeros(state.shape)
                     next_frame = np.zeros(frame.shape)
+                    if episode % 100 == 0 and episode > 10 and self.goals > 0:
+                        print(self.goals)
+                        self.goals = 0
                 else:
                     next_frame = self.ddpg.stack_frames(next_state, done)
 
                 if status == hfo.GOAL:
                     self.goals += 1
-                if episode % 100 == 0 and episode > 10 and self.goals > 0:
-                    print(self.goals)
-                    self.goals = 0
                 self.ddpg.append_to_replay(
                     frame, action, reward, next_frame, int(done))
                 frame = next_frame

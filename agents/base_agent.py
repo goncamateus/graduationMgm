@@ -41,7 +41,7 @@ class Agent():
         self.config.LR = 0.00025
         # memory
         self.config.TARGET_NET_UPDATE_FREQ = 1000
-        self.config.EXP_REPLAY_SIZE = 50000
+        self.config.EXP_REPLAY_SIZE = 100000
         self.config.BATCH_SIZE = 64
 
         # Learning control variables
@@ -61,8 +61,8 @@ class Agent():
         self.actions = [hfo.MOVE, hfo.GO_TO_BALL, hfo.DEFEND_GOAL]
         self.rewards = [0, 0, 0]
         self.hfo_env = HFOEnv(self.actions, self.rewards, strict=True, port=port)
-        self.test = True
-        self.gen_mem = False
+        self.test = False
+        self.gen_mem = True
         self.unum = self.hfo_env.getUnum()
 
     def load_model(self, model):

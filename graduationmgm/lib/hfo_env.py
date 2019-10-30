@@ -82,10 +82,12 @@ class HFOEnv(hfo.HFOEnvironment):
             action = action[0]
             if action < -0.5:
                 action = self.action_space.actions[0]
-            elif action >= -0.5 and action < 0:
+            elif action < 0:
                 action = self.action_space.actions[1]
-            elif action >= 0 and action < 0.5:
+            elif action <= 0.5:
                 action = self.action_space.actions[2]
+            else:
+                action = self.action_space.actions[0]
         self.act(action)
         act = self.action_space.actions.index(action)
         status = super(HFOEnv, self).step()
@@ -124,14 +126,14 @@ class HFOEnv(hfo.HFOEnvironment):
 
     def get_reward_def(self, act, next_state, done, status):
         reward = 0
-        ball_potential = self.ball_potential(next_state[3], next_state[4])
+        # ball_potential = self.ball_potential(next_state[3], next_state[4])
 
-        if self.prev_ball_potential is not None:
-            grad_ball_potential = self.clip(
-                (ball_potential - self.prev_ball_potential), -1.0,
-                1.0)
-        else:
-            grad_ball_potential = 0
+        # if self.prev_ball_potential is not None:
+        #     grad_ball_potential = self.clip(
+        #         (ball_potential - self.prev_ball_potential), -1.0,
+        #         1.0)
+        # else:
+        #     grad_ball_potential = 0
 
         if status == hfo.GOAL:
             reward = -10
@@ -149,7 +151,7 @@ class HFOEnv(hfo.HFOEnvironment):
             else:
                 if abs(next_state[10]) <= 1:
                     reward = -1
-        self.prev_ball_potential = grad_ball_potential
+        # self.prev_ball_potential = grad_ball_potential
         return reward
 
     def get_reward_goalie(self, act, next_state, done, status):

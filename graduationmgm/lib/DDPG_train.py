@@ -168,7 +168,6 @@ class DDPGTrain(BaseTrain):
         self.writer.add_scalar(
             'Loss/ddpg/actor_loss', actor_loss, global_step=self.num_actor_update_iteration)
         self.actor_loss.append(actor_loss)
-        
 
         # Update the frozen target models
         for param, target_param in zip(self.critic.parameters(), self.target_critic.parameters()):
