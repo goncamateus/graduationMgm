@@ -7,19 +7,17 @@ import torch
 
 
 class BaseTrain(object):
-    def __init__(self, config, env, log_dir='/tmp/RC_test'):
+    def __init__(self, config, env):
         self.model = None
         self.target_model = None
         self.optimizer = None
         self.device = config.device
-        self.log_dir = log_dir
         self.actor = None
         self.target_actor = None
         self.critic = None
         self.target_critic = None
 
         self.rewards = []
-        self.losses = self.critic_losses = self.policy_losses = []
 
         self.action_log_frequency = config.ACTION_SELECTION_COUNT_FREQUENCY
         if not env.continuous:
@@ -68,47 +66,3 @@ class BaseTrain(object):
     def load_replay(self, mem_path='./saved_agents/exp_replay_agent.dump'):
         if os.path.isfile(mem_path):
             self.memory = pickle.load(open(mem_path, 'rb'))
-
-    def save_sigma_param_magnitudes(self, tstep):
-        with torch.no_grad():
-            sum_, count = 0.0, 0.0
-            for name, param in self.model.named_parameters():
-                if param.requires_grad and 'sigma' in name:
-                    sum_ += torch.sum(param.abs()).item()
-                    count += np.prod(param.shape)
-        if count > 0:
-            with open(os.path.join(self.log_dir,
-                                   'sig_param_mag.csv'), 'a') as f:
-                writer = csv.writer(f)
-                writer.writerow((tstep, sum_ / count))
-
-    def save_td(self, td, tstep):
-        with open(os.path.join('./saved_agents', 'td.csv'), 'w+') as f:
-            writer = csv.writer(f)
-            writer.writerow((tstep, td))
-
-    def save_reward(self, reward):
-        self.rewards.append(reward)
-
-    def save_action(self, action, tstep):
-        self.action_selections[int(action)] += 1.0 / self.action_log_frequency
-        if (tstep + 1) % self.action_log_frequency == 0:
-            with open(os.path.join(self.log_dir, 'action_log.csv'), 'a') as f:
-                writer = csv.writer(f)
-                writer.writerow(list([tstep] + self.action_selections))
-            self.action_selections = [
-                0 for _ in range(len(self.action_selections))]
-
-    def save_losses(self, path):
-        if self.losses:
-            print(np.array(self.losses).mean())
-            with open(path, 'wb') as loss_file:
-                pickle.dump(self.losses, loss_file)
-        if self.critic_losses:
-            print('critic losses:', np.array(self.critic_losses).mean())
-            with open(path[0], 'wb') as critic_loss_file:
-                pickle.dump(self.critic_losses, critic_loss_file)
-        if self.policy_losses:
-            print('actor losses:', np.array(self.policy_losses).mean())
-            with open(path[1], 'wb') as policy_loss_file:
-                pickle.dump(self.policy_losses, policy_loss_file)

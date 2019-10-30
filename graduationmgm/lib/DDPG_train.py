@@ -17,9 +17,8 @@ Variable = lambda *args, **kwargs: autograd.Variable(*args, **kwargs).cuda()
 
 class DDPGTrain(BaseTrain):
     def __init__(self, static_policy=False, env=None,
-                 config=None, log_dir='/tmp/RC_test'):
-        super(DDPGTrain, self).__init__(
-            config=config, env=env, log_dir=log_dir)
+                 config=None):
+        super(DDPGTrain, self).__init__(config=config, env=env)
 
         self.priority_replay = config.USE_PRIORITY_REPLAY
 
@@ -47,6 +46,7 @@ class DDPGTrain(BaseTrain):
             self.actor.parameters(), lr=actor_learning_rate)
         self.critic_optimizer = optim.Adam(
             self.critic.parameters(), lr=critic_learning_rate)
+        self.actor_loss = self.critic_loss = list()
 
         # move to correct device
         self.actor = self.actor.to(self.device)
@@ -147,30 +147,37 @@ class DDPGTrain(BaseTrain):
         # Get current Q estimate
         current_Q = self.critic(state, action)
 
-        # Compute critic loss       
+        # Compute critic loss
         critic_loss = F.smooth_l1_loss(current_Q, target_Q)
-        self.writer.add_scalar('Loss/ddpg/critic_loss', critic_loss, global_step=self.num_critic_update_iteration)
         # Optimize the critic
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
         self.critic_optimizer.step()
+        self.writer.add_scalar('Loss/ddpg/critic_loss', critic_loss,
+                               global_step=self.num_critic_update_iteration)
+        self.critic_loss.append(critic_loss)
 
         # Compute actor loss
         acts = self.actor(state)
         actor_loss = -self.critic(state, acts).mean()
-        self.writer.add_scalar('Loss/ddpg/actor_loss', actor_loss, global_step=self.num_actor_update_iteration)
 
         # Optimize the actor
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
         self.actor_optimizer.step()
+        self.writer.add_scalar(
+            'Loss/ddpg/actor_loss', actor_loss, global_step=self.num_actor_update_iteration)
+        self.actor_loss.append(actor_loss)
+        
 
         # Update the frozen target models
         for param, target_param in zip(self.critic.parameters(), self.target_critic.parameters()):
-            target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
+            target_param.data.copy_(
+                self.tau * param.data + (1 - self.tau) * target_param.data)
 
         for param, target_param in zip(self.actor.parameters(), self.target_actor.parameters()):
-            target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
+            target_param.data.copy_(
+                self.tau * param.data + (1 - self.tau) * target_param.data)
 
         self.num_actor_update_iteration += 1
         self.num_critic_update_iteration += 1

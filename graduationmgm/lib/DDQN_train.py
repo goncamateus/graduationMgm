@@ -16,9 +16,8 @@ Variable = lambda *args, **kwargs: autograd.Variable(*args, **kwargs).cuda()
 
 class DuelingTrain(BaseTrain):
     def __init__(self, static_policy=False, env=None,
-                 config=None, log_dir='/tmp/RC_test'):
-        super(DuelingTrain, self).__init__(
-            config=config, env=env, log_dir=log_dir)
+                 config=None):
+        super(DuelingTrain, self).__init__(config=config, env=env)
         self.noisy = config.USE_NOISY_NETS
         self.priority_replay = config.USE_PRIORITY_REPLAY
 
@@ -38,7 +37,8 @@ class DuelingTrain(BaseTrain):
         self.env = env
 
         self.declare_networks()
-        self.writer = SummaryWriter(f'./saved_agents/DDQN/agent_{self.env.getUnum()}')
+        self.writer = SummaryWriter(
+            f'./saved_agents/DDQN/agent_{self.env.getUnum()}')
         self.losses = list()
 
         self.target_model.load_state_dict(self.model.state_dict())

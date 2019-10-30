@@ -16,10 +16,8 @@ Variable = lambda *args, **kwargs: autograd.Variable(*args, **kwargs).cuda()
 
 
 class DQNTrain(BaseTrain):
-    def __init__(self, static_policy=False, env=None,
-                 config=None, log_dir='/tmp/RC_test'):
-        super(DQNTrain, self).__init__(
-            config=config, env=env, log_dir=log_dir)
+    def __init__(self, static_policy=False, env=None, config=None):
+        super(DQNTrain, self).__init__(config=config, env=env)
         self.noisy = config.USE_NOISY_NETS
         self.priority_replay = config.USE_PRIORITY_REPLAY
 
