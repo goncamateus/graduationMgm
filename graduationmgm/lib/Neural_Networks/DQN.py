@@ -9,9 +9,9 @@ import torch.optim as optim
 from graduationmgm.lib.DQN_train import DQNTrain
 
 
-class DQN(nn.Module):
+class DQNModel(nn.Module):
     def __init__(self, num_inputs, num_outputs):
-        super(DQN, self).__init__()
+        super(DQNModel, self).__init__()
 
         self.feature = nn.Sequential(
             nn.Linear(num_inputs, 128),
@@ -26,17 +26,20 @@ class DQN(nn.Module):
         return x
 
 
-class Model(DQNTrain):
+class DQN(DQNTrain):
+
+    __name__ = 'DQN'
+
     def __init__(self, static_policy=False, env=None, config=None):
         self.stacked_frames = deque(
             [np.zeros(env.observation_space.shape[0], dtype=np.int)
-             for i in range(8)], maxlen=8)
+             for i in range(128)], maxlen=128)
         self.env = env
-        self.num_feats = (self.env.observation_space.shape[0]*8,)
-        super(Model, self).__init__(static_policy, env, config)
+        self.num_feats = (self.env.observation_space.shape[0]*128,)
+        super(DQN, self).__init__(static_policy, env, config)
 
     def declare_networks(self):
-        self.model = DQN(self.env.observation_space.shape[0]*8,
+        self.model = DQNModel(self.env.observation_space.shape[0]*128,
                          self.env.action_space.n)
 
     def stack_frames(self, state, is_new_episode):
@@ -44,10 +47,10 @@ class Model(DQNTrain):
             # Clear our stacked_frams
             self.stacked_frames = deque([np.zeros(
                 state.shape,
-                dtype=np.int) for i in range(8)], maxlen=8)
+                dtype=np.int) for i in range(128)], maxlen=128)
 
-            # Because we're in a new episode, copy the same state 8x
-            for _ in range(8):
+            # Because we're in a new episode, copy the same state 128x
+            for _ in range(128):
                 self.stacked_frames.append(state)
 
             # Stack the frames

@@ -36,7 +36,7 @@ class DDPGTrain(BaseTrain):
         self.num_feats = env.observation_space.shape
         self.env = env
         self.writer = SummaryWriter(
-            f'./saved_agents/agent_{self.env.getUnum()}')
+            f'./saved_agents/DDPG/agent_{self.env.getUnum()}')
         self.declare_networks()
         actor_learning_rate = 1e-4
         critic_learning_rate = 1e-3
@@ -149,7 +149,7 @@ class DDPGTrain(BaseTrain):
 
         # Compute critic loss       
         critic_loss = F.smooth_l1_loss(current_Q, target_Q)
-        self.writer.add_scalar('Loss/critic_loss', critic_loss, global_step=self.num_critic_update_iteration)
+        self.writer.add_scalar('Loss/ddpg/critic_loss', critic_loss, global_step=self.num_critic_update_iteration)
         # Optimize the critic
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
@@ -158,7 +158,7 @@ class DDPGTrain(BaseTrain):
         # Compute actor loss
         acts = self.actor(state)
         actor_loss = -self.critic(state, acts).mean()
-        self.writer.add_scalar('Loss/actor_loss', actor_loss, global_step=self.num_actor_update_iteration)
+        self.writer.add_scalar('Loss/ddpg/actor_loss', actor_loss, global_step=self.num_actor_update_iteration)
 
         # Optimize the actor
         self.actor_optimizer.zero_grad()

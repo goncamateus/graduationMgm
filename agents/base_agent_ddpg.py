@@ -24,11 +24,10 @@ class DDPGAgent(Agent):
         self.goals = 0
 
     def config_env(self):
-        BLOCK = hfo.CATCH
-        self.actions = [hfo.MOVE, hfo.GO_TO_BALL, BLOCK, hfo.DEFEND_GOAL]
-        self.rewards = [0, 0, 0, 0]
+        self.actions = [hfo.MOVE, hfo.GO_TO_BALL, hfo.DEFEND_GOAL]
+        self.rewards = [0, 0, 0]
         self.hfo_env = HFOEnv(self.actions, self.rewards,
-                              strict=True, continuous=True)
+                              strict=True, continuous=True, port=8000)
         self.test = False
         self.gen_mem = True
         self.unum = self.hfo_env.getUnum()
@@ -36,10 +35,10 @@ class DDPGAgent(Agent):
     def load_model(self, model):
         self.ddpg = model(env=self.hfo_env, config=self.config,
                           static_policy=self.test)
-        self.model_paths = (f'./saved_agents/actor_{self.unum}.dump',
-                            f'./saved_agents/critic_{self.unum}.dump')
-        self.optim_paths = (f'./saved_agents/actor_optim_{self.unum}.dump',
-                            f'./saved_agents/critic_optim_{self.unum}.dump')
+        self.model_paths = (f'./saved_agents/ddpg/actor_{self.unum}.dump',
+                            f'./saved_agents/ddpg/critic_{self.unum}.dump')
+        self.optim_paths = (f'./saved_agents/ddpg/actor_optim_{self.unum}.dump',
+                            f'./saved_agents/ddpg/critic_optim_{self.unum}.dump')
         if os.path.isfile(self.model_paths[0]) \
                 and os.path.isfile(self.optim_paths[0]):
             self.ddpg.load_w(path_models=self.model_paths,
@@ -47,7 +46,7 @@ class DDPGAgent(Agent):
             print("Model Loaded")
 
     def load_memory(self):
-        self.mem_path = f'./saved_agents/exp_replay_agent_{self.unum}.dump'
+        self.mem_path = f'./saved_agents/ddpg/exp_replay_agent_{self.unum}_ddpg.dump'
 
         if not self.test:
             if os.path.isfile(self.mem_path):
@@ -111,7 +110,7 @@ class DDPGAgent(Agent):
                     # Resets frame_stack and states
                     if not self.gen_mem:
                         self.ddpg.writer.add_scalar(
-                            f'Rewards/epi_reward_{self.unum}', episode_rewards, global_step=episode)
+                            f'Rewards/ddpg/epi_reward_{self.unum}', episode_rewards, global_step=episode)
                     self.currun_rewards.append(episode_rewards)
                     next_state = np.zeros(state.shape)
                     next_frame = np.zeros(frame.shape)
@@ -120,9 +119,9 @@ class DDPGAgent(Agent):
 
                 if status == hfo.GOAL:
                     self.goals += 1
-                    if episode % 100 == 0 and episode > 10:
-                        print(self.goals)
-                        self.goals = 0
+                if episode % 100 == 0 and episode > 10 and self.goals > 0:
+                    print(self.goals)
+                    self.goals = 0
                 self.ddpg.append_to_replay(
                     frame, action, reward, next_frame, int(done))
                 frame = next_frame

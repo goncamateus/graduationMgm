@@ -37,19 +37,22 @@ class DuelingDQN(nn.Module):
         return value + advantage - advantage.mean()
 
 
-class Model(DuelingTrain):
+class DDQN(DuelingTrain):
+
+    __name__ = 'DDQN'
+
     def __init__(self, static_policy=False, env=None, config=None):
         self.stacked_frames = deque(
             [np.zeros(env.observation_space.shape[0], dtype=np.int)
-             for i in range(8)], maxlen=8)
+             for i in range(128)], maxlen=128)
         self.env = env
-        self.num_feats = (self.env.observation_space.shape[0]*8,)
-        super(Model, self).__init__(static_policy, env, config)
+        self.num_feats = (self.env.observation_space.shape[0]*128,)
+        super(DDQN, self).__init__(static_policy, env, config)
 
     def declare_networks(self):
-        self.model = DuelingDQN(self.env.observation_space.shape[0]*8,
+        self.model = DuelingDQN(self.env.observation_space.shape[0]*128,
                                 self.env.action_space.n)
-        self.target_model = DuelingDQN(self.env.observation_space.shape[0]*8,
+        self.target_model = DuelingDQN(self.env.observation_space.shape[0]*128,
                                        self.env.action_space.n)
 
     def stack_frames(self, state, is_new_episode):
@@ -57,10 +60,10 @@ class Model(DuelingTrain):
             # Clear our stacked_frams
             self.stacked_frames = deque([np.zeros(
                 state.shape,
-                dtype=np.int) for i in range(8)], maxlen=8)
+                dtype=np.int) for i in range(128)], maxlen=128)
 
-            # Because we're in a new episode, copy the same state 8x
-            for _ in range(8):
+            # Because we're in a new episode, copy the same state 128x
+            for _ in range(128):
                 self.stacked_frames.append(state)
 
             # Stack the frames

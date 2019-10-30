@@ -2,10 +2,10 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 echo $DIR
-HFO_mgm/bin/HFO --fullstate --no-logging --headless --defense-agents=1 --offense-npcs=1 --defense-npcs=1 --offense-team=helios --defense-team=helios --trials $1 &
+HFO_mgm/bin/HFO --port=8000 --fullstate --no-logging --headless --defense-agents=1 --offense-npcs=1 --defense-npcs=1 --offense-team=helios --defense-team=helios --trials $1 &
 sleep 5
 # Sleep is needed to make sure doesn't get connected too soon, as unum 1 (goalie)
-python ./agents/agent.py &
+python ./agents/agent1.py &
 sleep 1
 # python ./agents/agent.py &
 # sleep 1

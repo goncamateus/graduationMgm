@@ -1113,30 +1113,47 @@ bool Agent::doReduceAngleToGoal() {
  *
  * This action cuts off the angle between the shooter and the goal; the player always moves on a fixed line.
  */
-
 bool Agent::doDefendGoal() {
-  const WorldModel & wm = this->world();
-  Vector2D self_pos = Strategy::i().getPosition( wm.self().unum() );
-  double dist = self_pos.dist(Vector2D(-ServerParam::i().pitchHalfLength(), self_pos.y));
-  Vector2D goal_pos1( -ServerParam::i().pitchHalfLength() + dist, ServerParam::i().goalHalfWidth() );
-  Vector2D goal_pos2( -ServerParam::i().pitchHalfLength() + dist, -ServerParam::i().goalHalfWidth() );
-  Vector2D goal_pos_center( -ServerParam::i().pitchHalfLength(), 0);
+    Strategy::instance().update( world() );
+    const WorldModel & wm = this->world();
+    Vector2D ball_pos = wm.ball().pos();
+    Vector2D trave1(-ServerParam::i().pitchHalfWidth(), ServerParam::i().goalHalfWidth());
+    Vector2D trave2(-ServerParam::i().pitchHalfWidth(), -ServerParam::i().goalHalfWidth());
+    Vector2D strat_point = Strategy::i().getPosition( wm.self().unum() );
+    Vector2D target_point;
+    if (!wm.getOurGoalie())
+        target_point = strat_point;
+    else
+    {
+      Vector2D goalie_pos = wm.getOurGoalie()->pos();
+      Vector2D self_pos = wm.self().pos();
+      Triangle2D right_triangle(trave1, goalie_pos, ball_pos);
+      Triangle2D left_triangle(trave2, goalie_pos, ball_pos);
+      Vector2D right_circumcenter = right_triangle.circumcenter();
+      Vector2D left_circumcenter = left_triangle.circumcenter();
+      const int self_min = wm.interceptTable()->selfReachCycle();
+      const int mate_min = wm.interceptTable()->teammateReachCycle();
+      const int opp_min = wm.interceptTable()->opponentReachCycle();
+      bool our_ball = std::min(std::min(self_min, mate_min), opp_min) == std::min(self_min, mate_min);
+      if (goalie_pos.dist(trave1) > goalie_pos.dist(trave2))
+          target_point = left_circumcenter;
+      else
+          target_point = right_circumcenter;
+      float best_dist = 100000;
+      for(PlayerPtrCont::const_iterator p = wm.teammatesFromSelf().begin(); p != wm.teammatesFromSelf().end(); ++p)
+      {
+        if(best_dist > (*p)->pos().dist(target_point))
+          best_dist = (*p)->pos().dist(target_point);
+      }
 
-  const BallObject& ball = wm.ball();
-  if (! ball.posValid()) {
-    return false;
-  }
-
-  Vector2D ball_pos = ball.pos();
-
-
-
-  double dist_to_post1 = goal_pos1.dist2(ball_pos);
-  double dist_to_post2 = goal_pos2.dist2(ball_pos);
-  double ratio = dist_to_post2/(dist_to_post1+dist_to_post2);
-  Vector2D target = goal_pos1 * ratio + goal_pos2 * (1-ratio);
-
-  if (Body_GoToPoint(target, 0.25, ServerParam::i().maxDashPower()).execute(this) ||
+      if(strat_point.dist(target_point) > 10 ||
+        our_ball ||
+        ball_pos.x < -34 ||
+        mate_min < self_min ||
+        best_dist < self_pos.dist(target_point))       
+        target_point = strat_point;
+    }
+  if (Body_GoToPoint(target_point, 0.25, ServerParam::i().maxDashPower()).execute(this) ||
       wm.self().collidesWithPost()) { // latter because sometimes fixes
     return true;
   }

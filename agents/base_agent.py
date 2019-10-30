@@ -20,8 +20,8 @@ class Agent():
 
     config = Config()
 
-    def __init__(self, model, per):
-        self.config_env()
+    def __init__(self, model, per, port=6000):
+        self.config_env(port=port)
         self.config_hyper(per)
         self.config_model(model)
         self.episodes = 10000
@@ -51,34 +51,35 @@ class Agent():
 
         # Nstep controls
         self.config.N_STEPS = 1
-        if not self.test:
-            self.config.device = torch.device(
-                "cuda" if torch.cuda.is_available() else "cpu")
-        else:
-            self.config.device = torch.device("cpu")
+        # if not self.test:
+        self.config.device = torch.device(
+            "cuda" if torch.cuda.is_available() else "cpu")
+        # else:
+        #     self.config.device = torch.device("cpu")
 
-    def config_env(self):
-        BLOCK = hfo.CATCH
-        self.actions = [hfo.MOVE, hfo.GO_TO_BALL, BLOCK, hfo.DEFEND_GOAL]
-        self.rewards = [0, 0, 0, 0]
-        self.hfo_env = HFOEnv(self.actions, self.rewards, strict=True)
-        self.test = False
-        self.gen_mem = True
+    def config_env(self, port):
+        self.actions = [hfo.MOVE, hfo.GO_TO_BALL, hfo.DEFEND_GOAL]
+        self.rewards = [0, 0, 0]
+        self.hfo_env = HFOEnv(self.actions, self.rewards, strict=True, port=port)
+        self.test = True
+        self.gen_mem = False
         self.unum = self.hfo_env.getUnum()
 
     def load_model(self, model):
         self.dqn = model(env=self.hfo_env, config=self.config,
                          static_policy=self.test)
-        self.model_path = './saved_agents/model_{}.dump'.format(self.unum)
-        self.optim_path = './saved_agents/optim_{}.dump'.format(self.unum)
+        self.model_path = './saved_agents/{}/model_{}.dump'.format(
+            self.dqn.__name__, self.unum)
+        self.optim_path = './saved_agents/{}/optim_{}.dump'.format(
+            self.dqn.__name__, self.unum)
         if os.path.isfile(self.model_path) and os.path.isfile(self.optim_path):
             self.dqn.load_w(model_path=self.model_path,
                             optim_path=self.optim_path)
             print("Model Loaded")
 
     def load_memory(self):
-        self.mem_path = './saved_agents/exp_replay_agent_{}.dump'.format(
-            self.unum)
+        self.mem_path = './saved_agents/{}/exp_replay_agent_{}.dump'.format(
+            self.dqn.__name__, self.unum)
 
         if not self.test:
             if os.path.isfile(self.mem_path):
@@ -97,7 +98,23 @@ class Agent():
             self.dqn.save_replay(mem_path=self.mem_path)
             print("Memory Saved")
 
+    def save_loss(self, episode=0, bye=False):
+        if (episode % 100 == 0 and episode > 0 and not self.test) or bye:
+            with open(f'./saved_agents/{self.dqn.__name__}/{self.dqn.__name__}.loss', 'wb') as lf:
+                pickle.dump(self.dqn.losses, lf)
+                lf.close()
+
+    def save_rewards(self, episode=0, bye=False):
+        if (episode % 100 == 0 and episode > 0 and not self.test) or bye:
+            with open(f'./saved_agents/{self.dqn.__name__}/{self.dqn.__name__}.reward', 'wb') as lf:
+                pickle.dump(self.currun_rewards, lf)
+                lf.close()
+
     def config_model(self, model):
+        try:
+            os.mkdir(f'saved_agents/{model.__name__}')
+        except FileExistsError:
+            pass
         self.load_model(model)
         self.load_memory()
         self.currun_rewards = list()
@@ -110,6 +127,8 @@ class Agent():
     def save_modelmem(self, episode=0, bye=False):
         self.save_model(episode, bye)
         self.save_mem(episode, bye)
+        self.save_loss(episode, bye)
+        self.save_rewards(episode, bye)
 
     def bye(self, status=hfo.SERVER_DOWN):
         if status == hfo.SERVER_DOWN:
@@ -134,7 +153,7 @@ class Agent():
                     frame = self.dqn.stack_frames(state, done)
                 # If the size of experiences is under max_size*8 runs gen_mem
                 if self.gen_mem and len(self.dqn.memory) < self.config.EXP_REPLAY_SIZE:
-                    action = np.random.randint(0, 4)
+                    action = np.random.randint(0, len(self.actions))
                 else:
                     # When gen_mem is done, saves experiences and starts a new
                     # frame counting and starts the learning process
@@ -149,7 +168,8 @@ class Agent():
                 action = action if not interceptable else 1
 
                 # Calculates results from environment
-                next_state_ori, reward, done, status = self.hfo_env.step(action)
+                next_state_ori, reward, done, status = self.hfo_env.step(
+                    action)
                 next_state = next_state_ori[:-1]
                 episode_rewards += reward
 
@@ -157,12 +177,12 @@ class Agent():
                     # Resets frame_stack and states
                     if not self.gen_mem:
                         self.dqn.writer.add_scalar(
-                            f'Rewards/epi_reward_{self.unum}', episode_rewards, global_step=episode)
+                            f'Rewards/{self.dqn.__name__}/epi_reward_{self.unum}', episode_rewards, global_step=episode)
                     if status == hfo.GOAL:
                         self.goals += 1
-                        if episode % 100 == 0 and episode > 10:
-                            print(self.goals)
-                            self.goals = 0
+                    if episode % 100 == 0 and episode > 10 and self.goals > 0:
+                        print(self.goals)
+                        self.goals = 0
                     self.currun_rewards.append(episode_rewards)
                     next_state = np.zeros(state.shape)
                     next_frame = np.zeros(frame.shape)

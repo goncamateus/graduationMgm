@@ -38,7 +38,8 @@ class DuelingTrain(BaseTrain):
         self.env = env
 
         self.declare_networks()
-        self.writer = SummaryWriter(f'./saved_agents/agent_{self.env.getUnum()}')
+        self.writer = SummaryWriter(f'./saved_agents/DDQN/agent_{self.env.getUnum()}')
+        self.losses = list()
 
         self.target_model.load_state_dict(self.model.state_dict())
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
@@ -121,6 +122,7 @@ class DuelingTrain(BaseTrain):
         unum = self.env.getUnum()
         self.writer.add_scalar(
             f'Loss/loss_{unum}', loss, global_step=self.update_iteration)
+        self.losses.append(loss)
         self.update_iteration += 1
 
         self.update_target_model()

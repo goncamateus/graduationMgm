@@ -48,7 +48,7 @@ class HFOEnv(hfo.HFOEnvironment):
         super(HFOEnv, self).__init__()
         self.connectToServer(hfo.HIGH_LEVEL_FEATURE_SET, './formations-dt',
                              port, 'localhost',
-                             'base_left' if is_offensive else 'base_right',
+                             'base_left' if is_offensive else 'HELIOS_right',
                              play_goalie=play_goalie)
         self.num_teammates = self.getNumTeammates()
         self.num_opponents = self.getNumOpponents()
@@ -66,12 +66,9 @@ class HFOEnv(hfo.HFOEnvironment):
                                                       shape=shape)
         if self.continuous:
             self.action_space = ActionSpaceContinuous(
-                -1, 1, actions, shape=(1,))
+                -1, 0.5, actions, shape=(1,))
         else:
             self.action_space = ActionSpace(actions)
-        self.stamina_basis = super(HFOEnv, self).getState()[-1]
-        self.stamina_basis = self.unnormalize(
-            self.stamina_basis, 0, self.stamina_max)
 
     def step(self, action, is_offensive=False):
         # Prepared when get discrete space with pass
@@ -89,9 +86,6 @@ class HFOEnv(hfo.HFOEnvironment):
                 action = self.action_space.actions[1]
             elif action >= 0 and action < 0.5:
                 action = self.action_space.actions[2]
-            elif action >= 0.5 and action <= 1:
-                action = self.action_space.actions[3]
-
         self.act(action)
         act = self.action_space.actions.index(action)
         status = super(HFOEnv, self).step()

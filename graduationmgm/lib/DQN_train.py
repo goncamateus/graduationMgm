@@ -40,7 +40,7 @@ class DQNTrain(BaseTrain):
 
         self.declare_networks()
         self.writer = SummaryWriter(
-            f'./saved_agents/agent_{self.env.getUnum()}')
+            f'./saved_agents/DQN/agent_{self.env.getUnum()}')
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
 
@@ -117,7 +117,7 @@ class DQNTrain(BaseTrain):
         loss = self.compute_td_loss()
         unum = self.env.getUnum()
         self.writer.add_scalar(
-            f'Loss/loss_{unum}', loss, global_step=self.update_iteration)
+            f'Loss/dqn/loss_{unum}', loss, global_step=self.update_iteration)
         self.update_iteration += 1
 
     def get_action(self, s, eps=0.1):  # faster

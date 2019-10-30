@@ -6,7 +6,7 @@ from graduationmgm.lib.Neural_Networks.DDPG import DDPG
 
 
 def main():
-    agent = DQNAgent(DQN, False)
+    agent = DQNAgent(DDQN, False, port=8000)
     # agent = DDPGAgent(DDPG, False)
     try:
         agent.run()
