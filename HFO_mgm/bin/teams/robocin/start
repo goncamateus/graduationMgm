@@ -1,0 +1,46 @@
+#!/bin/sh
+HOST='127.0.0.1'
+BASEDIR='.'
+NUM=$1
+
+
+if [ x"$LIBPATH" != x ]; then
+  if [ x"$LD_LIBRARY_PATH" = x ]; then
+    LD_LIBRARY_PATH=$LIBPATH
+  else
+    LD_LIBRARY_PATH=$LIBPATH:$LD_LIBRARY_PATH
+  fi
+  export LD_LIBRARY_PATH
+fi
+
+teamname="RoboCIn"
+
+player="./src/robocin_player"
+coach="./src/robocin_coach"
+
+config="./src/player.conf"
+config_dir="./src/formations-dt"
+coach_config="./src/coach.conf"
+
+opt="--player-config ${config} --config_dir ${config_dir}"
+opt="${opt} -h ${HOST} -t ${teamname}"
+
+coachopt="--coach-config ${coach_config}"
+coachopt="${coachopt} -h ${HOST} -t ${teamname}"
+
+team_graphic="--use_team_graphic on --team_graphic_file ./src/team_logo.xpm"
+coachopt="${coachopt} ${team_graphic}"
+
+cd $BASEDIR
+
+case $NUM in
+    1)
+        $player $opt -g
+        ;;
+    2)
+        $coach $coachopt
+        ;;
+    *)
+        $player $opt
+        ;;
+esac
