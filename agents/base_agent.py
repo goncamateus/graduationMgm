@@ -58,8 +58,9 @@ class Agent():
         #     self.config.device = torch.device("cpu")
 
     def config_env(self, port):
-        self.actions = [hfo.MOVE, hfo.GO_TO_BALL, hfo.DEFEND_GOAL]
-        self.rewards = [0, 0, 0]
+        BLOCK = hfo.CATCH
+        self.actions = [hfo.MOVE, hfo.GO_TO_BALL, hfo.DEFEND_GOAL, BLOCK]
+        self.rewards = [0, 0, 0, 0]
         self.hfo_env = HFOEnv(self.actions, self.rewards, strict=True, port=port)
         self.test = False
         self.gen_mem = True

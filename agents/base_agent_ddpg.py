@@ -23,8 +23,9 @@ class DDPGAgent(Agent):
         self.goals = 0
 
     def config_env(self, port):
-        self.actions = [hfo.MOVE, hfo.GO_TO_BALL, hfo.DEFEND_GOAL]
-        self.rewards = [0, 0, 0]
+        BLOCK = hfo.CATCH
+        self.actions = [hfo.MOVE, hfo.GO_TO_BALL, hfo.DEFEND_GOAL, BLOCK]
+        self.rewards = [0, 0, 0, 0]
         self.hfo_env = HFOEnv(self.actions, self.rewards,
                               strict=True, continuous=True, port=port)
         self.test = False

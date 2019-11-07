@@ -24,11 +24,12 @@
 #include "shoot_generator.h"
 #include "bhv_force_pass.h"
 #include "bhv_block.h"
+#include "bhv_marlik_block.h"
+#include "bhv_marlik_move.h"
 #include "bhv_basic_move.h"
 
 #include "bhv_custom_before_kick_off.h"
 #include "bhv_strict_check_shoot.h"
-#include "bhv_basic_move.h"
 
 #include "view_tactical.h"
 
@@ -345,7 +346,7 @@ void Agent::actionImpl() {
       break;
     case CATCH:
       // last_action_status = this->doCatch();
-      last_action_status = Bhv_Block().execute(this);
+      last_action_status = Bhv_MarlikBlock().execute(this);
       break;
     case NOOP:
       last_action_status = false;
@@ -960,7 +961,7 @@ bool
 Agent::doMove()
 {
   Strategy::instance().update( world() );
-  return Bhv_BasicMove().execute(this);
+  return Bhv_MarlikMove().execute(this);
 }
 
 /*-------------------------------------------------------------------*/

@@ -48,7 +48,7 @@ class HFOEnv(hfo.HFOEnvironment):
         super(HFOEnv, self).__init__()
         self.connectToServer(hfo.HIGH_LEVEL_FEATURE_SET, './formations-dt',
                              port, 'localhost',
-                             'base_left' if is_offensive else 'HELIOS_right',
+                             'base_left' if is_offensive else 'RoboCIn_right',
                              play_goalie=play_goalie)
         self.num_teammates = self.getNumTeammates()
         self.num_opponents = self.getNumOpponents()
@@ -87,7 +87,7 @@ class HFOEnv(hfo.HFOEnvironment):
             elif action <= 0.5:
                 action = self.action_space.actions[2]
             else:
-                action = self.action_space.actions[0]
+                action = self.action_space.actions[3]
         self.act(action)
         act = self.action_space.actions.index(action)
         status = super(HFOEnv, self).step()
