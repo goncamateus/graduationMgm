@@ -189,6 +189,7 @@ HighLevelFeatureExtractor::ExtractFeatures(const rcsc::WorldModel& wm,
   const int opp_min = wm.interceptTable()->opponentReachCycle();
 
   bool isIntercept = false;
+  int num = wm.self().unum();
   if ( ! wm.existKickableTeammate()
         && ( self_min <= 3
             || ( self_min <= mate_min
@@ -196,6 +197,83 @@ HighLevelFeatureExtractor::ExtractFeatures(const rcsc::WorldModel& wm,
             )
         )
     isIntercept = true;
+
+Vector2D myInterceptPos = wm.ball().inertiaPoint( self_min );
+Vector2D me = wm.self().pos();
+Vector2D homePos = Strategy::i().getPosition( wm.self().unum() );
+Vector2D ball = wm.ball().pos();
+
+{
+    if( num > 5 && ! wm.existKickableTeammate()
+        && ( self_min <= 3
+             || ( self_min < mate_min + 3
+                  && self_min < opp_min + 4 ) 
+              )
+         )
+    {
+            isIntercept = true;
+    }
+
+    if( num > 6 && ( wm.existKickableOpponent() || (opp_min < 5 && mate_min > opp_min) ) &&
+        ( ball.dist( homePos ) < 10.0 || (self_min < 6 && ball.dist( homePos ) < 15.0 ) ||
+          (self_min < 6 && ball.dist( homePos ) < 25.0 && num > 8)  )
+        && ball.x > -36.0 && wm.self().stamina() > 4000.0 && !wm.existKickableTeammate() )
+    {
+            isIntercept = true;
+    }
+
+}
+
+{
+    if ( num < 6 && ! wm.existKickableTeammate()
+         && ( self_min <= 2
+              || ( self_min <= mate_min // self_min < mate_min + 3 bud!
+                   && self_min < opp_min + 2 ) // base: self_min < opp_min + 4
+              )
+         )
+    {
+        isIntercept = true;
+    }
+
+    if( (num == 4 || num == 5) && self_min <= 4 && ball.absY() > 15.0 && ball.x < -36.0 &&
+        me.dist(Vector2D(-50.0,0.0)) < ball.dist(Vector2D(-50.0,0.0)) &&
+        !wm.existKickableTeammate())
+    {
+        isIntercept = true;
+    }
+}
+
+{
+    if( ( num > 6 && mate_min > self_min + 1 && self_min < opp_min + 3 &&
+          myInterceptPos.x > 15.0 ) ||
+        ( num == 11 && mate_min > self_min && self_min < opp_min + 6 &&
+          myInterceptPos.x > 5.0 && myInterceptPos.x > wm.offsideLineX() - 3 ) ||
+        ( num > 6 && myInterceptPos.x > 20.0 && self_min < mate_min + 3 && opp_min < mate_min &&
+          opp_min < self_min && !wm.existKickableTeammate() )
+      )
+    {
+        isIntercept = true;
+    }
+}
+
+{
+    int goalCycles = 100;
+
+    for( int z=1; z<15; z++ )
+      if( wm.ball().inertiaPoint( z ).x < -52.5 && wm.ball().inertiaPoint( z ).absY() < 8.0 )
+      {
+         goalCycles = z;
+         break;
+      }
+
+    if( (wm.self().unum() == 2 || wm.self().unum() == 3) && goalCycles != 100 &&
+        mate_min >= goalCycles && me.x < -45.0 && !wm.existKickableTeammate() )
+    {
+
+      if( wm.ball().inertiaPoint( self_min ).x > -52.0 )
+        isIntercept = true;
+    }
+}
 
   addFeature(isIntercept);
   addFeature(self.stamina());
