@@ -126,49 +126,52 @@ class DDPGTrain(BaseTrain):
         self.memory.store((s, a, r, s_, d))
 
     def update(self):  # faster
-        state, next_state, action, reward, done = self.memory.sample(
-            self.batch_size)
-        reward = reward.reshape(-1, 1)
-        done = done.reshape(-1, 1)
-        num_feat = state.shape[1] * state.shape[2]
-        state = Variable(torch.FloatTensor(
-            np.float32(state))).view(self.batch_size, num_feat)
-        next_state = Variable(torch.FloatTensor(
-            np.float32(next_state))).view(self.batch_size, num_feat)
-        action = Variable(torch.FloatTensor(action))
-        reward = Variable(torch.FloatTensor(reward))
-        done = Variable(torch.FloatTensor(done))
+        for _ in range(100):
+            state, next_state, action, reward, done = self.memory.sample(
+                self.batch_size)
+            reward = reward.reshape(-1, 1)
+            done = done.reshape(-1, 1)
+            num_feat = state.shape[1] * state.shape[2]
+            state = Variable(torch.FloatTensor(
+                np.float32(state))).view(self.batch_size, num_feat)
+            next_state = Variable(torch.FloatTensor(
+                np.float32(next_state))).view(self.batch_size, num_feat)
+            action = Variable(torch.FloatTensor(action))
+            reward = Variable(torch.FloatTensor(reward))
+            done = Variable(torch.FloatTensor(done))
 
-        # Compute the target Q value
-        acts = self.target_actor(next_state)
-        target_Q = self.target_critic(next_state, acts)
-        target_Q = reward + (self.gamma * target_Q * (1 - done)).detach()
+            # Compute the target Q value
+            acts = self.target_actor(next_state)
+            target_Q = self.target_critic(next_state, acts)
+            target_Q = reward + (self.gamma * target_Q * (1 - done)).detach()
 
-        # Get current Q estimate
-        current_Q = self.critic(state, action)
+            # Get current Q estimate
+            current_Q = self.critic(state, action)
 
-        # Compute critic loss
-        critic_loss = F.smooth_l1_loss(current_Q, target_Q)
-        # Optimize the critic
-        self.critic_optimizer.zero_grad()
-        critic_loss.backward()
-        self.critic_optimizer.step()
-        self.writer.add_scalar('Loss/ddpg/critic_loss', critic_loss,
-                               global_step=self.num_critic_update_iteration)
-        self.critic_loss.append(critic_loss)
+            # Compute critic loss
+            critic_loss = F.smooth_l1_loss(current_Q, target_Q)
+            # Optimize the critic
+            self.critic_optimizer.zero_grad()
+            critic_loss.backward()
+            self.critic_optimizer.step()
+            self.writer.add_scalar('Loss/ddpg/critic_loss', critic_loss,
+                                global_step=self.num_critic_update_iteration)
+            self.critic_loss.append(critic_loss)
 
-        # Compute actor loss
-        acts = self.actor(state)
-        actor_loss = -self.critic(state, acts).mean()
+            # Compute actor loss
+            acts = self.actor(state)
+            actor_loss = -self.critic(state, acts).mean()
 
-        # Optimize the actor
-        self.actor_optimizer.zero_grad()
-        actor_loss.backward()
-        self.actor_optimizer.step()
-        self.writer.add_scalar(
-            'Loss/ddpg/actor_loss', actor_loss, global_step=self.num_actor_update_iteration)
-        self.actor_loss.append(actor_loss)
+            # Optimize the actor
+            self.actor_optimizer.zero_grad()
+            actor_loss.backward()
+            self.actor_optimizer.step()
+            self.writer.add_scalar(
+                'Loss/ddpg/actor_loss', actor_loss, global_step=self.num_actor_update_iteration)
+            self.actor_loss.append(actor_loss)
 
+            self.num_actor_update_iteration += 1
+            self.num_critic_update_iteration += 1
         # Update the frozen target models
         for param, target_param in zip(self.critic.parameters(), self.target_critic.parameters()):
             target_param.data.copy_(
@@ -178,8 +181,6 @@ class DDPGTrain(BaseTrain):
             target_param.data.copy_(
                 self.tau * param.data + (1 - self.tau) * target_param.data)
 
-        self.num_actor_update_iteration += 1
-        self.num_critic_update_iteration += 1
 
     def get_action(self, s):
         with torch.no_grad():

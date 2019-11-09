@@ -118,14 +118,15 @@ class DuelingTrain(BaseTrain):
         return loss
 
     def update(self, frame=0):
-        loss = self.compute_td_loss()
-        unum = self.env.getUnum()
-        self.writer.add_scalar(
-            f'Loss/loss_{unum}', loss, global_step=self.update_iteration)
-        self.losses.append(loss)
-        self.update_iteration += 1
+        for _ in range(100):
+            loss = self.compute_td_loss()
+            unum = self.env.getUnum()
+            self.writer.add_scalar(
+                f'Loss/loss_{unum}', loss, global_step=self.update_iteration)
+            self.losses.append(loss)
+            self.update_iteration += 1
 
-        self.update_target_model()
+            self.update_target_model()
 
     def get_action(self, s, eps=0.1):  # faster
         with torch.no_grad():
