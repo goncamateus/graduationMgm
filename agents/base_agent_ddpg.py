@@ -16,18 +16,18 @@ logger = logging.getLogger('Agent')
 
 class DDPGAgent(Agent):
 
-    def __init__(self, model, per, port=6000):
-        self.config_env(port=port)
+    def __init__(self, model, per, team='base', port=6000):
+        self.config_env(team, port)
         self.config_hyper(per)
         self.config_model(model)
         self.goals = 0
 
-    def config_env(self, port):
+    def config_env(self, team, port):
         BLOCK = hfo.CATCH
         self.actions = [hfo.MOVE, hfo.GO_TO_BALL, hfo.DEFEND_GOAL, BLOCK]
         self.rewards = [0, 0, 0, 0]
         self.hfo_env = HFOEnv(self.actions, self.rewards,
-                              strict=True, continuous=True, port=port)
+                              strict=True, continuous=True, team=team, port=port)
         self.test = False
         self.gen_mem = True
         self.unum = self.hfo_env.getUnum()

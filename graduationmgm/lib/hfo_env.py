@@ -44,11 +44,11 @@ class HFOEnv(hfo.HFOEnvironment):
 
     def __init__(self, actions, rewards,
                  is_offensive=False, play_goalie=False,
-                 strict=False, port=6000, continuous=False):
+                 strict=False, port=6000, continuous=False, team='base'):
         super(HFOEnv, self).__init__()
         self.connectToServer(hfo.HIGH_LEVEL_FEATURE_SET, './formations-dt',
                              port, 'localhost',
-                             'base_left' if is_offensive else 'RoboCIn_right',
+                             team + '_left' if is_offensive else team + '_right',
                              play_goalie=play_goalie)
         self.num_teammates = self.getNumTeammates()
         self.num_opponents = self.getNumOpponents()

@@ -20,8 +20,8 @@ class Agent():
 
     config = Config()
 
-    def __init__(self, model, per, port=6000):
-        self.config_env(port=port)
+    def __init__(self, model, per, team='base', port=6000):
+        self.config_env(team, port)
         self.config_hyper(per)
         self.config_model(model)
         self.episodes = 10000
@@ -57,11 +57,12 @@ class Agent():
         # else:
         #     self.config.device = torch.device("cpu")
 
-    def config_env(self, port):
+    def config_env(self, team, port):
         BLOCK = hfo.CATCH
         self.actions = [hfo.MOVE, hfo.GO_TO_BALL, hfo.DEFEND_GOAL, BLOCK]
         self.rewards = [0, 0, 0, 0]
-        self.hfo_env = HFOEnv(self.actions, self.rewards, strict=True, port=port)
+        self.hfo_env = HFOEnv(self.actions, self.rewards,
+                              strict=True, port=port, team=team)
         self.test = False
         self.gen_mem = True
         self.unum = self.hfo_env.getUnum()
