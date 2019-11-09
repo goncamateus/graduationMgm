@@ -118,7 +118,7 @@ class DuelingTrain(BaseTrain):
         return loss
 
     def update(self, frame=0):
-        for _ in range(100):
+        for _ in range(21):
             loss = self.compute_td_loss()
             unum = self.env.getUnum()
             self.writer.add_scalar(

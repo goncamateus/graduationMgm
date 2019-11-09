@@ -126,7 +126,7 @@ class DDPGTrain(BaseTrain):
         self.memory.store((s, a, r, s_, d))
 
     def update(self):  # faster
-        for _ in range(100):
+        for _ in range(21):
             state, next_state, action, reward, done = self.memory.sample(
                 self.batch_size)
             reward = reward.reshape(-1, 1)
