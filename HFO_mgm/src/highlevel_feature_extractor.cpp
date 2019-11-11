@@ -19,7 +19,7 @@ HighLevelFeatureExtractor::HighLevelFeatureExtractor(int num_teammates,
   assert(numOpponents >= 0);
   numFeatures = num_basic_features + features_per_teammate * numTeammates
       + features_per_opponent * numOpponents;
-  numFeatures+=2; // action status, stamina
+  // numFeatures+=2; // action status, stamina
   feature_vec.resize(numFeatures);
 }
 
