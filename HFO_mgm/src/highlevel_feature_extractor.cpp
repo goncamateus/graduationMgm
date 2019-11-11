@@ -84,14 +84,8 @@ HighLevelFeatureExtractor::ExtractFeatures(const rcsc::WorldModel& wm,
   } else {
     addFeature(FEAT_INVALID);
   }
-  const Vector2D formation_point = Strategy::i().getPosition( wm.self().unum() );
-  // Feature[10]: formation X-postion
-  addFeature(formation_point.x);
 
-  // Feature[11]: formation Y-Position
-  addFeature(formation_point.y);
-
-  // Features[11 - 11+T]: teammate's open angle to goal
+  // Features[10 - 10+T]: teammate's open angle to goal
   int detected_teammates = 0;
   for (PlayerPtrCont::const_iterator it=teammates.begin(); it != teammates.end(); ++it) {
     const PlayerObject* teammate = *it;
@@ -105,7 +99,7 @@ HighLevelFeatureExtractor::ExtractFeatures(const rcsc::WorldModel& wm,
     addFeature(FEAT_INVALID);
   }
 
-  // Features[11+T - 11+2T]: teammates' dists to closest opps
+  // Features[10+T - 10+2T]: teammates' dists to closest opps
   if (numOpponents > 0) {
     detected_teammates = 0;
     for (PlayerPtrCont::const_iterator it=teammates.begin(); it != teammates.end(); ++it) {
@@ -126,7 +120,7 @@ HighLevelFeatureExtractor::ExtractFeatures(const rcsc::WorldModel& wm,
     }
   }
 
-  // Features [11+2T - 11+3T]: open angle to teammates
+  // Features [10+2T - 10+3T]: open angle to teammates
   detected_teammates = 0;
   for (PlayerPtrCont::const_iterator it=teammates.begin(); it != teammates.end(); ++it) {
     const PlayerObject* teammate = *it;
@@ -140,7 +134,7 @@ HighLevelFeatureExtractor::ExtractFeatures(const rcsc::WorldModel& wm,
     addFeature(FEAT_INVALID);
   }
 
-  // Features [11+3T - 11+6T]: x, y, unum of teammates
+  // Features [10+3T - 10+6T]: x, y, unum of teammates
   detected_teammates = 0;
   for (PlayerPtrCont::const_iterator it=teammates.begin(); it != teammates.end(); ++it) {
     const PlayerObject* teammate = *it;
@@ -162,7 +156,7 @@ HighLevelFeatureExtractor::ExtractFeatures(const rcsc::WorldModel& wm,
     addFeature(FEAT_INVALID);
   }
 
-  // Features [11+6T - 11+6T+3O]: x, y, unum of opponents
+  // Features [10+6T - 10+6T+3O]: x, y, unum of opponents
   int detected_opponents = 0;
   for (PlayerPtrCont::const_iterator it = opponents.begin(); it != opponents.end(); ++it) {
     const PlayerObject* opponent = *it;

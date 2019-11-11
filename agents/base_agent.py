@@ -41,7 +41,7 @@ class Agent():
         self.config.LR = 0.00025
         # memory
         self.config.TARGET_NET_UPDATE_FREQ = 1000
-        self.config.EXP_REPLAY_SIZE = 100000
+        self.config.EXP_REPLAY_SIZE = 75000
         self.config.BATCH_SIZE = 64
 
         # Learning control variables
@@ -150,8 +150,8 @@ class Agent():
                 # Every time when game resets starts a zero frame
                 if done:
                     state_ori = self.hfo_env.get_state()
-                    interceptable = state_ori[-1]
-                    state = state_ori[:-1]
+                    # interceptable = state_ori[-1]
+                    state = state_ori
                     frame = self.dqn.stack_frames(state, done)
                 # If the size of experiences is under max_size*8 runs gen_mem
                 if self.gen_mem and len(self.dqn.memory) < self.config.EXP_REPLAY_SIZE:
@@ -167,12 +167,12 @@ class Agent():
                     epsilon = self.config.epsilon_by_frame(
                         self.frame_idx)
                     action = self.dqn.get_action(frame, epsilon)
-                action = action if not interceptable else 1
+                # action = action if not interceptable else 1
 
                 # Calculates results from environment
                 next_state_ori, reward, done, status = self.hfo_env.step(
                     action)
-                next_state = next_state_ori[:-1]
+                next_state = next_state_ori
                 episode_rewards += reward
 
                 if done:
@@ -198,7 +198,7 @@ class Agent():
                 if done:
                     break
                 self.frame_idx += 1
-            if not self.gen_mem and not self.test:
+            if not self.gen_mem:
                 self.dqn.update(self.frame_idx)
             self.save_modelmem(episode)
             self.bye(status)

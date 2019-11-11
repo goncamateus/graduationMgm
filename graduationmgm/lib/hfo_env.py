@@ -260,10 +260,7 @@ class HFOEnv(hfo.HFOEnvironment):
 
     def strict_state(self, state):
         num_mates = self.num_teammates
-        new_state = state[:8].tolist()
-        new_state.append(state[9])
-        new_state.append(state[10])
-        new_state.append(state[11])
+        new_state = state[:10].tolist()
         for i in range(10 + num_mates, 10 + num_mates + self.choosed_mates):
             new_state.append(state[i])
         index = 10 + 3 * num_mates

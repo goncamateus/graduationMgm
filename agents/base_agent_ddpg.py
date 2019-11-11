@@ -91,7 +91,7 @@ class DDPGAgent(Agent):
                 if done:
                     state_ori = self.hfo_env.get_state()
                     interceptable = state_ori[-1]
-                    state = state_ori[:-1]
+                    state = state_ori
                     frame = self.ddpg.stack_frames(state, done)
                 # If the size of experiences is under max_size*8 runs gen_mem
                 if self.gen_mem and len(self.ddpg.memory) < self.config.EXP_REPLAY_SIZE:
@@ -118,7 +118,7 @@ class DDPGAgent(Agent):
                 # Calculates results from environment
                 next_state_ori, reward, done, status = self.hfo_env.step(
                     action)
-                next_state = next_state_ori[:-1]
+                next_state = next_state_ori
                 episode_rewards += reward
 
                 if done:
