@@ -5,12 +5,20 @@ Inside you'll find codes comparing each technique.
 
 For 3000 test episodes:
 
-100k training dqn -> 52.2% defenses against Helios2013
-100k training dqn -> 52.2% defenses against RoboCIn2019
+ - Helios2013 vs Helios2013 -> 77,5% defenses of Helios2013
+ - Helios2013 vs RoboCIn2019 -> 71% defenses of RoboCIn2019
+ - RoboCIn2019 vs Helios2013 -> 77.4% defenses of Helios2013
+ - RoboCIn2019 vs RoboCIn2019 -> 53.3% defenses of RoboCIn2019
 
-100k training ddqn -> 55% defenses against Helios2013
-100k training ddqn -> 55% defenses against RoboCIn2019
+100k training dqn:
+ - 52.2% defenses against Helios2013
+ - 52.2% defenses against RoboCIn2019
 
-100k training ddpg -> 30.2% defenses against Helios2013
-100k training ddpg -> 30.2% defenses against RoboCIn2019
+100k training ddqn:
+ - 55% defenses against Helios2013
+ - 55% defenses against RoboCIn2019
+
+100k training ddpg:
+ - 30.2% defenses against Helios2013
+ - 30.2% defenses against RoboCIn2019
 
