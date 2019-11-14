@@ -28,8 +28,8 @@ class DDPGAgent(Agent):
         self.rewards = [0, 0, 0, 0]
         self.hfo_env = HFOEnv(self.actions, self.rewards,
                               strict=True, continuous=True, team=team, port=port)
-        self.test = False
-        self.gen_mem = True
+        self.test = True
+        self.gen_mem = False
         self.unum = self.hfo_env.getUnum()
 
     def load_model(self, model):
@@ -55,13 +55,13 @@ class DDPGAgent(Agent):
                 print("Memory Loaded")
 
     def save_model(self, episode=0, bye=False):
-        if (episode % 100 == 0 and episode > 0 and not self.test) or bye:
+        if (episode % 100 == 0 and episode > 0) or bye:
             self.ddpg.save_w(path_models=self.model_paths,
                              path_optims=self.optim_paths)
             print("Model Saved")
 
     def save_mem(self, episode=0, bye=False):
-        if (episode % 1000 == 0 and episode > 2) or bye:
+        if (episode % 1000 == 0 and episode > 2 and not self.test) or bye:
             self.ddpg.save_replay(mem_path=self.mem_path)
             print("Memory Saved")
 
@@ -144,7 +144,7 @@ class DDPGAgent(Agent):
                 if done:
                     break
                 self.frame_idx += 1
-            if not self.gen_mem:
+            if not self.gen_mem or self.test:
                 self.ddpg.update()
             self.save_modelmem(episode)
             self.bye(status)
