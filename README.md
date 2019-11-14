@@ -11,14 +11,17 @@ For 3000 test episodes:
  - RoboCIn2019 vs RoboCIn2019 -> 53.3% defenses of RoboCIn2019
 
 100k training dqn:
- - 52.2% defenses against Helios2013
- - 52.2% defenses against RoboCIn2019
+ - With Helios2013 goalie:
+    - 52.2% defenses against Helios2013
+    - 52.2% defenses against RoboCIn2019
 
 100k training ddqn:
- - 55% defenses against Helios2013
- - 55% defenses against RoboCIn2019
+ - With Helios2013 goalie:
+    - 55% defenses against Helios2013
+    - 55% defenses against RoboCIn2019
 
 100k training ddpg:
- - 30.2% defenses against Helios2013
- - 30.2% defenses against RoboCIn2019
+ - With Helios2013 goalie:
+    - 30.2% defenses against Helios2013
+    - 30.2% defenses against RoboCIn2019
 
