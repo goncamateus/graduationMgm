@@ -54,17 +54,17 @@ class DDPG(DDPGTrain):
                           len(self.stacked_frames))
 
     def declare_networks(self):
-        self.actor = Actor(self.env.observation_space.shape[0]*8,
+        self.actor = Actor(self.env.observation_space.shape[0]*32,
                            self.env.action_space.shape[0], self.max_action)
-        self.target_actor = Actor(self.env.observation_space.shape[0]*8,
+        self.target_actor = Actor(self.env.observation_space.shape[0]*32,
                                   self.env.action_space.shape[0], self.max_action)
         self.target_actor.load_state_dict(self.actor.state_dict())
 
         self.critic = Critic(
-            self.env.observation_space.shape[0]*8,
+            self.env.observation_space.shape[0]*32,
             self.env.action_space.shape[0])
         self.target_critic = Critic(
-            self.env.observation_space.shape[0]*8,
+            self.env.observation_space.shape[0]*32,
             self.env.action_space.shape[0])
         self.target_critic.load_state_dict(self.critic.state_dict())
 
@@ -73,10 +73,10 @@ class DDPG(DDPGTrain):
             # Clear our stacked_frams
             self.stacked_frames = deque([np.zeros(
                 frame.shape,
-                dtype=np.int) for i in range(8)], maxlen=8)
+                dtype=np.int) for i in range(32)], maxlen=32)
 
-            # Because we're in a new episode, copy the same frame 8x
-            for _ in range(8):
+            # Because we're in a new episode, copy the same frame 32x
+            for _ in range(32):
                 self.stacked_frames.append(frame)
 
             # Stack the frames
