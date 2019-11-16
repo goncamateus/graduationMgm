@@ -167,13 +167,15 @@ class DDPGTrain(BaseTrain):
         self.num_actor_update_iteration += 1
         self.num_critic_update_iteration += 1
         # Update the frozen target models
-        for param, target_param in zip(self.critic.parameters(), self.target_critic.parameters()):
-            target_param.data.copy_(
-                self.tau * param.data + (1 - self.tau) * target_param.data)
+        if self.num_critic_update_iteration % 1000 == 0:
+            for param, target_param in zip(self.critic.parameters(), self.target_critic.parameters()):
+                target_param.data.copy_(
+                    self.tau * param.data + (1 - self.tau) * target_param.data)
 
-        for param, target_param in zip(self.actor.parameters(), self.target_actor.parameters()):
-            target_param.data.copy_(
-                self.tau * param.data + (1 - self.tau) * target_param.data)
+        if self.num_actor_update_iteration % 1000 == 0:
+            for param, target_param in zip(self.actor.parameters(), self.target_actor.parameters()):
+                target_param.data.copy_(
+                    self.tau * param.data + (1 - self.tau) * target_param.data)
 
 
     def get_action(self, s):
