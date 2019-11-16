@@ -48,8 +48,6 @@ class DQNTrain(BaseTrain):
 
         if self.static_policy:
             self.model.eval()
-        else:
-            self.model.train()
 
         self.update_iteration = 0
 

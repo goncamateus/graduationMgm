@@ -52,9 +52,6 @@ class DuelingTrain(BaseTrain):
         if self.static_policy:
             self.model.eval()
             self.target_model.eval()
-        else:
-            self.model.train()
-            self.target_model.train()
 
         self.update_count = 0
         self.update_iteration = 0

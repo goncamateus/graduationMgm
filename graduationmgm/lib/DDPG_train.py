@@ -59,11 +59,6 @@ class DDPGTrain(BaseTrain):
             self.target_actor.eval()
             self.critic.eval()
             self.target_critic.eval()
-        else:
-            self.actor.train()
-            self.target_actor.train()
-            self.critic.train()
-            self.target_critic.train()
 
         self.update_count = 0
 

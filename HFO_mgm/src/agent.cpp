@@ -347,6 +347,8 @@ void Agent::actionImpl() {
     case CATCH:
       // last_action_status = this->doCatch();
       last_action_status = Bhv_MarlikBlock().execute(this);
+      if(!last_action_status)
+        last_action_status = this->doMove();
       break;
     case NOOP:
       last_action_status = false;
