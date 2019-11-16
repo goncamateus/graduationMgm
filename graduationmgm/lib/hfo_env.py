@@ -66,7 +66,7 @@ class HFOEnv(hfo.HFOEnvironment):
                                                       shape=shape)
         if self.continuous:
             self.action_space = ActionSpaceContinuous(
-                -1, 0.5, actions, shape=(1,))
+                -1, 1, actions, shape=(1,))
         else:
             self.action_space = ActionSpace(actions)
 

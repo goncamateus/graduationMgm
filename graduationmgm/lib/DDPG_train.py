@@ -148,7 +148,7 @@ class DDPGTrain(BaseTrain):
         current_Q = self.critic(state, action)
 
         # Compute critic loss
-        critic_loss = F.smooth_l1_loss(current_Q, target_Q)
+        critic_loss = F.mse_loss(current_Q, target_Q)
         # Optimize the critic
         self.critic_optimizer.zero_grad()
         critic_loss.backward()

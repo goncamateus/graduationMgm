@@ -31,6 +31,7 @@ class DuelingTrain(BaseTrain):
         self.priority_beta_start = config.PRIORITY_BETA_START
         self.priority_beta_frames = config.PRIORITY_BETA_FRAMES
         self.priority_alpha = config.PRIORITY_ALPHA
+        self.tau = config.tau
 
         self.static_policy = static_policy
         self.num_actions = env.action_space.n
@@ -142,4 +143,6 @@ class DuelingTrain(BaseTrain):
         self.update_count += 1
         self.update_count = self.update_count % self.target_net_update_freq
         if self.update_count == 0:
-            self.target_model.load_state_dict(self.model.state_dict())
+            for param, target_param in zip(self.model.parameters(), self.target_model.parameters()):
+                target_param.data.copy_(
+                    self.tau * param.data + (1 - self.tau) * target_param.data)

@@ -28,8 +28,8 @@ class DDPGAgent(Agent):
         self.rewards = [0, 0, 0, 0]
         self.hfo_env = HFOEnv(self.actions, self.rewards,
                               strict=True, continuous=True, team=team, port=port)
-        self.test = True
-        self.gen_mem = False
+        self.test = False
+        self.gen_mem = True
         self.unum = self.hfo_env.getUnum()
 
     def load_model(self, model):

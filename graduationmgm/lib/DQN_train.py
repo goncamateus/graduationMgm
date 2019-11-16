@@ -105,7 +105,7 @@ class DQNTrain(BaseTrain):
         expected_q_value = reward + self.gamma * next_q_value * (1 - done)
 
         # loss = (q_value - expected_q_value.detach()).pow(2).mean()
-        loss = F.smooth_l1_loss(q_value, expected_q_value)
+        loss = F.mse_loss(q_value, expected_q_value)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
