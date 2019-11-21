@@ -12,7 +12,7 @@ def main(team='base'):
         team = 'HELIOS'
     elif team == 'robocin':
         team = 'RoboCIn'
-    agent = DQNAgent(DDQN, False, team=team, port=6000)
+    agent = DQNAgent(DDQN, False, team=team, port=9500)
     # agent = DDPGAgent(DDPG, False)
     try:
         agent.run()

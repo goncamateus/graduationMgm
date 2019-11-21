@@ -29,7 +29,7 @@ class Agent():
 
     def config_hyper(self, per):
         # epsilon variables
-        self.config.epsilon_start = 1.0
+        self.config.epsilon_start = 0.01
         self.config.epsilon_final = 0.01
         self.config.epsilon_decay = 30000
         self.config.epsilon_by_frame = lambda frame_idx: self.config.epsilon_final + \
@@ -134,8 +134,6 @@ class Agent():
 
     def bye(self, status=hfo.SERVER_DOWN):
         if status == hfo.SERVER_DOWN:
-            if not self.test:
-                self.save_modelmem(0, True)
             self.hfo_env.act(hfo.QUIT)
             exit()
 
