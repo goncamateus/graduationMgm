@@ -217,7 +217,7 @@
   \gdef\@malecoadvisertitle{Co-Advisor}
   \gdef\@femalecoadvisertitle{Co-Advisor}
   \gdef\@notdefined{UNDEFINED}
-  \gdef\acknowledgementsname{Acknowledgements}
+  \gdef\acknowledgementsname{Agradecimentos}
   \gdef\@axiomname{Axiom}
   \gdef\@conjecturename{Conjecture}
   \gdef\@defname{Definition}
@@ -418,7 +418,7 @@ requirements for the degree of \@degree\ in \@majorfielden.
      {\bfseries}
      {\chapnumfont\textcolor{chapnumcol}{\thechapter}}
      {-24pt}
-     {\normalsize}
+     {\Huge}
 }
 
 \newcommand{\formatMainmatterChapter}{
@@ -441,6 +441,7 @@ requirements for the degree of \@degree\ in \@majorfielden.
   \formatAppendixmatterChapter
   \pagestyle{fancy}
 }
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PAGE LAYOUT
@@ -978,3 +979,5 @@ requirements for the degree of \@degree\ in \@majorfielden.
 \newcommand{\corref}[1]{\@corname~\ref{#1}\xspace}
 \newcommand{\propref}[1]{\@propname~\ref{#1}\xspace}
 \newcommand{\pgref}[1]{\@pagename~\pageref{#1}\xspace}
+
+

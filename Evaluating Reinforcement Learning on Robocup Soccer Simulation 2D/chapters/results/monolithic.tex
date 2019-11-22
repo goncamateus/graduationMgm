@@ -1,0 +1,51 @@
+\section{Monolithic}\label{mono}
+
+For the Monolithic classifiers, we have the Decision Tree, Multinomial and Bernoulli Naive Bayes, K-Nearest Neighbor (KNN), Support Vector Machine (SVM), Multi-Layer Perceptron and Random Forest.
+
+The setup for Decision Tree is the split strategy to select the most relevant feature with Gini Impurity as criterion. In Multinomial and Bernoulli Naive Bayes we choose a $\alpha$ of 1. For KNN, we use 5 as the number of neighbors and a uniform weight for the neighbor points. The SVM has L2 as penalty, linear kernel, $C = 1$ and tolerance of $10^{-4}$. For MLP we used L2 regularization with alpha of $10^{-4}$, 1000 neurons in hidden layer, no early stopping, activation layer as relu, max of 1000 iterations and tolerance of $10^{-4}$. For Random Forests we are using 10 estimators, the minimum samples to split is 2 and Gini Impurity as criterion. The parameters can also be seen in Table \ref{table:monolithic_params}, these parameters are the default ones, in this work we are not using optimization.
+
+\begin{table}[h!]
+    \centering
+    \renewcommand{\arraystretch}{1.8}
+    \begin{tabular}{ p{4cm}p{1.62cm}|p{1.5cm}|p{1.5cm}|p{1.5cm}|p{1.5cm} }
+        \toprule
+        Model & \multicolumn{5}{c}{Parameters} \\
+        \midrule
+        Decision Tree & criterion Gini & spliter best & & &\\
+        Multinomial NB & $\alpha = 1$ & & & &\\
+        Bernoulli NB & $\alpha = 1$ & & & &\\
+        KNN & $ k = 5 $ & uniform weight & & &\\
+        SVM & linear \newline kernel & penalty L2 & $C = 1$ & tolerance $10^{-4}$ &\\
+        MLP  & $ \alpha = 10^{-4} $ & reg. L2  & activation relu & tolerance $10^{-4}$ & hidden neurons 1000 \\
+        Random Forest & criterion Gini & samples 2 & estimators 10 & & \\ [1ex]
+        \bottomrule
+        \end{tabular}
+        \caption{%
+        Parameters for Monolithic Classifiers%
+        }\label{table:monolithic_params}
+        \vspace{4ex}
+\end{table}
+
+\begin{table}[h!]
+    \centering
+    \renewcommand{\arraystretch}{1.8}
+    \begin{tabular}{ p{3cm}p{2.8cm}p{2.8cm}p{2.8cm}p{2.8cm} }
+        \toprule
+        Model & Precision & Recall & F1 Score & Accuracy \\
+        \midrule
+        Decision Tree &     0.8324 (0.0552) & 0.8318 (0.0625) & 0.8301 (0.0446) & 0.8413 (0.0281) \\
+        Multinomial NB &    0.8019 (0.0540) & 0.8022 (0.0632) & 0.7998 (0.0425) & 0.8204 (0.0282) \\
+        Bernoulli NB &      0.8075 (0.0549) & 0.7979 (0.0662) & 0.8003 (0.0456) & 0.8219 (0.0310) \\
+        KNN &               0.8560 (0.0488) & 0.7969 (0.0604) & 0.8175 (0.0448) & 0.8393 (0.0242) \\
+        SVM &               0.8790 (0.0480) & 0.8702 (0.0541) & 0.8728 (0.0392) & 0.8796 (0.0274) \\
+        MLP &               \textbf{0.8838 (0.0474)} & \textbf{0.8709 (0.0544)} & \textbf{0.8758 (0.0426)} & \textbf{0.8856 (0.0287)} \\
+        Random Forest &     0.8821 (0.0510) & 0.8459 (0.0686) & 0.8586 (0.0469) & 0.8719 (0.0319) \\ [1ex]
+        \bottomrule
+        \end{tabular}
+        \caption{%
+        Result for Monolithic Classifiers, Mean (Standard Deviation), the best classifier for each metric is highlighted in bold. Using the %
+        }\label{table:result_monolithic}
+        \vspace{4ex}
+\end{table}
+
+Table \ref{table:result_monolithic} is showing the results for Monolithic Classifiers. We can observe that the MLP has better results overall in all metrics evaluated and the difference between MLP, Random Forest and SVM does not surpass 0.1. These results are within the confidence interval, suggesting that a the Random Forest and a LinearSVM can solve the problem as good as a MLP.

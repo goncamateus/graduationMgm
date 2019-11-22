@@ -1,0 +1,3 @@
+- Falar sobre META-DES com Perceptron com CalibratedClassifierCV
+- Escrever sobre a arquitetura
+- Escrever conclusão

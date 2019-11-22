@@ -1,1 +1,7 @@
 \chapter{Conclusion}\label{chapter:conclusion}
+
+The Defense Line is one of the most important task in the Soccer Simulation 2D league. There are many techniques implemented by other teams using deterministic policies that has a great performance. These algorithms came through deep studies in human behaviours in real soccer based on timing of intercept, positioning and blocking passes.
+
+The main problem of those policies is that it is predictable therefore there is a way to break that line. Our work's main intent is to create unpredictable agent to help the goalie and do not receive goals. This work compares 3 Deep Reinforcement Learning algorithms with 2 deterministic teams with great rate of defenses in the SS2D.
+
+We can conclude that DRL has a great potential of applicability in Soccer Simulation 2D due to it's elasticity to learn about the opponent and teammates. We can see in Tables \ref{tab:helios_result} and \ref{tab:rc_result} that the agent has to learn more about RoboCIn2019's goalie than the Helios2013's. DDPG had a great performance in our experiments performing a great percentage of defenses, being better to use rather than the deterministic teams. Also DQN and DDQN had a good performance but stays behind the deterministic algorithms. Based on the results, probably a more specific training for each team will lead to a better performance of each algorithm.

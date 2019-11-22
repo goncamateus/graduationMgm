@@ -1,1 +1,46 @@
 \section{Final Considerations}\label{result_ending}
+
+With the Monolithic and MCS compared, now we must compare the best Monolithic and the best MCS to fully understand which model is the most indicated to solve the problem of Android API methods categorization. Table \ref{table:overall_comp} show the performance of each classifier: MLP and METADES using Decision Tree, and we can see that the MLP has better results in all the metrics.
+
+\begin{table}[hb]
+    \centering
+    \renewcommand{\arraystretch}{1.8}
+    \begin{tabular}{ p{3cm}p{2.8cm}p{2.8cm}p{2.8cm}p{2.8cm} }
+        \toprule
+        Model & Precision & Recall & Accuracy & F1 Score \\
+        \midrule
+        MLP &       \textbf{0.8838 (0.0474)} & \textbf{0.8709 (0.0544)} & \textbf{0.8758 (0.0426)} & \textbf{0.8856 (0.0287)} \\
+        META-DES \newline Decision Tree &  0.8609 (0.0551) & 0.8423 (0.0639) & 0.8492 (0.0482) & 0.8575 (0.0344) \\
+        \bottomrule
+    \end{tabular}
+    \caption{%
+        The best of Monolithic compared to the best of MCS, Mean (Standard Deviation). The best classifier for each metric is highlighted in bold.
+        %
+    }\label{table:overall_comp}
+\end{table}
+
+\begin{table}[!ht]
+    \centering
+    \renewcommand{\arraystretch}{1.8}
+    \begin{tabular}{ p{2.2cm}p{0.8cm}p{2.7cm}p{2.7cm}p{2.7cm}p{2.7cm} }
+        \toprule
+        Model & Class & Precision & Recall & Accuracy & F1 Score \\
+        \midrule
+        \multirow{3}{*}{MLP}
+        & (1) & 0.8792 (0.0597) & \textbf{0.8708 (0.0786)} & \textbf{0.8731 (0.0577)} & \textbf{0.8856 (0.0287)} \\
+        & (2) & \textbf{0.8803 (0.0486)} & \textbf{0.8219 (0.0598)} & \textbf{0.8489 (0.0450)} & \textbf{0.8856 (0.0287)} \\
+        & (3) & \textbf{0.8920 (0.0339)} & \textbf{0.9200 (0.0248)} & \textbf{0.9055 (0.0251)} & \textbf{0.8856 (0.0287)} \\
+        \midrule
+        \multirow{3}{*}{\shortstack{METADES\\Decision Tree }}
+        & (1) & \textbf{0.8870 (0.0658)} & 0.8611 (0.0889) & 0.8702 (0.0580) & 0.8575 (0.0344) \\
+        & (2) & 0.8344 (0.0636) & 0.7676 (0.0691) & 0.7983 (0.0579) & 0.8575 (0.0344) \\
+        & (3) & 0.8614 (0.0361) & 0.8982 (0.0338) & 0.8790 (0.0288) & 0.8575 (0.0344) \\
+        \bottomrule
+        \end{tabular}
+        \caption{%
+        The best of Monolithic compared to the best of MCS, Mean (Standard Deviation). The Class (1) represents the Source methods, Class (2) are the Sink methods and (3) Neithernor. The best classifier for each metric and class is highlighted in bold.
+        %
+        }\label{table:per_class_overall_comp}
+\end{table}
+
+Looking deep to the results for each class, we can observe in Table \ref{table:per_class_overall_comp} that the MLP has a better score in most classes and metrics whereas METADES using Decision Tree as base classifier has better Precision when classifying the Source methods. Other point to be considered is the standard deviation, in this case we can conclude that, as the classifiers are also in the same interval for all the metrics, this is another evidence that a simpler algorithm can address this problem.

@@ -69,7 +69,7 @@
 %%          \citep (from natbib) -- To cite a reference between parenthesis
 %%          citationblock environment -- To produce direct citation blocks according to the ABNT
 
-\documentclass[pt,oneside,onehalfspacing,bscprop]{risethesis}
+\documentclass[en,oneside,onehalfspacing,bsc]{risethesis}
 \usepackage{colortbl}
 \usepackage{color}
 \usepackage[table,xcdraw]{xcolor}
@@ -86,6 +86,18 @@
 \usepackage{lipsum}
 \usepackage{sectsty}
 \usepackage{listings}
+\usepackage{float}
+\usepackage{siunitx}
+\usepackage{amsthm}
+\usepackage{tikz}
+\usetikzlibrary{tikzmark}
+\usepackage[ruled,vlined]{algorithm2e}
+
+\newtheorem{thm}{Theorem}[chapter] % reset theorem numbering for each chapter
+
+\theoremstyle{definition}
+\newtheorem{defn}[thm]{Definition}
+
 
 \definecolor{dkgreen}{rgb}{0,0.6,0}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
@@ -158,6 +170,7 @@
             pdfauthor={Rise Thesis Template (ABNT)},
             breaklinks=true]{hyperref}
 
+
 \address{RECIFE}
 
 \universitypt{Universidade Federal de Pernambuco}
@@ -190,13 +203,34 @@
 
 %\presentationpage
 
+%\begin{fichacatalografica}
+%	\FakeFichaCatalografica % Comment this line when you have the correct file
+%     \includepdf{fig_ficha_catalografica.pdf} % Uncomment this
+%\end{fichacatalografica}
+
+%\banca
+
 %\begin{dedicatory}
 %I dedicate this thesis to all my family, friends and professors who gave me the
 %necessary support to get here.
 %\end{dedicatory}
 
-%\acknowledgements
-%\input{agradecimentos}
+\acknowledgements
+\input{agradecimentos}
+
+\begin{epigraph}[]{Racionais MC's}
+Firmeza total, mais um ano se passando
+
+Graças a Deus a gente tá com saúde aí, 'morô?
+
+Muita coletividade na quebrada, dinheiro no bolso
+
+Sem miséria, e é nóis
+
+Vamos brindar o dia de hoje
+
+Que o amanhã só pertence a Deus, a vida é loka.
+\end{epigraph}
 
 \let\cleardoublepage\clearpage
 
@@ -213,10 +247,10 @@
 }
 
 % List of figures
-% \listoffigures
+\listoffigures
 
 % List of tables
-% \listoftables
+\listoftables
 
 % List of acronyms
 % Acronyms manual: http://linorg.usp.br/CTAN/macros/latex/contrib/acronym/acronym.pdf
@@ -224,16 +258,18 @@
 % \input{acronyms}
 
 % Summary (tables of contents)
-% \tableofcontents
+\tableofcontents
 
 \mainmatter
 
 % Uncomment to graduation
-% \include{chapters/introduction}
-% \include{chapters/background}
+\include{chapters/introduction}
+\include{chapters/ss2d}
+\include{chapters/architecture}
+\include{chapters/background}
 \include{chapters/environment}
-% \include{chapters/results}
-% \include{chapters/conclusion}
+\include{chapters/results}
+\include{chapters/conclusion}
 
 
 % Uncomment to proposal

@@ -1,1 +1,39 @@
 \chapter{Methodology}
+\section{Feature Set}
+HFO's high-level features set returns many features that is not relevant for our problem, such as opening angle to opponent's goal or pass opening angle to a teammate. We decided to remove those variables for the models understand more easier what to do. Another change was in the normalization of the features. The original environment returned normalized features in relation due to the half field problem. Once our problem is more comprehensive and the agents are in the same space and the features are strict, We maintained the without normalization. 
+
+Let $T$ denote the number of teammates in game and $O$ the
+number of opponents. There are a total of $10 + 3T + 2O + 1$ high-level
+features in our environment.
+
+\begin{enumerate}[noitemsep]
+\setcounter{enumi}{-1}
+\item{\textbf{X position} - The agent’s x-position on the field.}
+\item{\textbf{Y position} - The agent’s y-position on the field.}
+\item{\textbf{Orientation} - The global direction that the agent is facing.}
+\item{\textbf{Ball X} - The ball's x-position on the field.}
+\item{\textbf{Ball Y} - The ball's y-position on the field.}
+\item{\textbf{Able to Kick} - Boolean indicating if the agent can kick the ball.}
+\item{\textbf{Goal Center Proximity} - Agent's proximity to the center of the goal.}
+\item{\textbf{Goal Center Angle} - Angle from the agent to the center of the goal.}
+\item{\textbf{Proximity to Opponent} - If an opponent is present,
+  proximity to the closest opponent. Invalid if there are no
+  opponents.}
+\item [$T$] {\textbf{Proximity from Teammate i to Opponent} - For each
+  teammate i: the proximity from the teammate to the closest
+  opponent. This feature is invalid if there are no opponents or if
+  teammates are present but not detected.}
+\item [$2T$] {\textbf{X, Y of Teammates} - For each teammate: the x-position, y-position.}
+\item [$2O$] {\textbf{X, Y of Opponents} - For each opponent: the x-position, y-position.}
+\item [$+1$] {\textbf{Interceptable} - Whether the agent can intercept the ball or
+ not.}
+\end{enumerate}
+
+\section{Actions}
+Based on \cite{cyrus}, We chose four actions: 
+\begin{enumerate}
+    \item Move: Performs the basic move, going to the position according to the formation file.
+    \item Go to ball: Performs an interception move, tackling the opponent when it can.
+    \item Defend Goal: Goes to the circumcenter position of the triangle goalie position, right or left goal post position and attacker position.
+    \item Block: Performs \cite{marlik2011}'s Marlik Block.
+\end{enumerate}

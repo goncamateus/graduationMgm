@@ -9,7 +9,28 @@
     version      = {1.0},
     url          = {https://github.com/LARG/HFO}
     }
-
+@misc{ss2dmanual,
+    author       = {
+    Mao Chen and
+    Klaus Dorer and
+    Ehsan Foroughi and
+    Fredrik Heintz and
+    ZhanXiang Huang and
+    Spiros Kapetanakis and
+    Kostas Kostiadis and
+    Johan Kummeneje and
+    Jan Murray and
+    Itsuki Noda and 
+    Oliver Obst and 
+    Pat Riley and
+    Timo Steffens and
+    Yi Wang† and
+    Xiang Yin†
+    },
+    title        = {{RoboCup Soccer Simulator Documentation}},
+    year         = 2003,
+    url          = {https://rcsoccersim.github.io/manual/soccerserver.html}
+    }
 @ARTICLE{gym,
        author = {{Brockman}, Greg and {Cheung}, Vicki and {Pettersson}, Ludwig and
          {Schneider}, Jonas and {Schulman}, John and {Tang}, Jie and
@@ -139,6 +160,18 @@ Demis Hassabis},
   url       = {https://archive.robocup.info/Soccer/Simulation/2D/TDPs/RoboCup/2019/CYRUS_SS2D_RC2019_TDP.pdf}
 }
 
+@article{marlik2011,
+  author    = {Amir Tavafi and
+  Nima Nozari and
+   Reza Vatani and
+  Mani Rad Yousefi and
+  Sepideh Rahmatinia and
+  Pooyan Pirdeyr},
+  title     = {{MarliK 2011 Soccer 2D Simulation} Team Description Paper},
+  year      = {2011},
+  url       = {http://archive.robocup.info/Soccer/Simulation/2D/TDPs/RoboCup/2011/MarliK_SS2D_RC2011_TDP.pdf}
+}
+
 @article{DDQN,
   author    = {Ziyu Wang and
                Nando de Freitas and
@@ -155,7 +188,16 @@ Demis Hassabis},
   bibsource = {dblp computer science bibliography, https://dblp.org}
 }
 
-@inproceedings{DDPG,
+@misc{DDPG,
+    title={Continuous control with deep reinforcement learning},
+    author={Timothy P. Lillicrap and Jonathan J. Hunt and Alexander Pritzel and Nicolas Heess and Tom Erez and Yuval Tassa and David Silver and Daan Wierstra},
+    year={2015},
+    eprint={1509.02971},
+    archivePrefix={arXiv},
+    primaryClass={cs.LG}
+}
+
+@inproceedings{dpg,
  author = {Silver, David and Lever, Guy and Heess, Nicolas and Degris, Thomas and Wierstra, Daan and Riedmiller, Martin},
  title = {Deterministic Policy Gradient Algorithms},
  booktitle = {Proceedings of the 31st International Conference on International Conference on Machine Learning - Volume 32},
@@ -167,3 +209,314 @@ Demis Hassabis},
  acmid = {3044850},
  publisher = {JMLR.org},
 } 
+
+@misc{glidersv1,
+    title={Gliders2d: Source Code Base for RoboCup 2D Soccer Simulation League},
+    author={Mikhail Prokopenko and Peter Wang},
+    year={2018},
+    eprint={1812.10202},
+    archivePrefix={arXiv},
+    primaryClass={cs.MA}
+}
+
+@misc{glidersv2,
+    title={Fractals2019: Combinatorial Optimisation with Dynamic Constraint Annealing},
+    author={Mikhail Prokopenko and Peter Wang},
+    year={2019},
+    eprint={1909.01788},
+    archivePrefix={arXiv},
+    primaryClass={cs.AI}
+}
+
+@article{wrighteagle2014,
+  author    = {Haochong Zhang and
+  Guanghui Lu and
+    Rongya Chen and
+  Xiao Li and
+ Xiaoping Chen},
+  title     = {{WrightEagle 2D Soccer Simulation} 2014},
+  year      = {2014},
+  url       = {http://archive.robocup.info/Soccer/Simulation/2D/TDPs/RoboCup/2014/WrightEagle_SS2D_RC2014_TDP.pdf}
+}
+
+@InProceedings{neurohassle,
+author="Gabel, Thomas
+and Riedmiller, Martin
+and Trost, Florian",
+editor="Iocchi, Luca
+and Matsubara, Hitoshi
+and Weitzenfeld, Alfredo
+and Zhou, Changjiu",
+title="A Case Study on Improving Defense Behavior in Soccer Simulation 2D: The NeuroHassle Approach",
+booktitle="RoboCup 2008: Robot Soccer World Cup XII",
+year="2009",
+publisher="Springer Berlin Heidelberg",
+address="Berlin, Heidelberg",
+pages="61--72",
+abstract="While a lot of papers on RoboCup's robotic 2D soccer simulation have focused on the players' offensive behavior, there are only a few papers that specifically address a team's defense strategy. In this paper, we consider a defense scenario of crucial importance: We focus on situations where one of our players must interfere and disturb an opponent ball leading player in order to scotch the opponent team's attack at an early stage and, even better, to eventually conquer the ball initiating a counter attack. We employ a reinforcement learning methodology that enables our players to autonomously acquire such an aggressive duel behavior, and we have embedded it into our soccer simulation team's defensive strategy. Employing the learned NeuroHassle policy in our competition team, we were able to clearly improve the capabilities of our defense and, thus, to increase the performance of our team as a whole.",
+isbn="978-3-642-02921-9"
+}
+
+@misc{hausknecht2015deep,
+    title={Deep Reinforcement Learning in Parameterized Action Space},
+    author={Matthew Hausknecht and Peter Stone},
+    year={2015},
+    eprint={1511.04143},
+    archivePrefix={arXiv},
+    primaryClass={cs.AI}
+}
+
+@article{brainstormersIntercept,
+author = {Gabel, Thomas and Riedmiller, Martin},
+year = {2006},
+month = {01},
+pages = {18-23},
+title = {Learning a Partial Behavior for a Competitive Robotic Soccer Agent.},
+volume = {20},
+journal = {KI}
+}
+
+@book{bertsekas1996neuro,
+  title={Neuro-dynamic programming},
+  author={Bertsekas, Dimitri P and Tsitsiklis, John N},
+  volume={5},
+  year={1996},
+  publisher={Athena Scientific Belmont, MA}
+}
+
+@article{RoboCupAIChallenge,
+author = {Kitano, Hiroaki and Asada, Minoru and Kuniyoshi, Yasuo and Noda, Itsuki and Osawa, Eiichi and Matsubara, Hitoshi},
+year = {1997},
+month = {01},
+pages = {73-85},
+title = {RoboCup: A challenge problem for AI},
+volume = {18},
+journal = {AI Magazine}
+}
+
+@article{brainstormers2002,
+author = {Martin Riedmiller and
+A. Merke and
+A. Hoffmann and
+M. Nickschas and
+D. Withopf and
+F. Zacharias},
+year = {2002},
+title = {Brainstormers 2002 - Team Description Paper.},
+url = {http://archive.robocup.info/Soccer/Simulation/2D/TDPs/RoboCup/2002/Brainstormers_SS2D_RC2002_TDP.ps}
+}
+
+@article{keepawayRL,
+  title={Reinforcement learning for robocup soccer keepaway},
+  author={Stone, Peter and Sutton, Richard S and Kuhlmann, Gregory},
+  journal={Adaptive Behavior},
+  volume={13},
+  number={3},
+  pages={165--188},
+  year={2005},
+  publisher={Sage Publications Sage CA: Thousand Oaks, CA}
+}
+
+@article{passingCrit,
+  title={Multi-criteria optimization of ball passing in simulated soccer},
+  author={Kyrylov, Vadim and Bergman, David S and Greber, Martin},
+  journal={Journal of Multi-Criteria Decision Analysis},
+  volume={13},
+  number={2-3},
+  pages={103--113},
+  year={2005},
+  publisher={Wiley Online Library}
+}
+
+@article{helios2016,
+author = {Hidehisa Akiyama1 and
+Tomoharu Nakashima and
+Jordan Henrio and
+Thomas Henn and
+Sho Tanaka and
+Tomonari Nakade and
+Takuya Fukushima},
+year = {2016},
+title = {HELIOS2016: Team Description Paper},
+url = {http://archive.robocup.info/Soccer/Simulation/2D/TDPs/RoboCup/2016/HELIOS_SS2D_RC2016_TDP.pdf}
+}
+
+@book{mlp,
+ author = {Haykin, Simon},
+ title = {Neural Networks: A Comprehensive Foundation},
+ year = {1998},
+ isbn = {0132733501},
+ edition = {2nd},
+ publisher = {Prentice Hall PTR},
+ address = {Upper Saddle River, NJ, USA},
+} 
+
+@article{cyrus2014,
+  author    = {
+  Rauf Khayami and
+  Nader Zare and
+  Maryam Karimi and
+  Payman Mahor and
+  Ardavan Afshar and
+  Mohammad Sadegh Najafi and
+  Mahsa Asadi and
+  Ehsan Asali and
+  Ashkan Keshavarzi},
+  title     = {{Cyrus 2D Simulation 2014} Team Description Paper},
+  year      = {2014},
+  url       = http://archive.robocup.info/Soccer/Simulation/2D/TDPs/RoboCup/2014/CYRUS_SS2D_RC2014_TDP.pdf}
+}
+
+@article{per,
+  title={Prioritized experience replay},
+  author={Schaul, Tom and Quan, John and Antonoglou, Ioannis and Silver, David},
+  journal={arXiv preprint arXiv:1511.05952},
+  year={2015}
+}
+
+@article{cyrus2018,
+  author    = {Nader Zare and
+  Mohsen Sadeghipour and
+  Ashkan Keshavarzi and
+  Mahtab Sarvmeili and
+  Amin Nikanjam and
+  Reza Aghayari and
+  Arad Firouzkoohi and
+  Mohammad Abolnejad and
+  Sina Elahimanesh and
+  Amin Akhgari
+},
+  title     = {{Cyrus 2D Simulation 2018} Team Description Paper},
+  year      = {2018},
+  url       = {http://archive.robocup.info/Soccer/Simulation/2D/TDPs/RoboCup/2018/CYRUS_SS2D_RC2018_TDP.pdf}
+}
+
+@article{tgze,
+    author = {
+    José Nilton de Oliveira Lima Júnior and
+    Hansenclever Basani
+    },
+    title     = {Sim-to-Real: Adapting the Control for Robots Playing Soccer in the Real World},
+    year      = {2019},
+    url       = {https://www.cin.ufpe.br/~tg/2019-1/TG_EC/TG_jnolj_final.pdf}
+}
+
+@online{rcssserver,
+  author = {RoboCup},
+  title = {RoboCup Soccer Simulation Server},
+  year = 2018,
+  url = {https://github.com/rcsoccersim/rcssserver},
+  urldate = {2019-11-07}
+}
+
+@inproceedings{heliosbase,
+author = {Akiyama, Hidehisa and Nakashima, Tomoharu},
+year = {2014},
+month = {01},
+pages = {528-535},
+title = {HELIOS base: An open source package for the RoboCup soccer 2D simulation},
+volume = {8371},
+doi = {10.1007/978-3-662-44468-9_46}
+}
+
+@Article{qlearning,
+author="Watkins, Christopher J. C. H.
+and Dayan, Peter",
+title="Q-learning",
+journal="Machine Learning",
+year="1992",
+month="May",
+day="01",
+volume="8",
+number="3",
+pages="279--292",
+abstract="Q-learning (Watkins, 1989) is a simple way for agents to learn how to act optimally in controlled Markovian domains. It amounts to an incremental method for dynamic programming which imposes limited computational demands. It works by successively improving its evaluations of the quality of particular actions at particular states.",
+issn="1573-0565",
+doi="10.1007/BF00992698",
+url="https://doi.org/10.1007/BF00992698"
+}
+
+@article{rl,
+  title={Reinforcement learning: A survey},
+  author={Kaelbling, Leslie Pack and Littman, Michael L and Moore, Andrew W},
+  journal={Journal of artificial intelligence research},
+  volume={4},
+  pages={237--285},
+  year={1996}
+}
+
+@article{rlsutton,
+  title={Reinforcement learning: An introduction},
+  author={Sutton, Richard S and Barto, Andrew G},
+  year={2011},
+  publisher={Cambridge, MA: MIT Press}
+}
+
+@article{mdp,
+  title={A Markovian decision process},
+  author={Bellman, Richard},
+  journal={Journal of mathematics and mechanics},
+  pages={679--684},
+  year={1957},
+  publisher={JSTOR}
+}
+
+@inproceedings{doubledqn,
+  title={Deep reinforcement learning with double q-learning},
+  author={Van Hasselt, Hado and Guez, Arthur and Silver, David},
+  booktitle={Thirtieth AAAI conference on artificial intelligence},
+  year={2015}
+}
+
+@inproceedings{doubleqlearning,
+  title={Double Q-learning},
+  author={Hasselt, Hado V},
+  booktitle={Advances in Neural Information Processing Systems},
+  pages={2613--2621},
+  year={2010}
+}
+
+@misc{relu,
+    title={Deep Learning using Rectified Linear Units (ReLU)},
+    author={Abien Fred Agarap},
+    year={2018},
+    eprint={1803.08375},
+    archivePrefix={arXiv},
+    primaryClass={cs.NE}
+}
+
+@book{python, 
+  title={Python tutorial}, 
+  author={Van Rossum, Guido and Drake Jr, Fred L}, 
+  year={1995}, 
+  publisher={Centrum voor Wiskunde en Informatica Amsterdam, The Netherlands} 
+}
+
+@Book{cpp,
+  author =       "{ISO}",
+  title =        "{ISO\slash IEC 14882:1998}: {Programming} languages
+                 --- {C++}",
+  publisher =    pub-ISO,
+  address =      pub-ISO:adr,
+  pages =        "732",
+  day =          "1",
+  month =        sep,
+  year =         "1998",
+  ISBN =         "????",
+  ISBN-13 =      "????",
+  LCCN =         "????",
+  bibdate =      "Tue Dec 12 06:45:55 2000",
+  bibsource =    "http://www.math.utah.edu/pub/tex/bib/isostd.bib;
+                 http://www.math.utah.edu/pub/tex/bib/mathcw.bib",
+  note =         "Available in electronic form for online purchase at
+                 \path=http://webstore.ansi.org/= and
+                 \path=http://www.cssinfo.com/=.",
+  price =        "CHF 351, US\$18 (electronic), US\$252 (print);
+                 US\$245.00",
+  URL =          "http://webstore.ansi.org/ansidocstore/product.asp?sku=ISO%2FIEC+14882%2D1998;
+                 http://webstore.ansi.org/ansidocstore/product.asp?sku=ISO%2FIEC+14882%3A1998;
+                 http://www.iso.ch/cate/d25845.html;
+                 https://webstore.ansi.org/",
+  acknowledgement = ack-nhfb,
+  xxISBN =       "none",
+}

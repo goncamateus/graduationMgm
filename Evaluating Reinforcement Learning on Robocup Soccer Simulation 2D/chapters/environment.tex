@@ -1,25 +1,21 @@
 \chapter{Environment}\label{chapter:environment}
+In this chapter we discuss about the simulating environment that we used or developed in our experiments. It is divided in 3 sections: Server's Referee: the changes we made on HFO's referee; Feature set: the features we chose to receive from HFO's environment; Actions: the output of our Neural Networks; Reward System: the learning conditions to our Neural Networks. 
 
-The Half Field Offensive (HFO), \cite{hfo}, is an interface environment designed specifically to train SARSA (state, action, reward, next state, next action) agents based on the usual OpenAI environments. See figure \ref{images/HFO_diagram.png}. It provides 2 spaces of states and 3 spaces of actions:
-\begin{itemize}
-    \item Low-Level Features and Actions- Uses raw features from Sim2d server and provides raw actions.
-    \item Mid-Level Actions - Uses raw features but some complex and chained actions.
-    \item High-Level Features and Actions - Uses processed features and only complex or chained actions.
-\end{itemize}
-We adapted this environment to our problem changing the server's referee, the feature set and the actions that the agents can perform.
+\section{HFO Server's Referee}
+The Half Field Offensive environment has a principle: start an episode with the ball positioned in the middle field. That is not applicable to our real domain. We did some changes in HFO's Server due to this incompatibility of domains:
 
-\section{Server's Referee}
 \begin{itemize}
     \item Half Field Offensive's referee restricts all agents on the right side of the field. Our problem is more complex due to defending on opponent's side as well. Our referee covers the whole field.
     \item Given two areas O and T, opponents spawns randomly on O and the same for teammates on T. We need a spawn similar to a real attack situation in Soccer Simulation 2D. For the defender team We fixed specifics X axis for types of agent and randomizes the Y axis. The midfielders starts in front of the defenders. For the attacking team, is the same logic for attackers and midfielders. We decided to do not randomize the Y axis and fix it on 0 for all attackers.   
     \item The ball always starts near the midfielders of the attacking team in our environment. Doing so, We simulate a counterattack of the opponent.
+    \item We use a noise-free server due to the agents initial learning. Once well trained, it can train in a noisy system.
 \end{itemize}
 
 \section{Feature Set}
 HFO's high-level features set returns many features that is not relevant for our problem, such as opening angle to opponent's goal or pass opening angle to a teammate. We decided to remove those variables for the models understand more easier what to do. Another change was in the normalization of the features. The original environment returned normalized features in relation due to the half field problem. Once our problem is more comprehensive and the agents are in the same space and the features are strict, We maintained the without normalization. 
 
 Let $T$ denote the number of teammates in game and $O$ the
-number of opponents. There are a total of $11 + 3T + 2O + 1$ high-level
+number of opponents. There are a total of $10 + 3T + 2O + 1$ high-level
 features in our environment.
 
 \begin{enumerate}[noitemsep]
@@ -35,8 +31,6 @@ features in our environment.
 \item{\textbf{Proximity to Opponent} - If an opponent is present,
   proximity to the closest opponent. Invalid if there are no
   opponents.}
-\item{\textbf{Formation X position} - Agent’s x-position according to team's formation.}
-\item{\textbf{Formation Y position} - Agent’s y-position according to team's formation.}
 \item [$T$] {\textbf{Proximity from Teammate i to Opponent} - For each
   teammate i: the proximity from the teammate to the closest
   opponent. This feature is invalid if there are no opponents or if
@@ -48,12 +42,15 @@ features in our environment.
 \end{enumerate}
 
 \section{Actions}
-Based on \cite{cyrus}, We chose four actions:
+Based on \cite{cyrus}, We chose four actions: 
 \begin{enumerate}
     \item Move: Performs the basic move, going to the position according to the formation file.
     \item Go to ball: Performs an interception move, tackling the opponent when it can.
-    \item Block: Blocks a shoot or a pass from an opponent to another.
-    \item Defend Goal: Blocks a shoot at the same line of the goalkeeper.
+    \item Defend Goal: Goes to the circumcenter position of the triangle goalie position, right or left goal post position and attacker position.
+    \item Block: Performs \cite{marlik2011}'s Marlik Block.
 \end{enumerate}
 
-Once the action "Catch" does not fit in our problem yet, We decided to exchange it for Block. We used the algorithm of \cite{cyrus2014}.
+We decided to choose Marlik's block over Cyrus' due to Cyrus' harassment and effectiveness. Cyrus' block is too advanced and that induces great chances of a dribble and then a goal. 
+
+\section{Reward System}
+The reward system is also very similar to \cite{cyrus}'s. We just removed the cycles condition. We tried to adapt \cite{tgze}'s ball potential equation to Soccer Simulation 2d domain to be a reward as well but it did not fit in our experiments.
