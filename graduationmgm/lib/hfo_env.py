@@ -52,8 +52,8 @@ class HFOEnv(hfo.HFOEnvironment):
                              play_goalie=play_goalie)
         self.num_teammates = self.getNumTeammates()
         self.num_opponents = self.getNumOpponents()
-        self.choosed_mates = min(6, self.num_teammates)
-        self.choosed_ops = min(6, self.num_opponents)
+        self.choosed_mates = min(1, self.num_teammates)
+        self.choosed_ops = min(1, self.num_opponents)
         self.play_goalie = play_goalie
         self.continuous = continuous
         if not strict:

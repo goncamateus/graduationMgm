@@ -129,8 +129,6 @@ class Agent():
     def save_modelmem(self, episode=0, bye=False):
         self.save_model(episode, bye)
         self.save_mem(episode, bye)
-        self.save_loss(episode, bye)
-        self.save_rewards(episode, bye)
 
     def bye(self, status=hfo.SERVER_DOWN):
         if status == hfo.SERVER_DOWN:
