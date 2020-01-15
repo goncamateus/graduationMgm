@@ -9,12 +9,16 @@ import numpy as np
 
 from agents.base_agent import Agent
 from graduationmgm.lib.hfo_env import HFOEnv
+from graduationmgm.lib.utils import AsyncWrite
 from graduationmgm.lib.utils import OUNoise
+
 
 logger = logging.getLogger('Agent')
 
 
 class DDPGAgent(Agent):
+
+    memory_save_thread = None
 
     def __init__(self, model, per, team='base', port=6000):
         self.config_env(team, port)
@@ -24,8 +28,8 @@ class DDPGAgent(Agent):
 
     def config_env(self, team, port):
         BLOCK = hfo.CATCH
-        self.actions = [hfo.MOVE, hfo.GO_TO_BALL, hfo.DEFEND_GOAL, BLOCK]
-        self.rewards = [0, 0, 0, 0]
+        self.actions = [hfo.MOVE, hfo.GO_TO_BALL, BLOCK]
+        self.rewards = [0, 0, 0]
         self.hfo_env = HFOEnv(self.actions, self.rewards,
                               strict=True, continuous=True, team=team, port=port)
         self.test = False
@@ -61,9 +65,13 @@ class DDPGAgent(Agent):
             print("Model Saved")
 
     def save_mem(self, episode=0, bye=False):
-        if (episode % 1000 == 0 and episode > 2 and not self.test) or bye:
-            self.ddpg.save_replay(mem_path=self.mem_path)
-            print("Memory Saved")
+        if (episode % 100 == 0 and episode > 2 and not self.test) or bye:
+            # self.ddpg.save_replay(mem_path=self.mem_path)
+            if self.memory_save_thread is not None:
+                self.memory_save_thread.join()
+            self.memory_save_thread = AsyncWrite(self.ddpg.memory, self.mem_path)
+            self.memory_save_thread.start()
+
 
     def save_loss(self, episode=0, bye=False):
         losses = (self.ddpg.critic_loss, self.ddpg.actor_loss)
@@ -108,12 +116,12 @@ class DDPGAgent(Agent):
                     action = action.astype(np.float32)
                     step += 1
 
-                # if interceptable:
-                #     action = np.array(
-                #         [np.random.uniform(-0.5, 0)], dtype=np.float32)
-                #     action = (action + np.random.normal(0, 0.1, size=self.hfo_env.action_space.shape[0])).clip(
-                #         self.hfo_env.action_space.low, self.hfo_env.action_space.high)
-                #     action = action.astype(np.float32)
+                if interceptable and self.gen_mem:
+                    action = np.array(
+                        [np.random.uniform(-0.68, 0.36)], dtype=np.float32)
+                    action = (action + np.random.normal(0, 0.1, size=self.hfo_env.action_space.shape[0])).clip(
+                        self.hfo_env.action_space.low, self.hfo_env.action_space.high)
+                    action = action.astype(np.float32)
 
                 # Calculates results from environment
                 next_state_ori, reward, done, status = self.hfo_env.step(
@@ -146,5 +154,5 @@ class DDPGAgent(Agent):
                 self.frame_idx += 1
             if not self.gen_mem or self.test:
                 self.ddpg.update()
-            self.save_modelmem(episode)
+                self.save_modelmem(episode)
             self.bye(status)

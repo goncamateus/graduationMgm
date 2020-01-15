@@ -1,0 +1,116 @@
+#!/bin/sh
+HOST=$1
+NUM=$3
+echo "******************************************************************"
+echo " HELIOS2019"
+echo " Fukuoka University & Osaka Prefecture University"
+echo " Copyright 2000-2007.  Hidehisa Akiyama"
+echo " Copyright 2007-2010.  Hidehisa Akiyama and Hiroki Shimora"
+echo " Copyright 2011- Hidehisa Akiyama, Hiroki Shimora,"
+echo "   Tomoharu Nakashima (2011-),"
+echo "   Yousuke Narimoto, Tomohiko Okayama (2011-)"
+echo "   Katsuhiro Yamashita (2013-)"
+echo "   Satoshi Mifune (2014-)"
+echo "   Sho Tanaka, Jordan Henrio (2015-)"
+echo "   Tomonari Nakade, Takuya Fukushima (2016-)"
+echo "   Yudai Suzuki, An Ohori (2017-)"
+echo "   Jiarun Zhong (2018-)"
+echo "   Ryota Kuga, Masaki Yamaguchi, Hiroki Omori (2019-)"
+echo " All rights reserved."
+echo ""
+echo " LIBLINEAR"
+echo "   Copyright (c) 2007-2015 The LIBLINEAR Project."
+echo "   All rights reserved."
+echo " LIBSVM"
+echo "   Copyright (c) 2000-2014 Chih-Chung Chang and Chih-Jen Lin"
+echo "   All rights reserved."
+echo "******************************************************************"
+
+DIR=`dirname $0`
+LIBPATH=${DIR}/lib
+if [ x"$LIBPATH" != x ]; then
+  if [ x"$LD_LIBRARY_PATH" = x ]; then
+    LD_LIBRARY_PATH=$LIBPATH
+  else
+    LD_LIBRARY_PATH=$LIBPATH:$LD_LIBRARY_PATH
+  fi
+  export LD_LIBRARY_PATH
+fi
+
+player="${DIR}/helios_player"
+coach="${DIR}/helios_coach"
+trainer="${DIR}/helios_coach"
+teamname="HELIOS2018"
+host=$HOST
+port=6000
+coach_port=""
+player_conf="${DIR}/player.conf"
+strategy_conf="${DIR}/data/strategy.conf"
+strategy_dir="${DIR}/data/strategy"
+formation_dir="${DIR}/data/formations"
+setplay_dir="${DIR}/data/setplay"
+intercept_conf_dir="${DIR}/data/intercept_probability/"
+opponent_data_dir="${DIR}/data/opponent_data/"
+chain_search_method="BestFirstSearch"
+evaluator_name="Default"
+intercept_evaluator_name="Default"
+svmrank_evaluator_model="${DIR}/data/svmrank_evaluator/model"
+svmrank_intercept_evaluator_model="${DIR}/data/svmrank_intercept_evaluator/model"
+neural_network_evaluator_dir="${DIR}/data/neural_network_evaluator/"
+center_forward_free_move_model="${DIR}/data/center_forward_free_move/model"
+svm_formation_classifier_model="${DIR}/data/svm_formation_classifier/svm.model"
+max_chain_length="3"
+max_evaluate_size="3000"
+coach_conf="${DIR}/coach.conf"
+team_graphic="--use_team_graphic on"
+audio_shift="0"
+
+
+offline_mode="false"
+
+foreground="false"
+
+if [ X"${coach_port}" = X'' ]; then
+  coach_port=`expr ${port} + 2`
+fi
+ping -c 1 $host
+common_opt=""
+common_opt="${common_opt} -h ${host} -t ${teamname}"
+common_opt="${common_opt} --strategy-dir ${strategy_dir}"
+common_opt="${common_opt} --formation-dir ${formation_dir}"
+common_opt="${common_opt} --setplay-dir ${setplay_dir}"
+common_opt="${common_opt} --strategy-conf ${strategy_conf}"
+common_opt="${common_opt} --chain-search-method ${chain_search_method}"
+common_opt="${common_opt} --evaluator-name ${evaluator_name}"
+common_opt="${common_opt} --intercept-evaluator-name ${intercept_evaluator_name}"
+common_opt="${common_opt} --max-chain-length ${max_chain_length}"
+common_opt="${common_opt} --max-evaluate-size ${max_evaluate_size}"
+common_opt="${common_opt} --svmrank-evaluator-model ${svmrank_evaluator_model}"
+common_opt="${common_opt} --svmrank-intercept-evaluator-model ${svmrank_intercept_evaluator_model}"
+common_opt="${common_opt} --neural-network-evaluator-dir ${neural_network_evaluator_dir}"
+common_opt="${common_opt} --center-forward-free-move-model ${center_forward_free_move_model}"
+common_opt="${common_opt} --svm-formation-classifier-model ${svm_formation_classifier_model}"
+common_opt="${common_opt} --intercept-conf-dir ${intercept_conf_dir}"
+common_opt="${common_opt} --opponent-data-dir ${opponent_data_dir}"
+common_opt="${common_opt} --audio_shift ${audio_shift}"
+player_opt="--player-config ${player_conf}"
+player_opt="${player_opt} ${common_opt}"
+player_opt="${player_opt} -p ${port}"
+coach_opt="--coach-config ${coach_conf}"
+coach_opt="${coach_opt} ${common_opt}"
+coach_opt="${coach_opt} -p ${coach_port}"
+coach_opt="${coach_opt} ${team_graphic}"
+echo "player options: $player_opt"
+echo "coach options: $coach_opt"
+
+case $NUM in
+    1)
+       $player ${player_opt} -g
+       ;;
+    12)
+       $coach ${coach_opt}
+       ;;
+    *)
+       $player ${player_opt}
+       ;;
+esac

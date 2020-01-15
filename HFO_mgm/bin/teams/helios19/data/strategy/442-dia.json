@@ -1,0 +1,226 @@
+{
+	"name" : "442-dia",
+	"hetero_priority" : "7,8,11,9,10,4,6,5,2,3",
+	"before_kick_off" : {
+		"offense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_defense_type" : "*",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "before-kick-off-442dia.conf"
+			}
+		],
+		"defense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,0,0,0,0,0,0,0,0,0",
+				"defense_line" : 4,
+				"formation" : "before-kick-off-442dia.conf"
+			}
+		]
+	},
+	"play_on" : {
+		"offense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_defense_type" : "*",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "offense-formation-442dia.conf"
+			}
+		],
+		"defense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,1,1,1,1,1,1,0,0,0",
+				"defense_line" : 4,
+				"formation" : "defense-formation-442dia.conf"
+			}
+		]
+	},
+	"kick_in" : {
+		"offense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_defense_type" : "*",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "kickin-our-formation-442dia.conf",
+				"formation2" : "kickin-our-formation-442dia.conf"
+			}
+		],
+		"defense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,1,1,1,1,1,1,1,1,1",
+				"defense_line" : 4,
+				"formation" : "setplay-opp-formation-442dia.conf"
+			}
+		]
+	},
+	"corner_kick" : {
+		"offense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_defense_type" : "*",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "cornerkick-our-pre-formation-442dia.conf",
+				"formation2" : "cornerkick-our-post-formation-442dia.conf"
+			}
+		],
+		"defense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,1,1,1,1,1,1,1,1,1",
+				"defense_line" : 4,
+				"formation" : "setplay-opp-formation-442dia.conf"
+			}
+		]
+	},
+	"goal_kick" : {
+		"offense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_defense_type" : "*",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "goal-kick-our-442dia.conf",
+				"formation2" : "goal-kick-our-442dia.conf"
+			}
+		],
+		"defense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,1,1,1,1,1,1,1,1,1",
+				"defense_line" : 4,
+				"formation" : "goal-kick-opp-442dia.conf"
+			}
+		]
+	},
+	"goalie_catch" : {
+		"offense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_defense_type" : "*",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "goalie-catch-our-442dia.conf",
+				"formation" : "goalie-catch-our-442dia.conf"
+			}
+		],
+		"defense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,1,1,1,1,1,1,1,1,1",
+				"defense_line" : 4,
+				"formation" : "goalie-catch-opp-442dia.conf"
+			}
+		]
+	},
+	"indirect_freekick" : {
+		"offense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_defense_type" : "*",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "indirect-freekick-our-formation-442dia.conf",
+				"formation2" : "indirect-freekick-our-formation-442dia.conf"
+			}
+		],
+		"defense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,1,1,1,1,1,1,1,1,1",
+				"defense_line" : 4,
+				"formation" : "indirect-freekick-opp-formation-442dia.conf"
+			}
+		]
+	},
+	"freekick" : {
+		"offense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_defense_type" : "*",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "setplay-our-formation-442dia.conf",
+				"formation2" : "setplay-our-formation-442dia.conf"
+			}
+		],
+		"defense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,1,1,1,1,1,1,1,1,1",
+				"defense_line" : 4,
+				"formation" : "setplay-opp-formation-442dia.conf"
+			}
+		]
+	}
+}

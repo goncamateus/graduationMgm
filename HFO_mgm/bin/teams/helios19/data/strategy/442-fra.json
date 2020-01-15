@@ -1,0 +1,552 @@
+{
+	"name" : "442-fra",
+	"hetero_priority" : "9,8,2,11,10,3,4,5,6,7",
+	"before_kick_off" : {
+		"offense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_defense_type" : "*",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "before-kick-off-442.conf"
+			},
+			{
+				"id" : "cross",
+				"condition" : {
+					"begin_time" : 99999,
+					"opponent_defense_type" : "mark",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "before-kick-off-442-cross.conf"
+			},
+			{
+				"id" : "dev",
+				"condition" : {
+					"begin_time" : 99999,
+					"opponent_defense_type" : "mark",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "before-kick-off-442-deviation.conf"
+			}
+		],
+		"defense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,0,0,0,0,0,0,0,0,0",
+				"defense_line" : 4,
+				"formation" : "before-kick-off-442.conf"
+			}
+		]
+	},
+	"play_on" : {
+		"offense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_defense_type" : "*",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "offense-formation-442.conf"
+			},
+			{
+				"id" : "cross",
+				"condition" : {
+					"begin_time" : 99999,
+					"opponent_defense_type" : "mark",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "offense-formation-442-cross.conf"
+			},
+			{
+				"id" : "dev",
+				"condition" : {
+					"begin_time" : 99999,
+					"opponent_defense_type" : "mark",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "offense-formation-442-deviation.conf"
+			}
+		],
+		"defense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,1,1,1,1,1,1,0,0,0",
+				"defense_line" : 3,
+				"formation" : "defense-formation-442.conf"
+			},
+			{
+				"id" : "cross",
+				"condition" : {
+					"begin_time" : 99999,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,1,1,1,1,1,0,0,0,0",
+				"defense_line" : 3,
+				"formation" : "defense-formation-442-cross.conf"
+			},
+			{
+				"id" : "dev",
+				"condition" : {
+					"begin_time" : 99999,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,1,1,1,1,1,0,0,0,0",
+				"defense_line" : 3,
+				"formation" : "defense-formation-442-deviation.conf"
+			}
+		]
+	},
+	"kick_in" : {
+		"offense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_defense_type" : "*",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "kickin-our-pre-formation-442.conf",
+				"formation2" : "kickin-our-post-formation-442.conf"
+			},
+			{
+				"id" : "cross",
+				"condition" : {
+					"begin_time" : 99999,
+					"opponent_defense_type" : "mark",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "kickin-our-pre-formation-442.conf",
+				"formation2" : "kickin-our-post-formation-442.conf"
+			},
+			{
+				"id" : "dev",
+				"condition" : {
+					"begin_time" : 99999,
+					"opponent_defense_type" : "mark",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "kickin-our-pre-formation-442.conf",
+				"formation2" : "kickin-our-post-formation-442.conf"
+			}
+		],
+		"defense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,1,1,1,1,1,1,1,1,1",
+				"defense_line" : 3,
+				"formation" : "setplay-opp-formation-442.conf"
+			},
+			{
+				"id" : "cross",
+				"condition" : {
+					"begin_time" : 999,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,1,1,1,1,1,1,1,1,1",
+				"defense_line" : 3,
+				"formation" : "setplay-opp-formation-442-cross.conf"
+			},
+			{
+				"id" : "dev",
+				"condition" : {
+					"begin_time" : 999,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,1,1,1,1,1,1,1,1,1",
+				"defense_line" : 3,
+				"formation" : "setplay-opp-formation-442-deviation.conf"
+			}
+		]
+	},
+	"corner_kick" : {
+		"offense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_defense_type" : "*",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "kickin-our-pre-formation-442.conf",
+				"formation2" : "kickin-our-post-formation-442.conf"
+			},
+			{
+				"id" : "cross",
+				"condition" : {
+					"begin_time" : 99999,
+					"opponent_defense_type" : "*",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "kickin-our-pre-formation-442.conf",
+				"formation2" : "kickin-our-post-formation-442.conf"
+			},
+			{
+				"id" : "dev",
+				"condition" : {
+					"begin_time" : 99999,
+					"opponent_defense_type" : "*",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "kickin-our-pre-formation-442.conf",
+				"formation2" : "kickin-our-post-formation-442.conf"
+			}
+		],
+		"defense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,1,1,1,1,1,1,1,1,1",
+				"defense_line" : 3,
+				"formation" : "setplay-opp-formation-442.conf"
+			},
+			{
+				"id" : "cross",
+				"condition" : {
+					"begin_time" : 99999,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,1,1,1,1,1,1,1,1,1",
+				"defense_line" : 3,
+				"formation" : "setplay-opp-formation-442-cross.conf"
+			},
+			{
+				"id" : "dev",
+				"condition" : {
+					"begin_time" : 99999,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,1,1,1,1,1,1,1,1,1",
+				"defense_line" : 3,
+				"formation" : "setplay-opp-formation-442-deviation.conf"
+			}
+		]
+	},
+	"goal_kick" : {
+		"offense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_defense_type" : "*",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "goal-kick-our-442-1st.conf",
+				"formation2" : "goal-kick-our-442-2nd.conf"
+			},
+			{
+				"id" : "cross",
+				"condition" : {
+					"begin_time" : 99999,
+					"opponent_defense_type" : "*",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "goal-kick-our-442-1st.conf",
+				"formation2" : "goal-kick-our-442-2nd.conf"
+			},
+			{
+				"id" : "dev",
+				"condition" : {
+					"begin_time" : 99999,
+					"opponent_defense_type" : "*",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "goal-kick-our-442-1st.conf",
+				"formation2" : "goal-kick-our-442-2nd.conf"
+			}
+		],
+		"defense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,1,1,1,1,1,1,1,1,1",
+				"defense_line" : 3,
+				"formation" : "goal-kick-opp-442.conf"
+			},
+			{
+				"id" : "cross",
+				"condition" : {
+					"begin_time" : 99999,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,1,1,1,1,1,1,1,1,1",
+				"defense_line" : 3,
+				"formation" : "goal-kick-opp-442-cross.conf"
+			},
+			{
+				"id" : "dev",
+				"condition" : {
+					"begin_time" : 99999,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,1,1,1,1,1,1,1,1,1",
+				"defense_line" : 3,
+				"formation" : "goal-kick-opp-442-deviation.conf"
+			}
+		]
+	},
+	"goalie_catch" : {
+		"offense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_defense_type" : "*",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "goalie-catch-our-442.conf",
+				"formation" : "goalie-catch-our-442.conf"
+			},
+			{
+				"id" : "cross",
+				"condition" : {
+					"begin_time" : 99999,
+					"opponent_defense_type" : "*",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "goalie-catch-our-442-cross.conf",
+				"formation" : "goalie-catch-our-442-cross.conf"
+			},
+			{
+				"id" : "dev",
+				"condition" : {
+					"begin_time" : 99999,
+					"opponent_defense_type" : "*",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "goalie-catch-our-442-deviation.conf",
+				"formation" : "goalie-catch-our-442-deviation.conf"
+			}
+		],
+		"defense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,1,1,1,1,1,1,1,1,1",
+				"defense_line" : 3,
+				"formation" : "goalie-catch-opp-442.conf"
+			},
+			{
+				"id" : "cross",
+				"condition" : {
+					"begin_time" : 99999,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,1,1,1,1,1,1,1,1,1",
+				"defense_line" : 3,
+				"formation" : "goalie-catch-opp-442-cross.conf"
+			},
+			{
+				"id" : "dev",
+				"condition" : {
+					"begin_time" : 99999,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,1,1,1,1,1,1,1,1,1",
+				"defense_line" : 3,
+				"formation" : "goalie-catch-opp-442-deviation.conf"
+			}
+		]
+	},
+	"indirect_freekick" : {
+		"offense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_defense_type" : "*",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "indirect-freekick-our-formation-442.conf",
+				"formation2" : "indirect-freekick-our-formation-442.conf"
+			},
+			{
+				"id" : "cross",
+				"condition" : {
+					"begin_time" : 99999,
+					"opponent_defense_type" : "*",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "indirect-freekick-our-formation-442-cross.conf",
+				"formation2" : "indirect-freekick-our-formation-442-cross.conf"
+			},
+			{
+				"id" : "dev",
+				"condition" : {
+					"begin_time" : 99999,
+					"opponent_defense_type" : "*",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "indirect-freekick-our-formation-442-deviation.conf",
+				"formation2" : "indirect-freekick-our-formation-442-deviation.conf"
+			}
+		],
+		"defense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,1,1,1,1,1,1,1,1,1",
+				"defense_line" : 3,
+				"formation" : "indirect-freekick-opp-formation-442.conf"
+			},
+			{
+				"id" : "cross",
+				"condition" : {
+					"begin_time" : 99999,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,1,1,1,1,1,1,1,1,1",
+				"defense_line" : 3,
+				"formation" : "indirect-freekick-opp-formation-442-cross.conf"
+			},
+			{
+				"id" : "dev",
+				"condition" : {
+					"begin_time" : 99999,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,1,1,1,1,1,1,1,1,1",
+				"defense_line" : 3,
+				"formation" : "indirect-freekick-opp-formation-442-deviation.conf"
+			}
+		]
+	},
+	"freekick" : {
+		"offense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_defense_type" : "*",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "setplay-our-formation-442.conf",
+				"formation2" : "setplay-our-formation-442.conf"
+			},
+			{
+				"id" : "cross",
+				"condition" : {
+					"begin_time" : 99999,
+					"opponent_defense_type" : "*",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "setplay-our-formation-442-cross.conf",
+				"formation2" : "setplay-our-formation-442-cross.conf"
+			},
+			{
+				"id" : "dev",
+				"condition" : {
+					"begin_time" : 99999,
+					"opponent_defense_type" : "*",
+					"score_type" : "*"
+				},
+				"evaluator" : "Default",
+				"formation" : "setplay-our-formation-442-deviation.conf",
+				"formation2" : "setplay-our-formation-442-deviation.conf"
+			}
+		],
+		"defense" : [
+			{
+				"id" : "default",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,1,1,1,1,1,1,1,1,1",
+				"defense_line" : 3,
+				"formation" : "setplay-opp-formation-442.conf"
+			},
+			{
+				"id" : "cross",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,1,1,1,1,1,1,1,1,1",
+				"defense_line" : 3,
+				"formation" : "setplay-opp-formation-442-cross.conf"
+			},
+			{
+				"id" : "dev",
+				"condition" : {
+					"begin_time" : 0,
+					"opponent_offense_type" : "*",
+					"score_type" : "*"
+				},
+				"mark" : "0,0,1,1,1,1,1,1,1,1,1",
+				"defense_line" : 3,
+				"formation" : "setplay-opp-formation-442-deviation.conf"
+			}
+		]
+	}
+}

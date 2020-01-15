@@ -10,6 +10,8 @@ from graduationmgm.lib.Neural_Networks.Dueling_DQN import DDQN
 def main(team='base'):
     if team == 'helios':
         team = 'HELIOS'
+    elif team == 'helios19':
+        team = 'HELIOS19'
     elif team == 'robocin':
         team = 'RoboCIn'
     agent = DDPGAgent(DDPG, False, team=team, port=6000)

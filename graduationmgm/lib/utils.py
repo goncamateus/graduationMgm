@@ -2,6 +2,7 @@ import datetime
 import logging
 import pickle
 import random
+import threading
 from collections import deque
 
 import numpy as np
@@ -76,6 +77,24 @@ class OUNoise(object):
         self.sigma = self.max_sigma - \
             (self.max_sigma - self.min_sigma) * min(1.0, t / self.decay_period)
         return np.clip(action + ou_state, self.low, self.high)
+
+
+class AsyncWrite(threading.Thread):
+
+    def __init__(self, obj, path, msg):
+
+        # calling superclass init
+        threading.Thread.__init__(self)
+        self.obj = obj
+        self.path = path
+        self.msg = msg
+
+    def run(self):
+        with open(self.path, 'wb') as fiile:
+            pickle.dump(self.obj, fiile)
+        # waiting for 2 seconds after writing
+        # the file
+        print(self.msg)
 
 
 def gen_mem_end(gen_mem, episode, model, frame_idx):

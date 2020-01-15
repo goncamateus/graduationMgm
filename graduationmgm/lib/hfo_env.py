@@ -39,8 +39,9 @@ class HFOEnv(hfo.HFOEnvironment):
     max_R = np.sqrt(pitchHalfLength * pitchHalfLength +
                     pitchHalfWidth * pitchHalfWidth)
     stamina_max = 8000
-    w_ball_grad = 0.8
-    prev_ball_potential = None
+    ball_initial_x = 40.0
+    w_ball_grad = 1
+    prev_ball_x = None
 
     def __init__(self, actions, rewards,
                  is_offensive=False, play_goalie=False,
@@ -52,8 +53,8 @@ class HFOEnv(hfo.HFOEnvironment):
                              play_goalie=play_goalie)
         self.num_teammates = self.getNumTeammates()
         self.num_opponents = self.getNumOpponents()
-        self.choosed_mates = min(1, self.num_teammates)
-        self.choosed_ops = min(1, self.num_opponents)
+        self.choosed_mates = self.num_teammates
+        self.choosed_ops = self.num_opponents
         self.play_goalie = play_goalie
         self.continuous = continuous
         if not strict:
@@ -80,14 +81,12 @@ class HFOEnv(hfo.HFOEnvironment):
             action = self.action_space.actions[action]
         else:
             action = action[0]
-            if action < -0.5:
+            if action < -0.68:
                 action = self.action_space.actions[0]
-            elif action < 0:
+            elif action < 0.36:
                 action = self.action_space.actions[1]
-            elif action <= 0.5:
-                action = self.action_space.actions[2]
             else:
-                action = self.action_space.actions[3]
+                action = self.action_space.actions[2]
         self.act(action)
         act = self.action_space.actions.index(action)
         status = super(HFOEnv, self).step()
@@ -126,14 +125,8 @@ class HFOEnv(hfo.HFOEnvironment):
 
     def get_reward_def(self, act, next_state, done, status):
         reward = 0
-        # ball_potential = self.ball_potential(next_state[3], next_state[4])
-
-        # if self.prev_ball_potential is not None:
-        #     grad_ball_potential = self.clip(
-        #         (ball_potential - self.prev_ball_potential), -1.0,
-        #         1.0)
-        # else:
-        #     grad_ball_potential = 0
+        ball_x = next_state[3] - self.ball_initial_x
+        ball_x_rew = ball_x/(self.pitchHalfLength + self.ball_initial_x)
 
         if status == hfo.GOAL:
             reward = -10
@@ -149,9 +142,9 @@ class HFOEnv(hfo.HFOEnvironment):
                 if self.observation_space.taken % 5 == 0:
                     reward = 100
             else:
-                if abs(next_state[10]) <= 1:
-                    reward = -1
-        # self.prev_ball_potential = grad_ball_potential
+                if abs(next_state[10]) <= 1.2:
+                    reward = -0.8  # punishes collisions of teammates
+                reward += ball_x_rew*self.w_ball_grad
         return reward
 
     def get_reward_goalie(self, act, next_state, done, status):
@@ -282,18 +275,20 @@ class HFOEnv(hfo.HFOEnvironment):
     def ball_potential(self, ball_x, ball_y):
         """
             Calculate ball potential according to this formula:
-            pot = ((-sqrt((52.5-x)^2 + 2*(0-y)^2) +
-                    sqrt((-52.5- x)^2 + 2*(0-y)^2))/52.5 - 1)/2
+            pot = ((-sqrt((105-x)^2 + 2*(34-y)^2) +
+                    sqrt((0 - x)^2 + 2*(34-y)^2))/105 - 1)/2
             the potential is zero (maximum) at the center of attack goal
-            (52.5,0) and -1 at the defense goal (-52.5,0)
+            (105, 34) and -1 at the defense goal (0,34)
             it changes twice as fast on y coordinate than on the x coordinate
         """
 
-        dx_d = -self.pitchHalfLength - ball_x  # distance to defence
-        dx_a = self.pitchHalfLength - ball_x  # distance to attack
-        dy = 0 - ball_y
+        ball_x = ball_x + self.pitchHalfLength
+        ball_y = ball_y + self.pitchHalfWidth
+        dx_d = -ball_x  # distance to defense
+        dx_a = 2*self.pitchHalfLength - ball_x  # distance to attack
+        dy = self.pitchHalfWidth - ball_y
         potential = ((-math.sqrt(dx_a ** 2 + 2 * dy ** 2) +
-                      math.sqrt(dx_d ** 2 + 2 * dy ** 2)) / self.pitchHalfLength - 1) / 2  # noqa
+                      math.sqrt(dx_d ** 2 + 2 * dy ** 2)) / (2*self.pitchHalfLength) - 1) / 2  # noqa
 
         return potential
 
