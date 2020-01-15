@@ -63,15 +63,22 @@ class DDPGAgent(Agent):
             self.ddpg.save_w(path_models=self.model_paths,
                              path_optims=self.optim_paths)
             print("Model Saved")
+        # paths = list(self.model_paths) + list(self.optim_paths)
+        # if self.models_save_thread is not None:
+        #     self.models_save_thread.join()
+        # self.models_save_thread = AsyncModelWrite(
+        #     self.ddpg, paths, 'Model saved')
+        # self.models_save_thread.start()
 
     def save_mem(self, episode=0, bye=False):
-        if (episode % 100 == 0 and episode > 2 and not self.test) or bye:
+        if episode % 5 == 0 and self.memory_save_thread is not None:
+            self.memory_save_thread.join()
+            self.memory_save_thread = None
+        if (episode % 1000 == 0 and episode > 2 and not self.test) or bye:
             # self.ddpg.save_replay(mem_path=self.mem_path)
-            if self.memory_save_thread is not None:
-                self.memory_save_thread.join()
-            self.memory_save_thread = AsyncWrite(self.ddpg.memory, self.mem_path)
+            self.memory_save_thread = AsyncWrite(
+                self.ddpg.memory, self.mem_path, 'Memory saved')
             self.memory_save_thread.start()
-
 
     def save_loss(self, episode=0, bye=False):
         losses = (self.ddpg.critic_loss, self.ddpg.actor_loss)
@@ -116,7 +123,7 @@ class DDPGAgent(Agent):
                     action = action.astype(np.float32)
                     step += 1
 
-                if interceptable and self.gen_mem:
+                if interceptable:
                     action = np.array(
                         [np.random.uniform(-0.68, 0.36)], dtype=np.float32)
                     action = (action + np.random.normal(0, 0.1, size=self.hfo_env.action_space.shape[0])).clip(

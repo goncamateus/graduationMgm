@@ -47,7 +47,7 @@ class DDPG(DDPGTrain):
     def __init__(self, static_policy=False, env=None, config=None):
         self.stacked_frames = deque(
             [np.zeros(env.observation_space.shape, dtype=np.int)
-             for i in range(8)], maxlen=8)
+             for i in range(32)], maxlen=32)
         self.max_action = float(env.action_space.high[0])
         super(DDPG, self).__init__(static_policy, env, config)
         self.num_feats = (*self.env.observation_space.shape,

@@ -6,6 +6,7 @@ import threading
 from collections import deque
 
 import numpy as np
+import torch
 
 logger = logging.getLogger(__name__)
 
@@ -92,8 +93,25 @@ class AsyncWrite(threading.Thread):
     def run(self):
         with open(self.path, 'wb') as fiile:
             pickle.dump(self.obj, fiile)
-        # waiting for 2 seconds after writing
-        # the file
+        fiile.close()
+        self.obj = None
+        print(self.msg)
+
+
+class AsyncModelWrite(threading.Thread):
+
+    def __init__(self, obj, paths, msg):
+        # calling superclass init
+        threading.Thread.__init__(self)
+        self.obj = obj
+        self.paths = paths
+        self.msg = msg
+
+    def run(self):
+        torch.save(self.obj.actor.state_dict(), self.paths[0])
+        torch.save(self.obj.critic.state_dict(), self.paths[1])
+        torch.save(self.obj.actor_optimizer.state_dict(), self.paths[2])
+        torch.save(self.obj.critic_optimizer.state_dict(), self.paths[3])
         print(self.msg)
 
 

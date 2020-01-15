@@ -212,9 +212,9 @@ class Trainer(object):
             self._numFrames += self._frame - self._lastTrialStart
             self._lastTrialStart = self._frame
             self.getConnectedPlayers()
-            if self._numTrials % 100 == 0:
-                print('EndOfTrial: %d / %d %d %s' %
-                    (self._numGoals, self._numTrials, self._frame, event))
+            # if self._numTrials % 100 == 0:
+            print('EndOfTrial: %d / %d %d %s' %
+                (self._numGoals, self._numTrials, self._frame, event))
 
     def _hear(self, body):
         """ Handle a hear message. """
@@ -475,7 +475,7 @@ class Trainer(object):
             time.sleep(0.1)
             self.sendHFOConfig()
 
-            time.sleep(5)
+            time.sleep(4)
             print('Starting game')
             self.startGame()
             while self.allPlayersConnected() and self.checkLive(necProcesses) and not self._done:

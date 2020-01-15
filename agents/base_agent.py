@@ -41,7 +41,7 @@ class Agent():
         self.config.LR = 0.00025
         # memory
         self.config.TARGET_NET_UPDATE_FREQ = 1000
-        self.config.EXP_REPLAY_SIZE = 2.5e5
+        self.config.EXP_REPLAY_SIZE = 1e5
         self.config.BATCH_SIZE = 64
 
         # Learning control variables
@@ -130,8 +130,10 @@ class Agent():
         self.save_model(episode, bye)
         self.save_mem(episode, bye)
 
-    def bye(self, status=hfo.SERVER_DOWN):
+    def bye(self, status=hfo.SERVER_DOWN, thread=None):
         if status == hfo.SERVER_DOWN:
+            if thread:
+                thread.join()
             self.hfo_env.act(hfo.QUIT)
             exit()
 
