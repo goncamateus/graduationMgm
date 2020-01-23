@@ -475,7 +475,7 @@ class Trainer(object):
             time.sleep(0.1)
             self.sendHFOConfig()
 
-            time.sleep(4)
+            # time.sleep(4)
             print('Starting game')
             self.startGame()
             while self.allPlayersConnected() and self.checkLive(necProcesses) and not self._done:

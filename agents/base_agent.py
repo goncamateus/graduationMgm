@@ -41,11 +41,11 @@ class Agent():
         self.config.LR = 0.00025
         # memory
         self.config.TARGET_NET_UPDATE_FREQ = 1000
-        self.config.EXP_REPLAY_SIZE = 1e5
+        self.config.EXP_REPLAY_SIZE = 3e5
         self.config.BATCH_SIZE = 64
 
         # Learning control variables
-        self.config.LEARN_START = 100000
+        self.config.LEARN_START = 300000
         self.config.MAX_FRAMES = 60000000
         self.config.UPDATE_FREQ = 1
 
@@ -90,15 +90,21 @@ class Agent():
                 print("Memory Loaded")
 
     def save_model(self, episode=0, bye=False):
+        saved = False
         if (episode % 100 == 0 and episode > 0) or bye:
             self.dqn.save_w(path_model=self.model_path,
                             path_optim=self.optim_path)
             print("Model Saved")
+            saved = True
+        return saved
 
     def save_mem(self, episode=0, bye=False):
+        saved = False
         if (episode % 1000 == 0 and episode > 2 and not self.test) or bye:
             self.dqn.save_replay(mem_path=self.mem_path)
             print("Memory Saved")
+            saved = True
+        return saved
 
     def save_loss(self, episode=0, bye=False):
         if (episode % 100 == 0 and episode > 0 and not self.test) or bye:
@@ -127,8 +133,9 @@ class Agent():
         print('Start Learning at Episode %s', episode)
 
     def save_modelmem(self, episode=0, bye=False):
-        self.save_model(episode, bye)
-        self.save_mem(episode, bye)
+        s1 = self.save_model(episode, bye)
+        s2 = self.save_mem(episode, bye)
+        return s1 or s2
 
     def bye(self, status=hfo.SERVER_DOWN, thread=None):
         if status == hfo.SERVER_DOWN:

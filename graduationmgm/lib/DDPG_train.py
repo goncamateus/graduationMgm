@@ -148,9 +148,9 @@ class DDPGTrain(BaseTrain):
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
         self.critic_optimizer.step()
-        self.writer.add_scalar('Loss/ddpg/critic_loss', critic_loss,
-                            global_step=self.num_critic_update_iteration)
-        self.critic_loss.append(critic_loss)
+        # self.writer.add_scalar('Loss/ddpg/critic_loss', critic_loss,
+        #                     global_step=self.num_critic_update_iteration)
+        # self.critic_loss.append(critic_loss)
 
         # Compute actor loss
         acts = self.actor(state)
@@ -160,9 +160,9 @@ class DDPGTrain(BaseTrain):
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
         self.actor_optimizer.step()
-        self.writer.add_scalar(
-            'Loss/ddpg/actor_loss', actor_loss, global_step=self.num_actor_update_iteration)
-        self.actor_loss.append(actor_loss)
+        # self.writer.add_scalar(
+        #     'Loss/ddpg/actor_loss', actor_loss, global_step=self.num_actor_update_iteration)
+        # self.actor_loss.append(actor_loss)
 
         self.num_actor_update_iteration += 1
         self.num_critic_update_iteration += 1
@@ -176,7 +176,6 @@ class DDPGTrain(BaseTrain):
             for param, target_param in zip(self.actor.parameters(), self.target_actor.parameters()):
                 target_param.data.copy_(
                     self.tau * param.data + (1 - self.tau) * target_param.data)
-
 
     def get_action(self, s):
         with torch.no_grad():

@@ -1,4 +1,5 @@
 import datetime
+import gc
 import itertools
 import logging
 import os
@@ -9,9 +10,7 @@ import numpy as np
 
 from agents.base_agent import Agent
 from graduationmgm.lib.hfo_env import HFOEnv
-from graduationmgm.lib.utils import AsyncWrite
-from graduationmgm.lib.utils import OUNoise
-
+from graduationmgm.lib.utils import AsyncWrite, OUNoise
 
 logger = logging.getLogger('Agent')
 
@@ -51,34 +50,33 @@ class DDPGAgent(Agent):
 
     def load_memory(self):
         self.mem_path = f'./saved_agents/DDPG/exp_replay_agent_{self.unum}_ddpg.dump'
-
-        if not self.test:
-            if os.path.isfile(self.mem_path):
-                self.ddpg.load_replay(mem_path=self.mem_path)
-                self.gen_mem_end(0)
-                print("Memory Loaded")
+        if os.path.isfile(self.mem_path) and not self.test:
+            self.ddpg.load_replay(mem_path=self.mem_path)
+            self.gen_mem_end(0)
+            print("Memory Loaded")
 
     def save_model(self, episode=0, bye=False):
+        saved = False
         if (episode % 100 == 0 and episode > 0) or bye:
             self.ddpg.save_w(path_models=self.model_paths,
                              path_optims=self.optim_paths)
             print("Model Saved")
-        # paths = list(self.model_paths) + list(self.optim_paths)
-        # if self.models_save_thread is not None:
-        #     self.models_save_thread.join()
-        # self.models_save_thread = AsyncModelWrite(
-        #     self.ddpg, paths, 'Model saved')
-        # self.models_save_thread.start()
+            saved = True
+        return saved
 
     def save_mem(self, episode=0, bye=False):
+        saved = False
         if episode % 5 == 0 and self.memory_save_thread is not None:
             self.memory_save_thread.join()
             self.memory_save_thread = None
         if (episode % 1000 == 0 and episode > 2 and not self.test) or bye:
             # self.ddpg.save_replay(mem_path=self.mem_path)
+            # print('Memory saved')
             self.memory_save_thread = AsyncWrite(
                 self.ddpg.memory, self.mem_path, 'Memory saved')
             self.memory_save_thread.start()
+            saved = True
+        return saved
 
     def save_loss(self, episode=0, bye=False):
         losses = (self.ddpg.critic_loss, self.ddpg.actor_loss)
@@ -123,12 +121,12 @@ class DDPGAgent(Agent):
                     action = action.astype(np.float32)
                     step += 1
 
-                if interceptable:
-                    action = np.array(
-                        [np.random.uniform(-0.68, 0.36)], dtype=np.float32)
-                    action = (action + np.random.normal(0, 0.1, size=self.hfo_env.action_space.shape[0])).clip(
-                        self.hfo_env.action_space.low, self.hfo_env.action_space.high)
-                    action = action.astype(np.float32)
+                # if interceptable and self.gen_mem:
+                #     action = np.array(
+                #         [np.random.uniform(-0.68, 0.36)], dtype=np.float32)
+                #     action = (action + np.random.normal(0, 0.1, size=self.hfo_env.action_space.shape[0])).clip(
+                #         self.hfo_env.action_space.low, self.hfo_env.action_space.high)
+                #     action = action.astype(np.float32)
 
                 # Calculates results from environment
                 next_state_ori, reward, done, status = self.hfo_env.step(
@@ -136,11 +134,14 @@ class DDPGAgent(Agent):
                 next_state = next_state_ori
                 episode_rewards += reward
 
+                if not self.gen_mem and not self.test:
+                    self.ddpg.update()
+
                 if done:
                     # Resets frame_stack and states
-                    if not self.gen_mem:
-                        self.ddpg.writer.add_scalar(
-                            f'Rewards/epi_reward_{self.unum}', episode_rewards, global_step=episode)
+                    # if not self.gen_mem:
+                    #     self.ddpg.writer.add_scalar(
+                    #         f'Rewards/epi_reward_{self.unum}', episode_rewards, global_step=episode)
                     self.currun_rewards.append(episode_rewards)
                     next_state = np.zeros(state.shape)
                     next_frame = np.zeros(frame.shape)
@@ -160,6 +161,6 @@ class DDPGAgent(Agent):
                     break
                 self.frame_idx += 1
             if not self.gen_mem or self.test:
-                self.ddpg.update()
                 self.save_modelmem(episode)
+            gc.collect()
             self.bye(status)
