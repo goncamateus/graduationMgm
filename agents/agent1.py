@@ -1,24 +1,20 @@
 import sys
 
-from base_agent import Agent as DQNAgent
-from base_agent_ddpg import DDPGAgent
+from agents_ddpg import DDPGAgent
 from graduationmgm.lib.Neural_Networks.DDPG import DDPG
-from graduationmgm.lib.Neural_Networks.DQN import DQN
-from graduationmgm.lib.Neural_Networks.Dueling_DQN import DDQN
 
 
-def main(team='base'):
+def main(team='base', num_agents=1):
     if team == 'helios':
         team = 'HELIOS'
+    elif team == 'helios19':
+        team = 'HELIOS19'
     elif team == 'robocin':
         team = 'RoboCIn'
-    agent = DQNAgent(DDQN, False, team=team, port=8000)
-    # agent = DDPGAgent(DDPG, False)
-    try:
-        agent.run()
-    except:
-        exit(1)
+    DDPGAgent(DDPG, False,
+              team=team, port=6000,
+              num_agents=int(num_agents))
 
 
 if __name__ == "__main__":
-    main(team=sys.argv[1])
+    main(team=sys.argv[1], num_agents=sys.argv[2])

@@ -43,20 +43,25 @@ class HFOEnv(hfo.HFOEnvironment):
     w_ball_grad = 1
     prev_ball_x = None
 
-    def __init__(self, actions, rewards,
-                 is_offensive=False, play_goalie=False,
-                 strict=False, port=6000, continuous=False, team='base'):
-        super(HFOEnv, self).__init__()
+    def __init__(self, obj=None):
+        super(HFOEnv, self).__init__(obj)
+
+    def connect(self, is_offensive=False,
+                play_goalie=False, port=6000,
+                continuous=False, team='base'):
         self.connectToServer(hfo.HIGH_LEVEL_FEATURE_SET, './formations-dt',
                              port, 'localhost',
                              team + '_left' if is_offensive else team + '_right',
                              play_goalie=play_goalie)
+        self.play_goalie = play_goalie
+        self.continuous = continuous
+
+    def set_env(self, actions, rewards,
+                strict=False):
         self.num_teammates = self.getNumTeammates()
         self.num_opponents = self.getNumOpponents()
         self.choosed_mates = self.num_teammates
         self.choosed_ops = self.num_opponents
-        self.play_goalie = play_goalie
-        self.continuous = continuous
         if not strict:
             self.observation_space = ObservationSpace(self, rewards)
         else:
