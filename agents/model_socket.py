@@ -148,13 +148,9 @@ def main(num_mates, num_ops):
 
     while True:
         # Get action part
-        for i, unum in enumerate(unums):
-            threads[i] = threading.Thread(
-                target=get_action, args=(unum, env, ddpg))
-            threads[i].start()
-
-        for thread in threads:
-            thread.join()
+        get_action_part(get_action, env, ddpg)
+        with ProcessPoolExecutor() as executor:
+            executor.map(get_action_part, unums)
 
         # Train part
         get_sarsd_part = partial(get_sarsd, env, ddpg)
