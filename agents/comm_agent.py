@@ -109,6 +109,9 @@ class DDPGAgent(Agent):
         action = set_comm(messages=[state, done], recmsg=12)
         return action
 
+    def train(self, state, action, reward, next_state, done):
+        set_comm(messages=[state, action, reward, next_state, done])
+
     def run(self):
         self.frame_idx = 1
         self.goals = 0
@@ -122,32 +125,16 @@ class DDPGAgent(Agent):
                 if done:
                     state = self.hfo_env.get_state()
                     interceptable = state_ori[-1]
-                self.get_action(state, done)
-                
-                    step += 1
-
-                # if interceptable and self.gen_mem:
-                #     action = np.array(
-                #         [np.random.uniform(-0.68, 0.36)], dtype=np.float32)
-                #     action = (action + np.random.normal(0, 0.1, size=self.hfo_env.action_space.shape[0])).clip(
-                #         self.hfo_env.action_space.low, self.hfo_env.action_space.high)
-                #     action = action.astype(np.float32)
+                action = self.get_action(state, done)
 
                 # Calculates results from environment
-                next_state_ori, reward, done, status = self.hfo_env.step(
+                next_state, reward, done, status = self.hfo_env.step(
                     action)
-                next_state = next_state_ori
+
+                self.train(state, action, reward, next_state, done)
                 episode_rewards += reward
 
-                if not self.gen_mem and not self.test:
-                    self.ddpg.update()
-
                 if done:
-                    # Resets frame_stack and states
-                    # if not self.gen_mem:
-                    #     self.ddpg.writer.add_scalar(
-                    #         f'Rewards/epi_reward_{self.unum}', episode_rewards, global_step=episode)
-                    self.currun_rewards.append(episode_rewards)
                     next_state = np.zeros(state.shape)
                     next_frame = np.zeros(frame.shape)
                     if episode % 100 == 0 and episode > 10 and self.goals > 0:
@@ -160,6 +147,8 @@ class DDPGAgent(Agent):
                     self.goals += 1
                 self.ddpg.append_to_replay(
                     frame, action, reward, next_frame, int(done))
+                if not self.gen_mem and not self.test:
+                    self.ddpg.update()
                 frame = next_frame
                 state = next_state
                 if done:

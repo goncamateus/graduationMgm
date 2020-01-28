@@ -53,7 +53,7 @@ def load_model(model, env):
 
 
 def load_memory(ddpg):
-    if os.path.isfile(mem_path) and not test:
+    if os.path.isfile(mem_path):
         ddpg.load_replay(mem_path=mem_path)
         print("Memory Loaded")
 
@@ -78,41 +78,76 @@ def get_action(unum, env, ddpg):
     HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
     PORT = 65432 + unum
     action = 0
-    while True:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind((HOST, PORT))
-            s.listen()
-            conn, addr = s.accept()
-            with conn:
-                while True:
-                    state = conn.recv(3664)
-                    state = pickle.loads(state)
-                    if not state:
-                        break
-                    done = conn.recv(3664)
-                    done = pickle.loads(done)
-                    frame = ddpg.stack_frames(state, done)
-                    # If the size of experiences is under max_size*8 runs gen_mem
-                    if gen_mem and len(ddpg.memory) < EXP_REPLAY_SIZE:
-                        action = env.action_space.sample()
-                    else:
-                        # When gen_mem is done, saves experiences and starts a new
-                        # frame counting and starts the learning process
-                        if gen_mem:
-                            gen_mem_end(episode)
-                        # Gets the action
-                        action = ddpg.get_action(frame)
-                        action = (action + np.random.normal(0, 0.1, size=env.action_space.shape[0])).clip(
-                            env.action_space.low, env.action_space.high)
-                        action = action.astype(np.float32)
-                        conn.sendall(pickle.dumps(action))
-    return frame, action
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind((HOST, PORT))
+        s.listen()
+        conn, addr = s.accept()
+        with conn:
+            while True:
+                state = conn.recv(3664)
+                state = pickle.loads(state)
+                if not state:
+                    break
+                done = conn.recv(3664)
+                done = pickle.loads(done)
+                frame = ddpg.stack_frames(state, done)
+                # If the size of experiences is under max_size*8 runs gen_mem
+                if gen_mem and len(ddpg.memory) < EXP_REPLAY_SIZE:
+                    action = env.action_space.sample()
+                else:
+                    # When gen_mem is done, saves experiences and starts a new
+                    # frame counting and starts the learning process
+                    if gen_mem:
+                        gen_mem_end(episode)
+                    # Gets the action
+                    action = ddpg.get_action(frame)
+                    action = (action + np.random.normal(0, 0.1, size=env.action_space.shape[0])).clip(
+                        env.action_space.low, env.action_space.high)
+                    action = action.astype(np.float32)
+                    conn.sendall(pickle.dumps(action))
+
+
+def get_sarsd(unum, env, ddpg):
+    HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
+    PORT = 65432 + unum
+    action = 0
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind((HOST, PORT))
+        s.listen()
+        conn, addr = s.accept()
+        with conn:
+            while True:
+                state = conn.recv(3664)
+                state = pickle.loads(state)
+                if not state:
+                    break
+                action = conn.recv(3664)
+                action = pickle.loads(action)
+                reward = conn.recv(3664)
+                reward = pickle.loads(reward)
+                next_state = conn.recv(3664)
+                next_state = pickle.loads(next_state)
+                done = conn.recv(3664)
+                done = pickle.loads(done)
+                frame = ddpg.stack_frames(state, False)
+                if done:
+                    next_state = np.zeros(state.shape)
+                    next_frame = np.zeros(frame.shape)
+                else:
+                    next_frame = ddpg.stack_frames(next_state, done)
+    return frame, action, reward, next_frame, done
 
 
 def main(num_mates, num_ops):
     threads = [None for _ in list(range(2, 9))[:num_mates]]
     env = MockEnv(num_mates, num_ops)
     ddpg = load_model(DDPG, env)
+
+
+    ddpg.append_to_replay(
+        frame, action, reward, next_frame, int(done))
+    if not gen_mem and not test:
+        ddpg.update()
 
     for i, unum in enumerate(list(range(2, 9))[:num_mates]):
         threads[i] = threading.Thread(target=run, args=(unum,))

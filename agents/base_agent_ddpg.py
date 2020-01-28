@@ -148,9 +148,6 @@ class DDPGAgent(Agent):
                 next_state = next_state_ori
                 episode_rewards += reward
 
-                if not self.gen_mem and not self.test:
-                    self.ddpg.update()
-
                 if done:
                     # Resets frame_stack and states
                     # if not self.gen_mem:
@@ -169,6 +166,8 @@ class DDPGAgent(Agent):
                     self.goals += 1
                 self.ddpg.append_to_replay(
                     frame, action, reward, next_frame, int(done))
+                if not self.gen_mem and not self.test:
+                    self.ddpg.update()
                 frame = next_frame
                 state = next_state
                 if done:
