@@ -4,6 +4,7 @@ import itertools
 import logging
 import os
 import pickle
+import socket
 
 import hfo
 import numpy as np
@@ -23,6 +24,8 @@ class DDPGAgent(Agent):
         self.config_env(team, port)
         self.config_hyper(per)
         self.config_model(model)
+        self.set_comm(messages=[self.hfo_env.observation_space,
+                                self.hfo_env.action_space])
         self.goals = 0
 
     def config_env(self, team, port):
@@ -90,6 +93,17 @@ class DDPGAgent(Agent):
             with open(f'./saved_agents/{self.ddpg.__name__}/{self.ddpg.__name__}.reward', 'wb') as lf:
                 pickle.dump(self.currun_rewards, lf)
                 lf.close()
+
+    def set_comm(self, messages=list()):
+        HOST = '127.0.0.1'  # The server's hostname or IP address
+        PORT = 65432 + self.unum        # The port used by the server
+
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.connect((HOST, PORT))
+            s.sendall(pickle.dumps(len(messages)))
+            for msg in messages:
+                msg = pickle.dumps(msg)
+                s.sendall(msg)
 
     def run(self):
         self.frame_idx = 1

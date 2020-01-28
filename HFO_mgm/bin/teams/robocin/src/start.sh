@@ -22,8 +22,8 @@ fi
 
 DIR=`dirname $0`
 
-player="${DIR}/sample_player"
-coach="${DIR}/sample_coach"
+player="${DIR}/robocin_player"
+coach="${DIR}/robocin_coach"
 teamname="RoboCIn"
 host="localhost"
 port=6000
