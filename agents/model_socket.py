@@ -4,6 +4,8 @@ import pickle
 import socket
 import sys
 import threading
+from concurrent.futures import ProcessPoolExecutor
+from functools import partial
 
 import numpy as np
 
@@ -107,7 +109,7 @@ def get_action(unum, env, ddpg):
                     conn.sendall(pickle.dumps(action))
 
 
-def get_sarsd(unum, env, ddpg):
+def get_sarsd(env, ddpg, unum):
     HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
     PORT = 65432 + unum
     action = 0
@@ -139,22 +141,32 @@ def get_sarsd(unum, env, ddpg):
 
 
 def main(num_mates, num_ops):
-    threads = [None for _ in list(range(2, 9))[:num_mates]]
+    unums = list(range(2, 9))[:num_mates]
+    threads = [None for _ in unums]
     env = MockEnv(num_mates, num_ops)
     ddpg = load_model(DDPG, env)
 
+    while True:
+        # Get action part
+        for i, unum in enumerate(unums):
+            threads[i] = threading.Thread(
+                target=get_action, args=(unum, env, ddpg))
+            threads[i].start()
 
-    ddpg.append_to_replay(
-        frame, action, reward, next_frame, int(done))
-    if not gen_mem and not test:
-        ddpg.update()
+        for thread in threads:
+            thread.join()
 
-    for i, unum in enumerate(list(range(2, 9))[:num_mates]):
-        threads[i] = threading.Thread(target=run, args=(unum,))
-        threads[i].start()
-
-    for thread in threads:
-        thread.join()
+        # Train part
+        get_sarsd_part = partial(get_sarsd, env, ddpg)
+        with ProcessPoolExecutor() as executor:
+            conjunto = executor.map(get_sarsd_part, unums)
+            conjunto = list(conjunto)
+        for sarsd in conjunto:
+            frame, action, reward, next_frame, done = sarsd
+            ddpg.append_to_replay(
+                frame, action, reward, next_frame, int(done))
+        if not gen_mem and not test:
+            ddpg.update()
 
 
 if __name__ == "__main__":
