@@ -74,6 +74,9 @@ class DDPGAgent(Agent):
                 if status == hfo.GOAL:
                     self.goals += 1
                 if done:
+                    if episode%100 == 0 and episode > 1:
+                        print(self.goals)
+                        self.goals = 0
                     break
                 state = next_state
             self.bye(status)

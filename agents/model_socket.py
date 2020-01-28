@@ -127,13 +127,11 @@ def get_action(env, ddpg, config, unum):
                 done = pickle.loads(done)
                 frame = ddpg.stack_frames(state, done)
                 # If the size of experiences is under max_size*8 runs gen_mem
-                if gen_mem and len(ddpg.memory) < config.EXP_REPLAY_SIZE:
+                if len(ddpg.memory) < config.EXP_REPLAY_SIZE:
                     action = env.action_space.sample()
                 else:
                     # When gen_mem is done, saves experiences and starts a new
                     # frame counting and starts the learning process
-                    if gen_mem:
-                        gen_mem_end(episode)
                     # Gets the action
                     action = ddpg.get_action(frame)
                     action = (action + np.random.normal(0, 0.1, size=env.action_space.shape[0])).clip(
@@ -146,6 +144,7 @@ def get_sarsd(env, ddpg, unum):
     HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
     PORT = 65432 + unum
     action = 0
+    frame = action = reward = next_frame = done = None
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind((HOST, PORT))
         s.listen()
@@ -178,6 +177,7 @@ def main(num_mates, num_ops):
     config = config_hyper()
     env = MockEnv(num_mates, num_ops)
     ddpg = load_model(DDPG, env, config)
+    test = False
 
     while True:
         # Get action part
@@ -186,15 +186,15 @@ def main(num_mates, num_ops):
             executor.map(get_action_part, unums)
 
         # Train part
-        get_sarsd_part = partial(get_sarsd, env, ddpg)
-        with ProcessPoolExecutor() as executor:
-            conjunto = executor.map(get_sarsd_part, unums)
-            conjunto = list(conjunto)
-        for sarsd in conjunto:
-            frame, action, reward, next_frame, done = sarsd
-            ddpg.append_to_replay(
-                frame, action, reward, next_frame, int(done))
         if not gen_mem and not test:
+            get_sarsd_part = partial(get_sarsd, env, ddpg)
+            with ProcessPoolExecutor() as executor:
+                conjunto = executor.map(get_sarsd_part, unums)
+                conjunto = list(conjunto)
+            for sarsd in conjunto:
+                frame, action, reward, next_frame, done = sarsd
+                ddpg.append_to_replay(
+                    frame, action, reward, next_frame, int(done))
             ddpg.update()
 
 
