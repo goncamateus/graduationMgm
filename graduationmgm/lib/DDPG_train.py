@@ -34,8 +34,8 @@ class DDPGTrain(BaseTrain):
         self.static_policy = static_policy
         self.num_feats = env.observation_space.shape
         self.env = env
-        self.writer = SummaryWriter(
-            f'./saved_agents/DDPG/agent_{self.env.getUnum()}')
+        # self.writer = SummaryWriter(
+        #     f'./saved_agents/DDPG/agent_{self.env.getUnum()}')
         self.declare_networks()
         actor_learning_rate = 1e-4
         critic_learning_rate = 1e-3

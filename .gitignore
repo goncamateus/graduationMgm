@@ -108,3 +108,4 @@ HFO_mgm/bin/teams/base/sample*
 HFO_mgm/bin/teams/base/agent*
 HFO_mgm/bin/rcssserver
 */build/*
+poetry.lock
