@@ -9,6 +9,7 @@ from functools import partial
 
 import numpy as np
 
+from graduationmgm.lib.hyperparameters import Config
 from graduationmgm.lib.Neural_Networks.DDPG import DDPG
 from graduationmgm.lib.utils import AsyncWrite
 from gym import spaces
@@ -18,7 +19,6 @@ model_paths = (f'./saved_agents/DDPG/actor.dump',
 optim_paths = (f'./saved_agents/DDPG/actor_optim.dump',
                f'./saved_agents/DDPG/critic_optim.dump')
 mem_path = f'./saved_agents/DDPG/exp_replay_agent_ddpg.dump'
-EXP_REPLAY_SIZE = 3e5
 
 
 class ObservationSpace():
@@ -42,7 +42,40 @@ class MockEnv:
         def.observation_space = ObservationSpace(shape=shape)
 
 
-def load_model(model, env):
+def config_hyper():
+    config = Config()
+    # epsilon variables
+    config.epsilon_start = 0.01
+    config.epsilon_final = 0.01
+    config.epsilon_decay = 30000
+    config.epsilon_by_frame = lambda frame_idx: config.epsilon_final + \
+        (config.epsilon_start - config.epsilon_final) * \
+        math.exp(-1. * frame_idx / config.epsilon_decay)
+
+    # misc agent variables
+    config.GAMMA = 0.95
+    config.LR = 0.00025
+    # memory
+    config.TARGET_NET_UPDATE_FREQ = 1000
+    config.EXP_REPLAY_SIZE = 3e5
+    config.BATCH_SIZE = 64
+
+    # Learning control variables
+    config.LEARN_START = 300000
+    config.MAX_FRAMES = 60000000
+    config.UPDATE_FREQ = 1
+
+    # Nstep controls
+    config.N_STEPS = 1
+    # if not test:
+    config.device = torch.device(
+        "cuda" if torch.cuda.is_available() else "cpu")
+    # else:
+    #     config.device = torch.device("cpu")
+    return config
+
+
+def load_model(model, env, config):
     ddpg = model(env=env, config=config,
                  static_policy=test)
     if os.path.isfile(model_paths[0]) \
@@ -76,7 +109,7 @@ def save_mem(ddpg, episode=0, bye=False):
         print('Memory saved')
 
 
-def get_action(unum, env, ddpg):
+def get_action(env, ddpg, config, unum):
     HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
     PORT = 65432 + unum
     action = 0
@@ -94,7 +127,7 @@ def get_action(unum, env, ddpg):
                 done = pickle.loads(done)
                 frame = ddpg.stack_frames(state, done)
                 # If the size of experiences is under max_size*8 runs gen_mem
-                if gen_mem and len(ddpg.memory) < EXP_REPLAY_SIZE:
+                if gen_mem and len(ddpg.memory) < config.EXP_REPLAY_SIZE:
                     action = env.action_space.sample()
                 else:
                     # When gen_mem is done, saves experiences and starts a new
@@ -142,13 +175,13 @@ def get_sarsd(env, ddpg, unum):
 
 def main(num_mates, num_ops):
     unums = list(range(2, 9))[:num_mates]
-    threads = [None for _ in unums]
+    config = config_hyper()
     env = MockEnv(num_mates, num_ops)
-    ddpg = load_model(DDPG, env)
+    ddpg = load_model(DDPG, env, config)
 
     while True:
         # Get action part
-        get_action_part(get_action, env, ddpg)
+        get_action_part(get_action, env, ddpg, config)
         with ProcessPoolExecutor() as executor:
             executor.map(get_action_part, unums)
 
