@@ -6,6 +6,8 @@ export PYTHONPATH=$PYTHONPATH:$DIR/..
 HFO_mgm/bin/HFO --fullstate --no-logging --headless --defense-agents=4 --offense-npcs=4 --defense-npcs=1 --offense-team=$1 --defense-team=$2 --trials $3 &
 sleep 5
 # Sleep is needed to make sure doesn't get connected too soon, as unum 1 (goalie)
+python ./agents/model_socket.py 4 4 &
+sleep 3
 python ./agents/agent.py $2&
 sleep 1
 python ./agents/agent.py $2&

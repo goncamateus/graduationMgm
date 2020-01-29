@@ -35,7 +35,7 @@ class DDPGAgent(Agent):
         self.unum = self.hfo_env.getUnum()
 
     def set_comm(self, messages=list(), recmsg=-1):
-        time.sleep(0.02)
+        time.sleep(0.03)
         HOST = '127.0.0.1'  # The server's hostname or IP address
         PORT = 65432 + self.unum  # The port used by the server
 
@@ -44,6 +44,7 @@ class DDPGAgent(Agent):
             for msg in messages:
                 msg = pickle.dumps(msg)
                 s.sendall(msg)
+                
             if recmsg > 0:
                 recv = s.recv(recmsg)
                 recv = pickle.loads(recv)
@@ -81,4 +82,6 @@ class DDPGAgent(Agent):
                         self.goals = 0
                     break
                 state = next_state
+            if episode%10000 == 0:
+                time.sleep(2)
             self.bye(status)

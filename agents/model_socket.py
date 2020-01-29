@@ -98,18 +98,16 @@ def load_memory(ddpg):
 
 def save_model(ddpg, episode=0, bye=False):
     saved = False
-    if (episode % 100 == 0 and episode > 0) or bye:
-        ddpg.save_w(path_models=model_paths,
-                    path_optims=optim_paths)
-        print("Model Saved")
-        saved = True
+    ddpg.save_w(path_models=model_paths,
+                path_optims=optim_paths)
+    print("Model Saved")
+    saved = True
     return saved
 
 
 def save_mem(ddpg, episode=0, bye=False):
-    if (episode % 1000 == 0 and episode > 2) or bye:
-        ddpg.save_replay(mem_path=mem_path)
-        print('Memory saved')
+    ddpg.save_replay(mem_path=mem_path)
+    print('Memory saved')
 
 
 def get_action(env, ddpg, config, unum):
@@ -176,7 +174,7 @@ def main(num_mates, num_ops):
     env = MockEnv(num_mates, num_ops)
     ddpg = load_model(DDPG, env, config)
     test = False
-
+    count = 0
     while True:
         # Get action part
         with ThreadPoolExecutor(max_workers=8) as executor:
@@ -192,8 +190,14 @@ def main(num_mates, num_ops):
             frame, action, reward, next_frame, done = sarsd
             ddpg.append_to_replay(
                 frame, action, reward, next_frame, int(done))
-        if len(ddpg.memory) > config.EXP_REPLAY_SIZE and not test:
+        if len(ddpg.memory) > 64 and not test:
             ddpg.update()
+        if conjunto[0][-1]:
+            count += 1
+            if count%10000 == 0 and count > 1:
+                save_model(ddpg, episode=count)
+            if count%10000 == 0 and count > 1:
+                save_mem(ddpg, episode=count)
 
 
 if __name__ == "__main__":
