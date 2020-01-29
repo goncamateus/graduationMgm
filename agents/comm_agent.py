@@ -4,6 +4,7 @@ import logging
 import os
 import pickle
 import socket
+import time
 
 import hfo
 import numpy as np
@@ -19,9 +20,8 @@ class DDPGAgent(Agent):
 
     memory_save_thread = None
 
-    def __init__(self, model, per, team='base', port=6000):
+    def __init__(self, team='base', port=6000):
         self.config_env(team, port)
-        self.config_hyper(per)
         self.goals = 0
 
     def config_env(self, team, port):
@@ -35,6 +35,7 @@ class DDPGAgent(Agent):
         self.unum = self.hfo_env.getUnum()
 
     def set_comm(self, messages=list(), recmsg=-1):
+        time.sleep(0.02)
         HOST = '127.0.0.1'  # The server's hostname or IP address
         PORT = 65432 + self.unum  # The port used by the server
 
@@ -45,14 +46,15 @@ class DDPGAgent(Agent):
                 s.sendall(msg)
             if recmsg > 0:
                 recv = s.recv(recmsg)
-                return pickle.loads(recv)
+                recv = pickle.loads(recv)
+                return recv
 
     def get_action(self, state, done):
-        action = set_comm(messages=[state, done], recmsg=12)
+        action = self.set_comm(messages=[(state, done)], recmsg=1024)
         return action
 
     def train(self, state, action, reward, next_state, done):
-        set_comm(messages=[state, action, reward, next_state, done])
+        self.set_comm(messages=[(state, action, reward, next_state, done)])
 
     def run(self):
         self.goals = 0
@@ -74,7 +76,7 @@ class DDPGAgent(Agent):
                 if status == hfo.GOAL:
                     self.goals += 1
                 if done:
-                    if episode%100 == 0 and episode > 1:
+                    if episode % 100 == 0 and episode > 1:
                         print(self.goals)
                         self.goals = 0
                     break

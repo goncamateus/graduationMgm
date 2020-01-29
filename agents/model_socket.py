@@ -1,18 +1,20 @@
 import datetime
+import math
 import os
 import pickle
 import socket
 import sys
 import threading
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from functools import partial
 
 import numpy as np
+import torch
+from gym import spaces
 
 from graduationmgm.lib.hyperparameters import Config
 from graduationmgm.lib.Neural_Networks.DDPG import DDPG
 from graduationmgm.lib.utils import AsyncWrite
-from gym import spaces
 
 model_paths = (f'./saved_agents/DDPG/actor.dump',
                f'./saved_agents/DDPG/critic.dump')
@@ -39,7 +41,8 @@ class MockEnv:
         self.action_space = ActionSpaceContinuous(-1, 1, shape=(1,))
         shape = 11 + 3 * num_mates + 2 * num_ops
         shape = (shape,)
-        def.observation_space = ObservationSpace(shape=shape)
+        self.observation_space = ObservationSpace(shape=shape)
+        self.continuous = True
 
 
 def config_hyper():
@@ -77,7 +80,7 @@ def config_hyper():
 
 def load_model(model, env, config):
     ddpg = model(env=env, config=config,
-                 static_policy=test)
+                 static_policy=False)
     if os.path.isfile(model_paths[0]) \
             and os.path.isfile(optim_paths[0]):
         ddpg.load_w(path_models=model_paths,
@@ -104,7 +107,7 @@ def save_model(ddpg, episode=0, bye=False):
 
 
 def save_mem(ddpg, episode=0, bye=False):
-    if (episode % 1000 == 0 and episode > 2 and not test) or bye:
+    if (episode % 1000 == 0 and episode > 2) or bye:
         ddpg.save_replay(mem_path=mem_path)
         print('Memory saved')
 
@@ -119,12 +122,11 @@ def get_action(env, ddpg, config, unum):
         conn, addr = s.accept()
         with conn:
             while True:
-                state = conn.recv(3664)
-                state = pickle.loads(state)
-                if not state:
+                state_done = conn.recv(1024)
+                if not state_done:
                     break
-                done = conn.recv(3664)
-                done = pickle.loads(done)
+
+                state, done = pickle.loads(state_done)
                 frame = ddpg.stack_frames(state, done)
                 # If the size of experiences is under max_size*8 runs gen_mem
                 if len(ddpg.memory) < config.EXP_REPLAY_SIZE:
@@ -137,7 +139,8 @@ def get_action(env, ddpg, config, unum):
                     action = (action + np.random.normal(0, 0.1, size=env.action_space.shape[0])).clip(
                         env.action_space.low, env.action_space.high)
                     action = action.astype(np.float32)
-                    conn.sendall(pickle.dumps(action))
+                conn.sendall(pickle.dumps(action))
+        conn.close()
 
 
 def get_sarsd(env, ddpg, unum):
@@ -151,28 +154,23 @@ def get_sarsd(env, ddpg, unum):
         conn, addr = s.accept()
         with conn:
             while True:
-                state = conn.recv(3664)
-                state = pickle.loads(state)
-                if not state:
+                tudo = conn.recv(1024)
+                if not tudo:
                     break
-                action = conn.recv(3664)
-                action = pickle.loads(action)
-                reward = conn.recv(3664)
-                reward = pickle.loads(reward)
-                next_state = conn.recv(3664)
-                next_state = pickle.loads(next_state)
-                done = conn.recv(3664)
-                done = pickle.loads(done)
+                state, action, reward, next_state, done = pickle.loads(tudo)
                 frame = ddpg.stack_frames(state, False)
                 if done:
                     next_state = np.zeros(state.shape)
                     next_frame = np.zeros(frame.shape)
                 else:
                     next_frame = ddpg.stack_frames(next_state, done)
+        conn.close()
     return frame, action, reward, next_frame, done
 
 
 def main(num_mates, num_ops):
+    num_mates = int(num_mates)
+    num_ops = int(num_ops)
     unums = list(range(2, 9))[:num_mates]
     config = config_hyper()
     env = MockEnv(num_mates, num_ops)
@@ -181,22 +179,22 @@ def main(num_mates, num_ops):
 
     while True:
         # Get action part
-        get_action_part(get_action, env, ddpg, config)
-        with ProcessPoolExecutor() as executor:
-            executor.map(get_action_part, unums)
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            for unum in unums:
+                executor.submit(get_action, env, ddpg, config, unum)
 
         # Train part
-        if not gen_mem and not test:
-            get_sarsd_part = partial(get_sarsd, env, ddpg)
-            with ProcessPoolExecutor() as executor:
-                conjunto = executor.map(get_sarsd_part, unums)
-                conjunto = list(conjunto)
-            for sarsd in conjunto:
-                frame, action, reward, next_frame, done = sarsd
-                ddpg.append_to_replay(
-                    frame, action, reward, next_frame, int(done))
+        get_sarsd_part = partial(get_sarsd, env, ddpg)
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            conjunto = executor.map(get_sarsd_part, unums)
+            conjunto = list(conjunto)
+        for sarsd in conjunto:
+            frame, action, reward, next_frame, done = sarsd
+            ddpg.append_to_replay(
+                frame, action, reward, next_frame, int(done))
+        if len(ddpg.memory) > config.EXP_REPLAY_SIZE and not test:
             ddpg.update()
 
 
 if __name__ == "__main__":
-    main(sys[1], sys[2])
+    main(sys.argv[1], sys.argv[2])
