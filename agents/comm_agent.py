@@ -34,28 +34,54 @@ class DDPGAgent(Agent):
         self.gen_mem = True
         self.unum = self.hfo_env.getUnum()
 
-    def set_comm(self, messages=list(), recmsg=-1):
-        time.sleep(0.03)
+    def set_comm(self, message, port, recmsg=-1):
         HOST = '127.0.0.1'  # The server's hostname or IP address
-        PORT = 65432 + self.unum  # The port used by the server
-
+        PORT = port  # The port used by the server
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect((HOST, PORT))
-            for msg in messages:
-                msg = pickle.dumps(msg)
-                s.sendall(msg)
-                
+            bom = False
+            while not bom:
+                try:
+                    s.connect((HOST, PORT))
+                    bom = True
+                except ConnectionError:
+                    time.sleep(0.01)
+            msg = pickle.dumps(message)
+            s.sendall(msg)
+
             if recmsg > 0:
                 recv = s.recv(recmsg)
                 recv = pickle.loads(recv)
                 return recv
 
+    def recv_ready(self):
+        HOST = '127.0.0.1'  # The server's hostname or IP address
+        PORT = 65432 + self.unum  # The port used by the server
+
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind((HOST, PORT))
+            s.listen()
+            print('espera ready')
+            conn, addr = s.accept()
+            first = False
+            with conn:
+                while not first:
+                    if first:
+                        break
+                    ready = conn.recv(1024)
+                    if ready:   
+                        first = pickle.loads(ready)
+
     def get_action(self, state, done):
-        action = self.set_comm(messages=[(state, done)], recmsg=1024)
+        PORT = 65452 + self.unum  # The port used by the server
+        self.recv_ready()
+        print('get_action')
+        action = self.set_comm(message=(state, done), port=PORT, recmsg=1024)
         return action
 
     def train(self, state, action, reward, next_state, done):
-        self.set_comm(messages=[(state, action, reward, next_state, done)])
+        PORT = 65452 + self.unum  # The port used by the server
+        self.set_comm(message=(state, action, reward, next_state, done), port=PORT)
+        print('train agent')
 
     def run(self):
         self.goals = 0
@@ -63,7 +89,6 @@ class DDPGAgent(Agent):
             status = hfo.IN_GAME
             done = True
             episode_rewards = 0
-            step = 0
             while status == hfo.IN_GAME:
                 # Every time when game resets starts a zero frame
                 if done:
@@ -82,6 +107,5 @@ class DDPGAgent(Agent):
                         self.goals = 0
                     break
                 state = next_state
-            if episode%10000 == 0:
-                time.sleep(2)
+
             self.bye(status)
