@@ -55,7 +55,7 @@ class Agent():
         self.config.device = torch.device(
             "cuda" if torch.cuda.is_available() else "cpu")
         # else:
-        #     self.config.device = torch.device("cpu")
+        # self.config.device = torch.device("cpu")
 
     def config_env(self, team, port):
         BLOCK = hfo.CATCH

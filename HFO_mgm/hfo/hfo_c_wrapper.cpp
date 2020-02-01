@@ -39,7 +39,6 @@ extern "C" {
 
   int numParams(const hfo::action_t action) { return NumParams(action); }
   int getUnum(hfo::HFOEnvironment *hfo, Agent* agent) {
-    std::cout << hfo->getAgent() << std::endl;
     hfo->setAgent(agent);
     return hfo->getUnum();}
   int getNumTeammates(hfo::HFOEnvironment *hfo) {

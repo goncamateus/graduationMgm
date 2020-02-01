@@ -68,6 +68,12 @@ class DDPG(DDPGTrain):
             self.env.action_space.shape[0])
         self.target_critic.load_state_dict(self.critic.state_dict())
 
+    def share_memory(self):
+        self.actor.share_memory()
+        self.target_actor.share_memory()
+        self.critic.share_memory()
+        self.target_critic.share_memory()
+
     def stack_frames(self, frame, is_new_episode):
         if is_new_episode:
             # Clear our stacked_frams
