@@ -12,6 +12,7 @@ from functools import partial
 
 import hfo
 import numpy as np
+import torch
 import torch.multiprocessing as mp
 from gym import spaces
 from joblib import Parallel, delayed
@@ -23,9 +24,12 @@ from graduationmgm.lib.Neural_Networks.DDPG import DDPG
 from graduationmgm.lib.utils import MemoryDeque
 
 MEM_SIZE = 1e5
+np.random.seed(5)
+torch.manual_seed(1)
+torch.cuda.manual_seed(1)
 
 
-def run(port, team, actions, rewards, num_agent, ddpg, memory, test):
+def run(port, team, actions, rewards, num_agent, ddpg, memory, test, episodes):
     time.sleep(num_agent*5)
     env = HFOEnv()
     env.connect(is_offensive=False, play_goalie=False,
@@ -39,7 +43,7 @@ def run(port, team, actions, rewards, num_agent, ddpg, memory, test):
     env.set_env(actions, rewards, strict=True)
     goals = 0
     first = True
-    for episode in itertools.count():
+    for episode in range(episodes):
         status = hfo.IN_GAME
         done = True
         episode_rewards = 0
@@ -86,12 +90,16 @@ def run(port, team, actions, rewards, num_agent, ddpg, memory, test):
             if done:
                 break
     env.act(hfo.QUIT)
+    ddpg.memory = memory
+    ddpg.save_replay(
+        mem_path=f'./saved_agents/DDPG/exp_replay_agent_{num_agent+1}.dump')
 
 
 if __name__ == "__main__":
     mp.set_start_method('spawn')
     team = sys.argv[1]
     num_agents = sys.argv[2]
+    episodes = int(sys.argv[3])
     if team == 'helios':
         team = 'HELIOS'
     elif team == 'helios19':
@@ -103,6 +111,10 @@ if __name__ == "__main__":
                       num_agents=int(num_agents),
                       num_ops=int(num_agents))
     processes = []
+    agent.ddpg.actor.share_memory()
+    agent.ddpg.target_actor.share_memory()
+    agent.ddpg.critic.share_memory()
+    agent.ddpg.target_critic.share_memory()
     if agent.gen_mem:
         memories = [MemoryDeque(MEM_SIZE)
                     for _ in range(agent.num_agents)]
@@ -110,9 +122,9 @@ if __name__ == "__main__":
         memories = agent.ddpg.memory
     for rank in range(agent.num_agents):
         p = mp.Process(target=run, args=(agent.port, agent.team, agent.actions,
-                                         agent.rewards, agent.num_agents,
+                                         agent.rewards, rank,
                                          agent.ddpg, memories[rank],
-                                         agent.test))
+                                         agent.test, episodes))
         p.start()
         processes.append(p)
     for p in processes:

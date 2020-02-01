@@ -5,13 +5,9 @@ import logging
 import os
 import pickle
 import time
-from copy import deepcopy
-# from concurrent.futures import ProcessPoolExecutor
-from functools import partial
 
 import hfo
 import numpy as np
-import torch.multiprocessing as mp
 from gym import spaces
 from joblib import Parallel, delayed
 
@@ -20,7 +16,6 @@ from graduationmgm.lib.hfo_env import HFOEnv
 from graduationmgm.lib.utils import AsyncWrite, MemoryDeque
 
 logger = logging.getLogger('Agent')
-# mp.set_start_method('spawn')
 
 
 class ObservationSpace():
@@ -43,69 +38,6 @@ class MockEnv:
         shape = (shape,)
         self.observation_space = ObservationSpace(shape=shape)
         self.continuous = True
-
-
-def run(port, team, actions, rewards, num_agent, ddpg, memory, test):
-    time.sleep(num_agent*5)
-    env = HFOEnv()
-    env.connect(is_offensive=False, play_goalie=False,
-                port=port, continuous=True,
-                team=team)
-    while not env.waitAnyState():
-        pass
-    while not env.waitToAct():
-        pass
-    assert env.processBeforeBegins()
-    env.set_env(actions, rewards, strict=True)
-    goals = 0
-    first = True
-    for episode in itertools.count():
-        status = hfo.IN_GAME
-        done = True
-        episode_rewards = 0
-        step = 0
-        while status == hfo.IN_GAME:
-            # Every time when game resets starts a zero frame
-            state = env.get_state()
-            # interceptable = state[-1]
-            frame = ddpg.stack_frames(state, done)
-            # If the size of experiences is under max_size*8 runs gen_mem
-            if len(memory) > ddpg.batch_size and not test:
-                action = env.action_space.sample()
-            else:
-                # When gen_mem is done, saves experiences and starts a new
-                # frame counting and starts the learning process
-                if first:
-                    first = False
-                    print('started learning at episode', episode)
-                # Gets the action
-                action = ddpg.get_action(frame)
-                action = (action + np.random.normal(0, 0.1, size=env.action_space.shape[0])).clip(
-                    env.action_space.low, env.action_space.high)
-                action = action.astype(np.float32)
-                step += 1
-
-            # Calculates results from environment
-            next_state, reward, done, status = env.step(action)
-            episode_rewards += reward
-
-            if done:
-                next_state = np.zeros(state.shape)
-                next_frame = np.zeros(frame.shape)
-                if episode % 100 == 0 and episode > 10 and goals > 0:
-                    print(goals)
-                    goals = 0
-            else:
-                next_frame = ddpg.stack_frames(next_state, done)
-
-            memory.store((frame, action, reward, next_frame, int(done)))
-            if status == hfo.GOAL:
-                goals += 1
-            if not test:
-                ddpg.update()
-            if done:
-                break
-    env.act(hfo.QUIT)
 
 
 class DDPGAgent(Agent):
@@ -143,13 +75,21 @@ class DDPGAgent(Agent):
             self.ddpg.load_w(path_models=self.model_paths,
                              path_optims=self.optim_paths)
             print("Model Loaded")
-        self.ddpg.share_memory()
+        # self.ddpg.share_memory()
 
     def load_memory(self):
-        self.mem_path = f'./saved_agents/DDPG/exp_replay_agent_ddpg.dump'
-        if os.path.isfile(self.mem_path) and not self.test:
-            self.ddpg.load_replay(mem_path=self.mem_path)
-            self.gen_mem_end(0)
+        self.mem_path = 'exp_replay_agent_'
+        paths = ['./saved_agents/DDPG/' +
+                 x for x in os.listdir('./saved_agents/DDPG/') if self.mem_path in x]
+        memories = list()
+        for path in paths:
+            if os.path.isfile(path) and not self.test:
+                self.ddpg.load_replay(mem_path=path)
+                if len(self.ddpg.memory) >= self.config.EXP_REPLAY_SIZE:
+                    self.gen_mem_end(0)
+                memories.append(self.ddpg.memory)
+        if memories:
+            self.ddpg.memory = memories
             print("Memory Loaded")
 
     def save_model(self, episode=0, bye=False):
@@ -185,23 +125,3 @@ class DDPGAgent(Agent):
             with open(f'./saved_agents/{self.ddpg.__name__}/{self.ddpg.__name__}.reward', 'wb') as lf:
                 pickle.dump(self.currun_rewards, lf)
                 lf.close()
-
-    def run(self):
-        processes = []
-        if self.gen_mem:
-            memories = [MemoryDeque(self.config.EXP_REPLAY_SIZE)
-                        for _ in range(self.num_agents)]
-        else:
-            memories = self.ddpg.memory
-        for rank in range(self.num_agents):
-            p = mp.Process(target=run, args=(self.port, self.team, self.actions,
-                                             self.rewards, self.num_agents,
-                                             self.ddpg, memories[rank],
-                                             self.test))
-            p.start()
-            processes.append(p)
-        for p in processes:
-            p.join()
-        self.ddpg.memory = memories
-        self.save_modelmem(bye=True)
-        self.save_loss(bye=True)
