@@ -37,6 +37,10 @@ class HFOEnvironment {
 
   // Get the current state of the domain. Returns a reference to feature_vec.
   const std::vector<float>& getState();
+  bool waitAnyState();
+  bool waitToAct();
+  bool processBeforeBegins();
+
 
   // Specify action type to take followed by parameters for that action
   virtual void act(action_t action, ...);
@@ -61,6 +65,10 @@ class HFOEnvironment {
   // Indicates the agent is done and the environment should
   // progress. Returns the game status after the step
   virtual status_t step();
+
+  Agent* getAgent();
+  void setAgent(Agent* actor);
+
 
  private:
   rcsc::BasicClient* client;

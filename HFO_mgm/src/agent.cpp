@@ -191,7 +191,6 @@ bool Agent::isIntercept() {
 
 bool Agent::initImpl(CmdLineParser & cmd_parser) {
     bool result = PlayerAgent::initImpl(cmd_parser);
-
     // read additional options
     result &= Strategy::instance().init(cmd_parser);
 

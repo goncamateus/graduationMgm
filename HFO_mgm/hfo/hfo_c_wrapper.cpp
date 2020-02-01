@@ -2,7 +2,10 @@
 
 
 extern "C" {
-  hfo::HFOEnvironment* HFO_new() { return new hfo::HFOEnvironment(); }
+  hfo::HFOEnvironment* HFO_new() { 
+    auto hfo = new hfo::HFOEnvironment();
+    return hfo; 
+    }
   void HFO_del(hfo::HFOEnvironment *hfo) { delete hfo; }
   void connectToServer(hfo::HFOEnvironment *hfo,
                        hfo::feature_set_t feature_set,
@@ -35,7 +38,15 @@ extern "C" {
   hfo::status_t step(hfo::HFOEnvironment *hfo) { return hfo->step(); }
 
   int numParams(const hfo::action_t action) { return NumParams(action); }
-  int getUnum(hfo::HFOEnvironment *hfo) {return hfo->getUnum();}
-  int getNumTeammates(hfo::HFOEnvironment *hfo) {return hfo->getNumTeammates();}
+  int getUnum(hfo::HFOEnvironment *hfo, Agent* agent) {
+    hfo->setAgent(agent);
+    return hfo->getUnum();}
+  int getNumTeammates(hfo::HFOEnvironment *hfo) {
+    return hfo->getNumTeammates();}
   int getNumOpponents(hfo::HFOEnvironment *hfo) {return hfo->getNumOpponents();}
+  bool waitAnyState(hfo::HFOEnvironment *hfo) { return hfo->waitAnyState(); }
+  bool waitToAct(hfo::HFOEnvironment *hfo) { return hfo->waitToAct(); }
+  bool processBeforeBegins(hfo::HFOEnvironment *hfo) { return hfo->processBeforeBegins(); }
+  Agent* getAgent(hfo::HFOEnvironment *hfo) {return hfo->getAgent();}
+  void setAgent(hfo::HFOEnvironment *hfo, Agent* agent) {hfo->setAgent(agent);}
 }

@@ -34,8 +34,8 @@ class DDPGTrain(BaseTrain):
         self.static_policy = static_policy
         self.num_feats = env.observation_space.shape
         self.env = env
-        self.writer = SummaryWriter(
-            f'./saved_agents/DDPG/agent_{self.env.getUnum()}')
+        # self.writer = SummaryWriter(
+        #     f'./saved_agents/DDPG/agent_{self.env.getUnum()}')
         self.declare_networks()
         actor_learning_rate = 1e-4
         critic_learning_rate = 1e-3
@@ -120,8 +120,10 @@ class DDPGTrain(BaseTrain):
     def append_to_replay(self, s, a, r, s_, d):
         self.memory.store((s, a, r, s_, d))
 
-    def update(self):  # faster
-        state, next_state, action, reward, done = self.memory.sample(
+    def update(self, memory=None, is_per=False):  # faster
+        if memory is None:
+            memory = self.memory
+        state, next_state, action, reward, done = memory.sample(
             self.batch_size)
         reward = reward.reshape(-1, 1)
         done = done.reshape(-1, 1)

@@ -49,7 +49,8 @@ void HFOEnvironment::connectToServer(feature_set_t feature_set,
     config.setLogDir(record_dir);
     config.setRecord(true);
   }
-  if (!agent->init(client, 0, NULL)) {
+  bool sucinit = agent->init(client, 0, NULL);
+  if (!sucinit) {
     std::cerr << "Init failed" << std::endl;
     exit(1);
   }
@@ -58,9 +59,32 @@ void HFOEnvironment::connectToServer(feature_set_t feature_set,
     std::cerr << "Unable to start agent" << std::endl;
     exit(1);
   }
+  std::cout << agent << std::endl;
   // Do nothing until the agent begins getting state features
+  // act(NOOP);
+  // while (agent->getState().empty()) {
+  //   if (!client->isServerAlive()) {
+  //     std::cerr << "[ConnectToServer] Server Down!" << std::endl;
+  //     exit(1);
+  //   }
+  //   ready_for_action = client->runStep(agent);
+  //   if (ready_for_action) {
+  //     agent->action();
+  //   }
+  // }
+  // // Step until it is time to act
+  // do {
+  //   ready_for_action = client->runStep(agent);
+  // } while (!ready_for_action);
+  // agent->ProcessTrainerMessages();
+  // agent->ProcessTeammateMessages();
+  // agent->UpdateFeatures();
+  // current_cycle = agent->currentTime().cycle();
+}
+
+bool HFOEnvironment::waitAnyState(){
   act(NOOP);
-  while (agent->getState().empty()) {
+  if (agent->getState().empty()) {
     if (!client->isServerAlive()) {
       std::cerr << "[ConnectToServer] Server Down!" << std::endl;
       exit(1);
@@ -69,15 +93,22 @@ void HFOEnvironment::connectToServer(feature_set_t feature_set,
     if (ready_for_action) {
       agent->action();
     }
+    return false;
   }
-  // Step until it is time to act
-  do {
-    ready_for_action = client->runStep(agent);
-  } while (!ready_for_action);
+  return true;
+}
+
+bool HFOEnvironment::waitToAct(){
+  ready_for_action = client->runStep(agent);
+  return ready_for_action;
+}
+
+bool HFOEnvironment::processBeforeBegins(){
   agent->ProcessTrainerMessages();
   agent->ProcessTeammateMessages();
   agent->UpdateFeatures();
   current_cycle = agent->currentTime().cycle();
+  return true;
 }
 
 const std::vector<float>& HFOEnvironment::getState() {
@@ -118,7 +149,8 @@ int HFOEnvironment::getUnum() {
 }
 
 int HFOEnvironment::getNumTeammates() {
-  return agent->getNumTeammates();
+  int mates = agent->getNumTeammates();
+  return mates;
 }
 
 int HFOEnvironment::getNumOpponents() {
@@ -127,6 +159,14 @@ int HFOEnvironment::getNumOpponents() {
 
 Player HFOEnvironment::playerOnBall() {
   return agent->getPlayerOnBall();
+}
+
+Agent* HFOEnvironment::getAgent(){
+  return agent;
+}
+
+void HFOEnvironment::setAgent(Agent* actor){
+  agent = actor;
 }
 
 status_t HFOEnvironment::step() {
