@@ -3,8 +3,7 @@
 
 extern "C" {
   hfo::HFOEnvironment* HFO_new() { 
-    auto hfo = new hfo::HFOEnvironment();
-    return hfo; 
+    return new hfo::HFOEnvironment(); 
     }
   void HFO_del(hfo::HFOEnvironment *hfo) { delete hfo; }
   void connectToServer(hfo::HFOEnvironment *hfo,

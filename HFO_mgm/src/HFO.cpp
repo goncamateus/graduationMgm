@@ -59,7 +59,6 @@ void HFOEnvironment::connectToServer(feature_set_t feature_set,
     std::cerr << "Unable to start agent" << std::endl;
     exit(1);
   }
-  std::cout << agent << std::endl;
   // Do nothing until the agent begins getting state features
   // act(NOOP);
   // while (agent->getState().empty()) {
