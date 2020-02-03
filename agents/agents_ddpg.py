@@ -90,6 +90,7 @@ class DDPGAgent(Agent):
                 memories.append(self.ddpg.memory)
         if memories:
             self.ddpg.memory = memories
+            self.gen_mem = False
             print("Memory Loaded")
 
     def save_model(self, episode=0, bye=False):

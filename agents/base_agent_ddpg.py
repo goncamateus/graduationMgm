@@ -29,8 +29,16 @@ class DDPGAgent(Agent):
         BLOCK = hfo.CATCH
         self.actions = [hfo.MOVE, hfo.GO_TO_BALL, BLOCK]
         self.rewards = [0, 0, 0]
-        self.hfo_env = HFOEnv(self.actions, self.rewards,
-                              strict=True, continuous=True, team=team, port=port)
+        self.hfo_env = HFOEnv()
+        self.hfo_env.connect(is_offensive=False, play_goalie=False,
+                    port=port, continuous=True,
+                    team=team)
+        while not self.hfo_env.waitAnyState():
+            pass
+        while not self.hfo_env.waitToAct():
+            pass
+        assert self.hfo_env.processBeforeBegins()
+        self.hfo_env.set_env(self.actions, self.rewards, strict=True)
         self.test = False
         self.gen_mem = True
         self.unum = self.hfo_env.getUnum()
@@ -53,6 +61,7 @@ class DDPGAgent(Agent):
         if os.path.isfile(self.mem_path) and not self.test:
             self.ddpg.load_replay(mem_path=self.mem_path)
             self.gen_mem_end(0)
+            self.config.epsilon_decay = 1
             print("Memory Loaded")
 
     def save_model(self, episode=0, bye=False):
@@ -107,7 +116,8 @@ class DDPGAgent(Agent):
                     state = state_ori
                     frame = self.ddpg.stack_frames(state, done)
                 # If the size of experiences is under max_size*8 runs gen_mem
-                if self.gen_mem and len(self.ddpg.memory) < self.config.EXP_REPLAY_SIZE:
+                eps = self.config.epsilon_by_frame(self.frame_idx)
+                if (self.gen_mem and len(self.ddpg.memory) < self.config.EXP_REPLAY_SIZE) or np.random.random() < eps:
                     action = self.hfo_env.action_space.sample()
                 else:
                     # When gen_mem is done, saves experiences and starts a new
@@ -121,12 +131,12 @@ class DDPGAgent(Agent):
                     action = action.astype(np.float32)
                     step += 1
 
-                # if interceptable and self.gen_mem:
-                #     action = np.array(
-                #         [np.random.uniform(-0.68, 0.36)], dtype=np.float32)
-                #     action = (action + np.random.normal(0, 0.1, size=self.hfo_env.action_space.shape[0])).clip(
-                #         self.hfo_env.action_space.low, self.hfo_env.action_space.high)
-                #     action = action.astype(np.float32)
+                if interceptable and self.gen_mem:
+                    action = np.array(
+                        [np.random.uniform(-0.68, 0.36)], dtype=np.float32)
+                    action = (action + np.random.normal(0, 0.1, size=self.hfo_env.action_space.shape[0])).clip(
+                        self.hfo_env.action_space.low, self.hfo_env.action_space.high)
+                    action = action.astype(np.float32)
 
                 # Calculates results from environment
                 next_state_ori, reward, done, status = self.hfo_env.step(

@@ -40,8 +40,8 @@ class HFOEnv(hfo.HFOEnvironment):
                     pitchHalfWidth * pitchHalfWidth)
     stamina_max = 8000
     ball_initial_x = 40.0
-    w_ball_grad = 1
-    prev_ball_x = None
+    w_ball_grad = 4
+    prev_ball_grad = None
 
     def __init__(self, obj=None):
         super(HFOEnv, self).__init__(obj)
@@ -130,9 +130,14 @@ class HFOEnv(hfo.HFOEnvironment):
 
     def get_reward_def(self, act, next_state, done, status):
         reward = 0
-        # ball_x = next_state[3] - self.ball_initial_x
-        # ball_x_rew = ball_x/(self.pitchHalfLength + self.ball_initial_x)
-
+        actual_pot = self.ball_potential(
+            next_state[3] + self.pitchHalfLength,
+            next_state[4] + self.pitchHalfWidth)
+        potential_diff = 0
+        if self.prev_ball_grad:
+            potential_diff = actual_pot - self.prev_ball_grad
+        else:
+            self.prev_ball_grad = actual_pot
         if status == hfo.GOAL:
             reward = -10
             self.observation_space.goals_taken += 1
@@ -149,7 +154,7 @@ class HFOEnv(hfo.HFOEnvironment):
             else:
                 if abs(next_state[10]) <= 1.2:
                     reward = -0.8  # punishes collisions of teammates
-                # reward += ball_x_rew*self.w_ball_grad
+                reward += potential_diff*self.w_ball_grad
         return reward
 
     def get_reward_goalie(self, act, next_state, done, status):
@@ -286,16 +291,10 @@ class HFOEnv(hfo.HFOEnvironment):
             (105, 34) and -1 at the defense goal (0,34)
             it changes twice as fast on y coordinate than on the x coordinate
         """
+        pot = ((-math.sqrt(((self.pitchHalfLength + 40) - ball_x)**2 + 2*(34-ball_y)**2) +
+                math.sqrt((0 - ball_x)**2 + 2*(34-ball_y)**2))/(self.pitchHalfLength + 40) - 1)/2
 
-        ball_x = ball_x + self.pitchHalfLength
-        ball_y = ball_y + self.pitchHalfWidth
-        dx_d = -ball_x  # distance to defense
-        dx_a = 2*self.pitchHalfLength - ball_x  # distance to attack
-        dy = self.pitchHalfWidth - ball_y
-        potential = ((-math.sqrt(dx_a ** 2 + 2 * dy ** 2) +
-                      math.sqrt(dx_d ** 2 + 2 * dy ** 2)) / (2*self.pitchHalfLength) - 1) / 2  # noqa
-
-        return potential
+        return pot
 
     def clip(self, val, vmin, vmax):
         return min(max(val, vmin), vmax)
