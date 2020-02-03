@@ -41,7 +41,7 @@ class Agent():
         self.config.LR = 0.00025
         # memory
         self.config.TARGET_NET_UPDATE_FREQ = 1000
-        self.config.EXP_REPLAY_SIZE = 3e5
+        self.config.EXP_REPLAY_SIZE = 1.2e5
         self.config.BATCH_SIZE = 64
 
         # Learning control variables
