@@ -7,12 +7,16 @@ import pickle
 
 import hfo
 import numpy as np
+import torch
 
 from agents.base_agent import Agent
 from graduationmgm.lib.hfo_env import HFOEnv
 from graduationmgm.lib.utils import AsyncWrite, OUNoise
 
 logger = logging.getLogger('Agent')
+np.random.seed(5)
+torch.manual_seed(1)
+torch.cuda.manual_seed(1)
 
 
 class DDPGAgent(Agent):
@@ -31,8 +35,8 @@ class DDPGAgent(Agent):
         self.rewards = [0, 0, 0]
         self.hfo_env = HFOEnv()
         self.hfo_env.connect(is_offensive=False, play_goalie=False,
-                    port=port, continuous=True,
-                    team=team)
+                             port=port, continuous=True,
+                             team=team)
         while not self.hfo_env.waitAnyState():
             pass
         while not self.hfo_env.waitToAct():
