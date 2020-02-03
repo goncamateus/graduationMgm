@@ -35,7 +35,7 @@ class Config(object):
         # epsilon variables
         self.epsilon_start = 1.0
         self.epsilon_final = 0.01
-        self.epsilon_decay = 30000
+        self.epsilon_decay = 5e5
         self.epsilon_by_frame = lambda frame_idx: self.epsilon_final + \
             (self.epsilon_start - self.epsilon_final) * \
             math.exp(-1. * frame_idx / self.epsilon_decay)
