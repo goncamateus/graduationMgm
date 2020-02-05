@@ -22,7 +22,7 @@ class MemoryDeque():
         self.storage = []
         self.max_size = max_size
         self.ptr = 0
-        self.stack_size = 128
+        self.stack_size = 32
 
     def store(self, data):
         if len(self.storage) == self.max_size:
