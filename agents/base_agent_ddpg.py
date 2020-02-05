@@ -121,7 +121,7 @@ class DDPGAgent(Agent):
                     # When gen_mem is done, saves experiences and starts a new
                     # frame counting and starts the learning process
                     if self.gen_mem:
-                        self.gen_mem_end(episode)
+                        self.gen_mem_end(episode+1)
                     # Gets the action
                     action = self.ddpg.get_action(frame)
                     action = (action + np.random.normal(0, 0.1, size=self.hfo_env.action_space.shape[0])).clip(

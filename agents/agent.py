@@ -14,7 +14,7 @@ def main(team='base'):
         team = 'HELIOS19'
     elif team == 'robocin':
         team = 'RoboCIn'
-    agent = DDPGAgent(DDPG, False, team=team, port=6000)
+    agent = DDPGAgent(DDPG, True, team=team, port=6000)
     try:
         agent.run()
     except:

@@ -11,6 +11,7 @@ from torch.autograd import Variable
 
 from graduationmgm.lib.base_train import BaseTrain
 from graduationmgm.lib.utils import MemoryDeque
+from graduationmgm.lib.prioritized_experience_replay import Memory
 
 Variable = lambda *args, **kwargs: autograd.Variable(*args, **kwargs).cuda()
 
@@ -115,16 +116,33 @@ class DDPGTrain(BaseTrain):
         pass
 
     def declare_memory(self):
-        self.memory = MemoryDeque(self.experience_replay_size)
+        if not self.priority_replay:
+            self.memory = MemoryDeque(self.experience_replay_size)
+        else:
+            self.memory = Memory(int(self.experience_replay_size))
 
     def append_to_replay(self, s, a, r, s_, d):
         self.memory.store((s, a, r, s_, d))
 
-    def update(self, memory=None, is_per=False):  # faster
+    def update(self, memory=None):  # faster
         if memory is None:
             memory = self.memory
-        state, next_state, action, reward, done = memory.gonca_sample(
-            self.batch_size)
+        if not self.priority_replay:
+            state, next_state, action, reward, done = memory.gonca_sample(
+                self.batch_size)
+        else:
+            batch, mem_idxs, mem_w = memory.gonca_sample(self.batch_size)
+            state = np.array([each[0][0]
+                                  for each in batch])
+            action = np.array(
+                [each[0][1] for each in batch])
+            reward = np.array(
+                [each[0][2] for each in batch])
+            next_state = np.array([each[0][3]
+                                       for each in batch])
+            done = np.array([each[0][4] for each in batch])
+            mem_w = Variable(torch.FloatTensor(mem_w))
+
         reward = reward.reshape(-1, 1)
         done = done.reshape(-1, 1)
         num_feat = state.shape[1] * state.shape[2]
@@ -135,7 +153,6 @@ class DDPGTrain(BaseTrain):
         action = Variable(torch.FloatTensor(action))
         reward = Variable(torch.FloatTensor(reward))
         done = Variable(torch.FloatTensor(done))
-
         # Compute the target Q value
         acts = self.target_actor(next_state)
         target_Q = self.target_critic(next_state, acts)
@@ -145,11 +162,18 @@ class DDPGTrain(BaseTrain):
         current_Q = self.critic(state, action)
 
         # Compute critic loss
-        critic_loss = F.mse_loss(current_Q, target_Q)
+        critic_loss  = (current_Q - target_Q.detach()).pow(2) * mem_w
+        mem_loss = critic_loss
+        critic_loss  = critic_loss.mean()
         # Optimize the critic
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
         self.critic_optimizer.step()
+
+
+        if self.priority_replay:
+            mem_loss = mem_loss.detach().cpu().numpy()
+            memory.batch_update(mem_idxs, mem_loss)
         # self.writer.add_scalar('Loss/ddpg/critic_loss', critic_loss,
         #                     global_step=self.num_critic_update_iteration)
         # self.critic_loss.append(critic_loss)

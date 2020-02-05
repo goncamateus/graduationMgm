@@ -40,6 +40,7 @@ class Agent():
         self.config.GAMMA = 0.95
         self.config.LR = 0.00025
         # memory
+        self.config.USE_PRIORITY_REPLAY = per
         self.config.TARGET_NET_UPDATE_FREQ = 1000
         self.config.EXP_REPLAY_SIZE = 3e5
         self.config.BATCH_SIZE = 64

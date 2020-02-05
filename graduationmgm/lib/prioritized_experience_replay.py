@@ -33,8 +33,11 @@ class SumTree(object):
 
         # Contains the experiences (so the size of data is capacity)
         self.data = np.zeros(capacity, dtype=object)
+        self.size = 0
 
     def add(self, priority, data):
+        self.size += 1
+        self.size = self.size if self.size <= self.capacity else self.capacity
         """
         Here we add our priority score in the sumtree leaf and add the experience in data
         """
@@ -155,6 +158,8 @@ class Memory(object):  # stored as ( s, a, r, s_ ) in SumTree
 
     absolute_error_upper = 1.  # clipped abs error
 
+    stack_size = 32
+
     def __init__(self, capacity):
         # Making the tree
         """
@@ -179,6 +184,26 @@ class Memory(object):  # stored as ( s, a, r, s_ ) in SumTree
 
         self.tree.add(max_priority, experience)   # set the max p for new p
 
+    def stack_states(self, index):
+        index = index - self.tree.capacity + 1
+        frame = list()
+        next_frame = list()
+        init = index - self.stack_size + 1
+        init = init if init > 0 else 0
+        shape = None
+        for i in range(init, index+1):
+            data = self.tree.data[i]
+            state, _, _, next_state, _ = data
+            shape = state.shape
+            frame.append(state)
+            next_frame.append(next_state)
+        for _ in range(self.stack_size - len(frame)):
+            frame.append(np.zeros(shape))
+            next_frame.append(np.zeros(shape))
+        stack = np.stack(frame, axis=0)
+        next_stack = np.stack(next_frame, axis=0)
+        return stack, next_stack
+
     """
     - First, to sample a minibatch of k size, the range [0, priority_total] is / into k ranges.
     - Then a value is uniformly sampled from each range
@@ -187,6 +212,48 @@ class Memory(object):  # stored as ( s, a, r, s_ ) in SumTree
     """
 
     def sample(self, n):
+        # Create a sample array that will contains the minibatch
+        memory_b = []
+
+        b_idx, b_ISWeights = np.empty(
+            (n,), dtype=np.int32), np.empty((n, 1), dtype=np.float32)
+        # Calculate the priority segment
+        # Here, as explained in the paper, we divide the Range[0, ptotal] into n ranges
+        priority_segment = self.tree.total_priority / n       # priority segment
+        # Here we increasing the PER_b each time we sample a new minibatch
+        self.PER_b = np.min(
+            [1., self.PER_b + self.PER_b_increment_per_sampling])  # max = 1
+        # Calculating the max_weight
+        p_min = np.min(
+            self.tree.tree[-self.tree.capacity:]) / self.tree.total_priority
+        max_weight = (p_min * n) ** (-self.PER_b)
+        for i in range(n):
+            """
+            A value is uniformly sample from each range
+            """
+            a, b = priority_segment * i, priority_segment * (i + 1)
+            value = np.random.uniform(a, b)
+
+            """
+            Experience that correspond to each value is retrieved
+            """
+            index, priority, data = self.tree.get_leaf(value)
+
+            # P(j)
+            sampling_probabilities = priority / self.tree.total_priority
+
+            #  IS = (1/N * 1/P(i))**b /max wi == (N*P(i))**-b  /max wi
+            b_ISWeights[i, 0] = np.power(
+                n * sampling_probabilities, -self.PER_b) / max_weight
+
+            b_idx[i] = index
+            experience = [data]
+
+            memory_b.append(experience)
+
+        return memory_b, b_idx, b_ISWeights
+
+    def gonca_sample(self, n):
         # Create a sample array that will contains the minibatch
         memory_b = []
 
@@ -217,6 +284,7 @@ class Memory(object):  # stored as ( s, a, r, s_ ) in SumTree
             Experience that correspond to each value is retrieved
             """
             index, priority, data = self.tree.get_leaf(value)
+            state, next_state = self.stack_states(index)
 
             # P(j)
             sampling_probabilities = priority / self.tree.total_priority
@@ -225,11 +293,12 @@ class Memory(object):  # stored as ( s, a, r, s_ ) in SumTree
             b_ISWeights[i, 0] = np.power(
                 n * sampling_probabilities, -self.PER_b) / max_weight
 
+            _, a, r, _, d = data
+
             b_idx[i] = index
-            experience = [data]
+            experience = [(state, a, r, next_state, d)]
 
             memory_b.append(experience)
-
         return memory_b, b_idx, b_ISWeights
 
     """
@@ -243,3 +312,6 @@ class Memory(object):  # stored as ( s, a, r, s_ ) in SumTree
 
         for ti, p in zip(tree_idx, ps):
             self.tree.update(ti, p)
+
+    def __len__(self):
+        return self.tree.size
