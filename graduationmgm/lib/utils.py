@@ -22,6 +22,7 @@ class MemoryDeque():
         self.storage = []
         self.max_size = max_size
         self.ptr = 0
+        self.stack_size = 128
 
     def store(self, data):
         if len(self.storage) == self.max_size:
@@ -42,6 +43,35 @@ class MemoryDeque():
             r.append(np.array(R, copy=False))
             d.append(np.array(D, copy=False))
 
+        return np.array(x), np.array(y), np.array(u), np.array(r), np.array(d)
+
+    def stack_states(self, index):
+        frame = list()
+        init = index - self.stack_size + 1
+        init = init if init > 0 else 0
+        shape = None
+        for i in range(init, index+1):
+            state, _, _, _, _ = self.storage[i]
+            shape = state.shape
+            frame.append(state)
+        for _ in range(self.stack_size - len(frame)):
+            frame.append(np.zeros(shape))
+        stack = np.stack(frame, axis=0)
+        return stack
+
+    def gonca_sample(self, batch_size):
+        ind = np.random.randint(0, len(self.storage), size=batch_size)
+        x, y, u, r, d = [], [], [], [], []
+
+        for i in ind:
+            X, U, R, Y, D = self.storage[i]
+            X = self.stack_states(i)
+            Y = self.stack_states(i)
+            x.append(X)
+            y.append(Y)
+            u.append(np.array(U, copy=False))
+            r.append(np.array(R, copy=False))
+            d.append(np.array(D, copy=False))
         return np.array(x), np.array(y), np.array(u), np.array(r), np.array(d)
 
     def __len__(self):

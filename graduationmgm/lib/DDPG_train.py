@@ -123,7 +123,7 @@ class DDPGTrain(BaseTrain):
     def update(self, memory=None, is_per=False):  # faster
         if memory is None:
             memory = self.memory
-        state, next_state, action, reward, done = memory.sample(
+        state, next_state, action, reward, done = memory.gonca_sample(
             self.batch_size)
         reward = reward.reshape(-1, 1)
         done = done.reshape(-1, 1)

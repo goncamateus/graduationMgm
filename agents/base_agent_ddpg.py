@@ -147,9 +147,8 @@ class DDPGAgent(Agent):
                     action = action.astype(np.float32)
 
                 # Calculates results from environment
-                next_state_ori, reward, done, status = self.hfo_env.step(
+                next_state, reward, done, status = self.hfo_env.step(
                     action)
-                next_state = next_state_ori
                 episode_rewards += reward
 
                 if not self.gen_mem and not self.test:
@@ -172,7 +171,7 @@ class DDPGAgent(Agent):
                 if status == hfo.GOAL:
                     self.goals += 1
                 self.ddpg.append_to_replay(
-                    frame, action, reward, next_frame, int(done))
+                    state, action, reward, next_state, int(done))
                 frame = next_frame
                 state = next_state
                 if done:
