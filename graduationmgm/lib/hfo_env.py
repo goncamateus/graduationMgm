@@ -130,14 +130,14 @@ class HFOEnv(hfo.HFOEnvironment):
 
     def get_reward_def(self, act, next_state, done, status):
         reward = 0
-        actual_pot = self.ball_potential(
-            next_state[3] + self.pitchHalfLength,
-            next_state[4] + self.pitchHalfWidth)
-        potential_diff = 0
-        if self.prev_ball_grad:
-            potential_diff = actual_pot - self.prev_ball_grad
-        else:
-            self.prev_ball_grad = actual_pot
+        # actual_pot = self.ball_potential(
+        #     next_state[3] + self.pitchHalfLength,
+        #     next_state[4] + self.pitchHalfWidth)
+        # potential_diff = 0
+        # if self.prev_ball_grad:
+        #     potential_diff = actual_pot - self.prev_ball_grad
+        # else:
+        #     self.prev_ball_grad = actual_pot
         if status == hfo.GOAL:
             reward = -10
             self.observation_space.goals_taken += 1
@@ -154,7 +154,7 @@ class HFOEnv(hfo.HFOEnvironment):
             else:
                 if abs(next_state[10]) <= 1.2:
                     reward = -0.8  # punishes collisions of teammates
-                reward += actual_pot*self.w_ball_grad
+                # reward += actual_pot*self.w_ball_grad
         return reward
 
     def get_reward_goalie(self, act, next_state, done, status):
