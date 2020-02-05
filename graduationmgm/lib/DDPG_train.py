@@ -162,8 +162,10 @@ class DDPGTrain(BaseTrain):
         current_Q = self.critic(state, action)
 
         # Compute critic loss
-        critic_loss  = (current_Q - target_Q.detach()).pow(2) * mem_w
-        mem_loss = critic_loss
+        critic_loss  = (current_Q - target_Q.detach()).pow(2)
+        if self.priority_replay:
+            critic_loss = critic_loss * mem_w
+            mem_loss = critic_loss
         critic_loss  = critic_loss.mean()
         # Optimize the critic
         self.critic_optimizer.zero_grad()
