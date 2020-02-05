@@ -120,7 +120,7 @@ class DDPGAgent(Agent):
                     state = state_ori
                     frame = self.ddpg.stack_frames(state, done)
                 # If the size of experiences is under max_size*8 runs gen_mem
-                eps = self.config.epsilon_by_frame(self.frame_idx)
+                # eps = self.config.epsilon_by_frame(self.frame_idx)
                 if self.gen_mem and len(self.ddpg.memory) < self.config.EXP_REPLAY_SIZE:
                     action = self.hfo_env.action_space.sample()
                 else:
@@ -129,15 +129,11 @@ class DDPGAgent(Agent):
                     if self.gen_mem:
                         self.gen_mem_end(episode)
                     # Gets the action
-                    if np.random.random() < eps:
-                        # epsilon greedy
-                        action = self.hfo_env.action_space.sample()
-                    else:
-                        action = self.ddpg.get_action(frame)
-                        action = (action + np.random.normal(0, 0.1, size=self.hfo_env.action_space.shape[0])).clip(
-                            self.hfo_env.action_space.low, self.hfo_env.action_space.high)
-                        action = action.astype(np.float32)
-                        step += 1
+                    action = self.ddpg.get_action(frame)
+                    action = (action + np.random.normal(0, 0.1, size=self.hfo_env.action_space.shape[0])).clip(
+                        self.hfo_env.action_space.low, self.hfo_env.action_space.high)
+                    action = action.astype(np.float32)
+                    step += 1
 
                 if interceptable and self.gen_mem:
                     action = np.array(
