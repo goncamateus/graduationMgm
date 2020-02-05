@@ -47,17 +47,21 @@ class MemoryDeque():
 
     def stack_states(self, index):
         frame = list()
+        next_frame = list()
         init = index - self.stack_size + 1
         init = init if init > 0 else 0
         shape = None
         for i in range(init, index+1):
-            state, _, _, _, _ = self.storage[i]
+            state, _, _, next_state, _ = self.storage[i]
             shape = state.shape
             frame.append(state)
+            next_frame.append(next_state)
         for _ in range(self.stack_size - len(frame)):
             frame.append(np.zeros(shape))
+            next_frame.append(np.zeros(shape))
         stack = np.stack(frame, axis=0)
-        return stack
+        next_stack = np.stack(next_frame, axis=0)
+        return stack, next_stack
 
     def gonca_sample(self, batch_size):
         ind = np.random.randint(0, len(self.storage), size=batch_size)
@@ -65,8 +69,7 @@ class MemoryDeque():
 
         for i in ind:
             X, U, R, Y, D = self.storage[i]
-            X = self.stack_states(i)
-            Y = self.stack_states(i)
+            X, Y = self.stack_states(i)
             x.append(X)
             y.append(Y)
             u.append(np.array(U, copy=False))
