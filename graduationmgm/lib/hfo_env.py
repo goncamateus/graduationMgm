@@ -43,12 +43,10 @@ class HFOEnv(hfo.HFOEnvironment):
     w_ball_grad = 4
     prev_ball_grad = None
 
-    def __init__(self, obj=None):
-        super(HFOEnv, self).__init__(obj)
-
-    def connect(self, is_offensive=False,
-                play_goalie=False, port=6000,
-                continuous=False, team='base'):
+    def __init__(self, is_offensive=False,
+                 play_goalie=False, port=6000,
+                 continuous=False, team='base'):
+        super(HFOEnv, self).__init__()
         self.connectToServer(hfo.HIGH_LEVEL_FEATURE_SET, './formations-dt',
                              port, 'localhost',
                              team + '_left' if is_offensive else team + '_right',

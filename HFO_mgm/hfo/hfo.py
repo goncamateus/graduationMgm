@@ -107,7 +107,7 @@ hfo_lib.step.argtypes = [c_void_p]
 hfo_lib.step.restype = c_int
 hfo_lib.numParams.argtypes = [c_int]
 hfo_lib.numParams.restype = c_int
-hfo_lib.getUnum.argtypes = [c_void_p, c_void_p]
+hfo_lib.getUnum.argtypes = [c_void_p]
 hfo_lib.getUnum.restype = c_int
 hfo_lib.getNumTeammates.argtypes = [c_void_p]
 hfo_lib.getNumTeammates.restype = c_int
@@ -124,10 +124,10 @@ hfo_lib.getAgent.restype = c_void_p
 hfo_lib.setAgent.argtypes = [c_void_p, c_void_p]
 hfo_lib.setAgent.restype = None
 
+
 class HFOEnvironment(object):
-    def __init__(self, obj):
-        self.obj = hfo_lib.HFO_new() if not obj else obj
-        self.agent = self.getAgent()
+    def __init__(self):
+        self.obj = hfo_lib.HFO_new()
 
     def __del__(self):
         hfo_lib.HFO_del(self.obj)
@@ -206,7 +206,7 @@ class HFOEnvironment(object):
 
     def getUnum(self):
         """ Returns the uniform number of the agent """
-        return hfo_lib.getUnum(self.obj, self.agent)
+        return hfo_lib.getUnum(self.obj)
 
     def getNumTeammates(self):
         """ Returns the number of teammates of the agent """
@@ -240,6 +240,6 @@ class HFOEnvironment(object):
 
     def processBeforeBegins(self):
         return hfo_lib.processBeforeBegins(self.obj)
-    
+
     def getAgent(self):
         return hfo_lib.getAgent(self.obj)

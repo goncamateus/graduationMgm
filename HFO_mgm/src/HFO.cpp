@@ -60,25 +60,25 @@ void HFOEnvironment::connectToServer(feature_set_t feature_set,
     exit(1);
   }
   // Do nothing until the agent begins getting state features
-  // act(NOOP);
-  // while (agent->getState().empty()) {
-  //   if (!client->isServerAlive()) {
-  //     std::cerr << "[ConnectToServer] Server Down!" << std::endl;
-  //     exit(1);
-  //   }
-  //   ready_for_action = client->runStep(agent);
-  //   if (ready_for_action) {
-  //     agent->action();
-  //   }
-  // }
-  // // Step until it is time to act
-  // do {
-  //   ready_for_action = client->runStep(agent);
-  // } while (!ready_for_action);
-  // agent->ProcessTrainerMessages();
-  // agent->ProcessTeammateMessages();
-  // agent->UpdateFeatures();
-  // current_cycle = agent->currentTime().cycle();
+  act(NOOP);
+  while (agent->getState().empty()) {
+    if (!client->isServerAlive()) {
+      std::cerr << "[ConnectToServer] Server Down!" << std::endl;
+      exit(1);
+    }
+    ready_for_action = client->runStep(agent);
+    if (ready_for_action) {
+      agent->action();
+    }
+  }
+  // Step until it is time to act
+  do {
+    ready_for_action = client->runStep(agent);
+  } while (!ready_for_action);
+  agent->ProcessTrainerMessages();
+  agent->ProcessTeammateMessages();
+  agent->UpdateFeatures();
+  current_cycle = agent->currentTime().cycle();
 }
 
 bool HFOEnvironment::waitAnyState(){

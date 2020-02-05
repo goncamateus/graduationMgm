@@ -33,15 +33,9 @@ class DDPGAgent(Agent):
         BLOCK = hfo.CATCH
         self.actions = [hfo.MOVE, hfo.GO_TO_BALL, BLOCK]
         self.rewards = [0, 0, 0]
-        self.hfo_env = HFOEnv()
-        self.hfo_env.connect(is_offensive=False, play_goalie=False,
+        self.hfo_env = HFOEnv(is_offensive=False, play_goalie=False,
                              port=port, continuous=True,
                              team=team)
-        while not self.hfo_env.waitAnyState():
-            pass
-        while not self.hfo_env.waitToAct():
-            pass
-        assert self.hfo_env.processBeforeBegins()
         self.hfo_env.set_env(self.actions, self.rewards, strict=True)
         self.test = False
         self.gen_mem = True

@@ -37,8 +37,7 @@ extern "C" {
   hfo::status_t step(hfo::HFOEnvironment *hfo) { return hfo->step(); }
 
   int numParams(const hfo::action_t action) { return NumParams(action); }
-  int getUnum(hfo::HFOEnvironment *hfo, Agent* agent) {
-    hfo->setAgent(agent);
+  int getUnum(hfo::HFOEnvironment *hfo) {
     return hfo->getUnum();}
   int getNumTeammates(hfo::HFOEnvironment *hfo) {
     return hfo->getNumTeammates();}
