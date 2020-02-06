@@ -1,0 +1,46 @@
+#! /bin/bash
+
+if test "$#" -gt "4" -o "$#" -lt "1"; then
+    echo "Error: Wrong number of arguments"
+    echo ""
+    echo "Usage: $0 TEAMDIR [SERVERNAME [TEAMHOST [LD_LIBRARY_PATH_EXT]]]"
+    echo ""
+    exit 2
+fi
+
+cd `dirname $0`
+
+host="localhost"
+server="localhost"
+basedir=$1
+teamname=`basename $1`
+
+if test "$#" -gt 1; then
+    server=$2
+    if test "$#" -gt 2; then
+	host=$3
+	if test "$#" -gt 3; then
+	  libbase="/usr/local"
+	  libext=$4
+	  teamname="$teamname`echo $libext | cut -d- -f2`"
+	fi
+    fi
+fi
+
+if test "$host" = `hostname`; then
+    host="localhost"
+fi
+
+if test "$host" = "localhost"; then
+    if test -n "$libext"; then
+	$basedir/src/start.sh --teamname $teamname --library-base $libbase --library-ext $libext
+    else
+	$basedir/src/start.sh --teamname $teamname 
+    fi
+else
+    if test -n "$libext"; then
+	ssh $host -f $basedir/src/start.sh --teamname $teamname --host $server --library-base $libbase --library-ext $libext
+    else
+	ssh $host -f $basedir/src/start.sh --teamname $teamname --host $server 
+    fi
+fi

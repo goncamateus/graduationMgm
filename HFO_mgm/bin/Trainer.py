@@ -111,12 +111,21 @@ class Trainer(object):
             team_dir = os.path.join(teams_dir, 'helios19')
             lib_dir = os.path.join(teams_dir, 'helios19', 'lib')
             return Teams.Helios19(team_name, team_dir, lib_dir,
-                                binaryName='helios_player', host='localhost',
-                                port=self._serverPort)
+                                  binaryName='helios_player', host='localhost',
+                                  port=self._serverPort)
         elif requested_team_name == 'base':
             print('Creating team Agent2d (base)')
             team_name = 'base_' + ('left' if play_offense else 'right')
             team_dir = os.path.join(teams_dir, 'base')
+            lib_dir = None
+            return Teams.Agent2d(team_name, team_dir, lib_dir,
+                                 binaryName='sample_player', logDir=self._logDir,
+                                 record=self._record, host='localhost',
+                                 port=self._serverPort)
+        elif requested_team_name == 'fractals':
+            print('Creating team Fractals')
+            team_name = 'Fractals_' + ('left' if play_offense else 'right')
+            team_dir = os.path.join(teams_dir, 'fractals/src')
             lib_dir = None
             return Teams.Agent2d(team_name, team_dir, lib_dir,
                                  binaryName='sample_player', logDir=self._logDir,
@@ -214,7 +223,7 @@ class Trainer(object):
             self.getConnectedPlayers()
             # if self._numTrials % 100 == 0:
             print('EndOfTrial: %d / %d %d %s' %
-                (self._numGoals, self._numTrials, self._frame, event))
+                  (self._numGoals, self._numTrials, self._frame, event))
 
     def _hear(self, body):
         """ Handle a hear message. """
