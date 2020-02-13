@@ -65,7 +65,7 @@ class Agent2d(Team):
                   % (name, port, baseDir, logDir, baseDir)
         if record:
             options += ' --record'
-        offenseOrder = [11, 9, 10, 7, 8, 6, 3, 2, 4, 5]
+        offenseOrder = [7, 8, 11, 9, 10, 6, 3, 2, 4, 5]
         defenseOrder = [2, 3, 4, 5, 6, 7, 8, 11, 9, 10]
         super(Agent2d, self).__init__(name, binaryPath, libDir, options,
                                       offenseOrder, defenseOrder)
@@ -87,7 +87,7 @@ class Fractals(Team):
                   % (name, port, baseDir, logDir, baseDir)
         if record:
             options += ' --record'
-        offenseOrder = [11, 9, 10, 7, 8, 6, 3, 2, 4, 5]
+        offenseOrder = [7, 8, 11, 9, 10, 6, 3, 2, 4, 5]
         defenseOrder = [2, 3, 4, 5, 6, 7, 8, 11, 9, 10]
         super(Fractals, self).__init__(name, binaryPath, libDir, options,
                                       offenseOrder, defenseOrder)
@@ -115,7 +115,7 @@ class Helios(Team):
                   '--opponent-data-dir %s/data/opponent_data/ -p %d'\
                   % (baseDir, host, name, baseDir, baseDir, baseDir, baseDir,
                      baseDir, baseDir, baseDir, port)
-        offenseOrder = [11, 9, 10, 7, 8, 6, 3, 2, 4, 5]
+        offenseOrder = [7, 8, 11, 9, 10, 6, 3, 2, 4, 5]
         defenseOrder = [2, 3, 4, 5, 6, 7, 8, 11, 9, 10]
         super(Helios, self).__init__(name, binaryPath, libDir, options,
                                      offenseOrder, defenseOrder)
@@ -152,7 +152,7 @@ class Helios19(Team):
                                                                                   baseDir, baseDir,
                                                                                   baseDir, baseDir,
                                                                                   port)
-        offenseOrder = [11, 9, 10, 7, 8, 6, 3, 2, 4, 5]
+        offenseOrder = [7, 8, 11, 9, 10, 6, 3, 2, 4, 5]
         defenseOrder = [2, 3, 4, 5, 6, 7, 8, 11, 9, 10]
         super(Helios19, self).__init__(name, binaryPath, libDir, options,
                                        offenseOrder, defenseOrder)
@@ -174,7 +174,7 @@ class RoboCIn(Team):
                   % (name, port, baseDir, logDir, baseDir)
         if record:
             options += ' --record'
-        offenseOrder = [11, 9, 10, 7, 8, 6, 3, 2, 4, 5]
+        offenseOrder = [7, 8, 11, 9, 10, 6, 3, 2, 4, 5]
         defenseOrder = [2, 3, 4, 5, 6, 7, 8, 11, 9, 10]
         super(RoboCIn, self).__init__(name, binaryPath, libDir, options,
                                       offenseOrder, defenseOrder)

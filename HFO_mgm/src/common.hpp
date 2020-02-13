@@ -38,7 +38,9 @@ enum action_t
   MARK_PLAYER, // [High-Level] Mark_Player(opponent_unum [0,11]) : Moves to the position in between the kicker and a given player
   DEFEND_GOAL,
   GO_TO_BALL,
-  REORIENT  // [High-Level] Handle lost position of self/ball, misc other situations; variant of doPreprocess called in DRIBBLE
+  REORIENT,  // [High-Level] Handle lost position of self/ball, misc other situations; variant of doPreprocess called in DRIBBLE
+  BLOCK,
+  CHAIN_ACTION
 };
 
 // Status of an HFO game
@@ -118,6 +120,10 @@ inline int NumParams(const action_t action) {
      return 0;
    case GO_TO_BALL:
      return 0;
+   case BLOCK:
+     return 0;
+   case CHAIN_ACTION:
+     return 0;
    case REORIENT:
      return 0;
  }
@@ -170,6 +176,10 @@ inline std::string ActionToString(action_t action) {
       return "Go_To_Ball";
     case REORIENT:
       return "Reorient";
+    case BLOCK:
+     return "Block";
+    case CHAIN_ACTION:
+     return "Chain_Action";
     default:
       return "Unknown";
   }

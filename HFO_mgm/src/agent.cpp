@@ -371,6 +371,14 @@ void Agent::actionImpl() {
     case REORIENT:
       last_action_status = this->doReorient();
       break;
+    case BLOCK:
+      last_action_status = Bhv_MarlikBlock().execute(this);
+      if(!last_action_status)
+        last_action_status = this->doMove();
+      break;
+    case CHAIN_ACTION:
+      last_action_status = Bhv_ChainAction().execute( this );
+      break;
     default:
       std::cerr << "ERROR: Unsupported Action: "
                 << requested_action << std::endl;

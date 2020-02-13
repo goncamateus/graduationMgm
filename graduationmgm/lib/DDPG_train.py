@@ -128,10 +128,10 @@ class DDPGTrain(BaseTrain):
         if memory is None:
             memory = self.memory
         if not self.priority_replay:
-            state, next_state, action, reward, done = memory.gonca_sample(
+            state, next_state, action, reward, done = memory.sample(
                 self.batch_size)
         else:
-            batch, mem_idxs, mem_w = memory.gonca_sample(self.batch_size)
+            batch, mem_idxs, mem_w = memory.sample(self.batch_size)
             state = np.array([each[0][0]
                                   for each in batch])
             action = np.array(

@@ -161,7 +161,7 @@ class DDPGAgent(Agent):
                 if status == hfo.GOAL:
                     self.goals += 1
                 self.ddpg.append_to_replay(
-                    state, action, reward, next_state, int(done))
+                    frame, action, reward, next_frame, int(done))
                 frame = next_frame
                 state = next_state
                 if done:
