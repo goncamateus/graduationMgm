@@ -67,7 +67,7 @@ class HFOEnv(hfo.HFOEnvironment):
             if not self.is_offensive:
                 shape = 11 + 3 * self.choosed_mates + 2 * self.choosed_ops
             else:
-                shape = 10 + self.choosed_mates + self.choosed_ops
+                shape = 12 + self.choosed_mates + self.choosed_ops
             shape = (shape,)
             self.observation_space = ObservationSpace(self,
                                                       rewards,

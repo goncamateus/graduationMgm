@@ -114,7 +114,7 @@ class DDPGAgent(Agent):
                     # If the size of experiences is under max_size*8 runs gen_mem
                     # eps = self.config.epsilon_by_frame(self.frame_idx)
                     if self.gen_mem and len(self.ddpg.memory) < self.config.EXP_REPLAY_SIZE:
-                        action = self.hfo_env.action_space.sample()[0]
+                        action = state[-2:]
                     else:
                         # When gen_mem is done, saves experiences and starts a new
                         # frame counting and starts the learning process

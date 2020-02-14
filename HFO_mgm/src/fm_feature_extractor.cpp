@@ -120,6 +120,10 @@ FMFeatureExtractor::ExtractFeatures(const rcsc::WorldModel &wm,
     addFeature(FEAT_INVALID);
   }
 
+  // Feature 9+T+O home pos x
+  addFeature(homePos.x/pitchHalfLength);
+  // Feature 10+T+O home pos y
+  addFeature(homePos.y/pitchHalfWidth);
 
   assert(feature_vec.size() == numFeatures);
   // checkFeatures();
