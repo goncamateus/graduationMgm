@@ -57,24 +57,24 @@ class DDPG(DDPGTrain):
         self.stacked_frames = deque(
             [np.zeros(env.observation_space.shape, dtype=np.int)
              for i in range(self.stack_size)], maxlen=self.stack_size)
-        self.max_action = float(env.action_space.high[0])
+        self.max_action = float(env.action_space.high[0][0])
         super(DDPG, self).__init__(static_policy, env, config)
         self.num_feats = (*self.env.observation_space.shape,
                           len(self.stacked_frames))
 
     def declare_networks(self):
         self.actor = Actor(self.env.observation_space.shape[0]*self.stack_size,
-                           self.env.action_space.shape[0], self.max_action)
+                           len(self.env.action_space.shape), self.max_action)
         self.target_actor = Actor(self.env.observation_space.shape[0]*self.stack_size,
-                                  self.env.action_space.shape[0], self.max_action)
+                                  len(self.env.action_space.shape), self.max_action)
         self.target_actor.load_state_dict(self.actor.state_dict())
 
         self.critic = Critic(
             self.env.observation_space.shape[0]*self.stack_size,
-            self.env.action_space.shape[0])
+            len(self.env.action_space.shape))
         self.target_critic = Critic(
             self.env.observation_space.shape[0]*self.stack_size,
-            self.env.action_space.shape[0])
+            len(self.env.action_space.shape))
         self.target_critic.load_state_dict(self.critic.state_dict())
 
     def share_memory(self):

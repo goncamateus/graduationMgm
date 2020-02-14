@@ -36,6 +36,7 @@
 #include "intention_receive.h"
 #include "lowlevel_feature_extractor.h"
 #include "highlevel_feature_extractor.h"
+#include "fm_feature_extractor.h"
 
 #include "actgen_cross.h"
 #include "actgen_direct_pass.h"
@@ -250,6 +251,10 @@ FeatureExtractor* Agent::getFeatureExtractor(feature_set_t feature_set_indx,
       return new HighLevelFeatureExtractor(numTeammates, numOpponents,
                                            playing_offense);
       break;
+    case FM_FEATURE_SET:
+      return new FMFeatureExtractor(numTeammates, numOpponents,
+                                           playing_offense);
+      break;
     default:
       std::cerr << "ERROR: Unrecognized Feature set index: "
                 << feature_set_indx << std::endl;
@@ -262,7 +267,6 @@ FeatureExtractor* Agent::getFeatureExtractor(feature_set_t feature_set_indx,
   virtual method in super class
 */
 void Agent::actionImpl() {
-
   if (requested_action < 0) {
     std::cerr << "ERROR: No action. Did you forget to call act()?" << std::endl;
     exit(1);
@@ -288,6 +292,32 @@ void Agent::actionImpl() {
   } else {
     this->setNeckAction(new Neck_ScanField()); // equivalent to Neck_TurnToBall()
   }
+    Strategy::instance().update( wm );
+    FieldAnalyzer::instance().update( wm );
+
+    //
+    // prepare action chain
+    //
+    M_field_evaluator = createFieldEvaluator();
+    M_action_generator = createActionGenerator();
+
+    ActionChainHolder::instance().setFieldEvaluator( M_field_evaluator );
+    ActionChainHolder::instance().setActionGenerator( M_action_generator );
+
+    //
+    // special situations (tackle, objects accuracy, intention...)
+    //
+    if ( doPreprocess() )
+    {
+        dlog.addText( Logger::TEAM,
+                      __FILE__": preprocess done" );
+        return;
+    }
+
+    //
+    // update action chain
+    //
+    ActionChainHolder::instance().update( wm );
 
 
 

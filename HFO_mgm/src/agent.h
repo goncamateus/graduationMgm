@@ -8,6 +8,7 @@
 #include "communication.h"
 #include "feature_extractor.h"
 #include "highlevel_feature_extractor.h"
+#include "fm_feature_extractor.h"
 #include "common.hpp"
 
 #include <rcsc/player/player_agent.h>

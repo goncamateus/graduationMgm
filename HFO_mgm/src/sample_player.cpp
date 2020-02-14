@@ -55,6 +55,8 @@
 #include "intention_receive.h"
 #include "lowlevel_feature_extractor.h"
 #include "highlevel_feature_extractor.h"
+#include "fm_feature_extractor.h"
+
 
 #include <rcsc/action/basic_actions.h>
 #include <rcsc/action/bhv_emergency.h>

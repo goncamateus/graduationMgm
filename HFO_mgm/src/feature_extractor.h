@@ -8,14 +8,15 @@
 
 typedef std::pair<float, float> OpenAngle;
 
-class FeatureExtractor {
+class FeatureExtractor
+{
 public:
   FeatureExtractor(int num_teammates, int num_opponents, bool playing_offense);
   virtual ~FeatureExtractor();
 
   // Updated the state features stored in feature_vec
-  virtual const std::vector<float>& ExtractFeatures(const rcsc::WorldModel& wm,
-						    bool last_action_status) = 0;
+  virtual const std::vector<float> &ExtractFeatures(const rcsc::WorldModel &wm,
+                                                    bool last_action_status) = 0;
 
   // Record the current state
   void LogFeatures();
@@ -25,7 +26,7 @@ public:
 
 public:
   // Determines if a player is a part of the HFO game or is inactive.
-  static bool valid(const rcsc::PlayerObject& player);
+  static bool valid(const rcsc::PlayerObject &player);
 
   // Returns the angle (in radians) from self to a given point
   static float angleToPoint(const rcsc::Vector2D &self,
@@ -48,6 +49,15 @@ public:
   static void calcClosestOpp(const rcsc::WorldModel &wm,
                              const rcsc::Vector2D &point,
                              float &ang, float &dist);
+
+  std::vector<float> calcOppsDistsToPoint(const rcsc::WorldModel &wm,
+                                          const rcsc::Vector2D &point);
+
+  std::vector<float> calcMatesDistsToPoint(const rcsc::WorldModel &wm,
+                                           const rcsc::Vector2D &point);
+
+  double get_player_congestion(const rcsc::PlayerCont &players,
+                               const rcsc::Vector2D &pos);
 
   // Returns the largest open (in terms of opponents) angle (radians)
   // from self to the slice defined by [angBot, angTop].
@@ -80,7 +90,7 @@ public:
 protected:
   // Encodes an angle feature as the sin and cosine of that angle,
   // effectively transforming a single angle into two features.
-  void addAngFeature(const rcsc::AngleDeg& ang);
+  void addAngFeature(const rcsc::AngleDeg &ang);
 
   // Encodes a proximity feature which is defined by a distance as
   // well as a maximum possible distance, which acts as a
@@ -89,14 +99,14 @@ protected:
   void addDistFeature(float dist, float maxDist);
 
   // Add the angle and distance to the landmark to the feature_vec
-  void addLandmarkFeatures(const rcsc::Vector2D& landmark,
-                           const rcsc::Vector2D& self_pos,
-                           const rcsc::AngleDeg& self_ang);
+  void addLandmarkFeatures(const rcsc::Vector2D &landmark,
+                           const rcsc::Vector2D &self_pos,
+                           const rcsc::AngleDeg &self_ang);
 
   // Add features corresponding to another player.
-  void addPlayerFeatures(rcsc::PlayerObject& player,
-                         const rcsc::Vector2D& self_pos,
-                         const rcsc::AngleDeg& self_ang);
+  void addPlayerFeatures(rcsc::PlayerObject &player,
+                         const rcsc::Vector2D &self_pos,
+                         const rcsc::AngleDeg &self_ang);
 
   // Add a feature without normalizing
   void addFeature(float val);
@@ -124,16 +134,16 @@ protected:
 
   int numFeatures; // Total number of features
   // Observed values of some parameters.
-  constexpr static float observedSelfSpeedMax   = 0.46;
+  constexpr static float observedSelfSpeedMax = 0.46;
   constexpr static float observedPlayerSpeedMax = 0.75;
-  constexpr static float observedStaminaMax     = 8000.;
-  constexpr static float observedBallSpeedMax   = 5.0;
+  constexpr static float observedStaminaMax = 8000.;
+  constexpr static float observedBallSpeedMax = 5.0;
   float maxHFODist; // Maximum possible distance in HFO playable region
   // Useful measures defined by the Server Parameters
   float pitchLength, pitchWidth, pitchHalfLength, pitchHalfWidth,
-    goalHalfWidth, penaltyAreaLength, penaltyAreaWidth;
-  int numTeammates; // Number of teammates in HFO
-  int numOpponents; // Number of opponents in HFO
+      goalHalfWidth, penaltyAreaLength, penaltyAreaWidth;
+  int numTeammates;    // Number of teammates in HFO
+  int numOpponents;    // Number of opponents in HFO
   bool playingOffense; // Are we playing offense or defense?
 };
 
