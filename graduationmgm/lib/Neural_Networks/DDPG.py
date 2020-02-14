@@ -53,7 +53,7 @@ class DDPG(DDPGTrain):
     __name__ = 'DDPG'
 
     def __init__(self, static_policy=False, env=None, config=None):
-        self.stack_size = 32
+        self.stack_size = 125
         self.stacked_frames = deque(
             [np.zeros(env.observation_space.shape, dtype=np.int)
              for i in range(self.stack_size)], maxlen=self.stack_size)

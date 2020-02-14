@@ -124,7 +124,7 @@ class DDPGAgent(Agent):
                         action = self.ddpg.get_action(frame)
                         action = (action + np.random.normal(0, 0.1, size=self.hfo_env.action_space.shape[0])).clip(
                             self.hfo_env.action_space.low, self.hfo_env.action_space.high)
-                        action = action.astype(np.float32)
+                        action = action.astype(np.float32)[0]
                         step += 1
                 else:
                     action = hfo.CHAIN_ACTION
