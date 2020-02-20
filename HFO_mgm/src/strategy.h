@@ -81,6 +81,20 @@ public:
     static const std::string INDIRECT_FREEKICK_OPP_FORMATION_CONF;
     static const std::string INDIRECT_FREEKICK_OUR_FORMATION_CONF;
 
+    // RoboCIn: new formations
+    static const std::string NORMAL_FORMATION_CONF_F;
+    static const std::string DEFENSE_FORMATION_CONF_F;
+    static const std::string OFFENSE_FORMATION_CONF_F;
+    static const std::string GOAL_KICK_OPP_FORMATION_CONF_F;
+    static const std::string GOAL_KICK_OUR_FORMATION_CONF_F;
+    static const std::string GOALIE_CATCH_OPP_FORMATION_CONF_F;
+    static const std::string GOALIE_CATCH_OUR_FORMATION_CONF_F;
+    static const std::string KICKIN_OUR_FORMATION_CONF_F;
+    static const std::string SETPLAY_OPP_FORMATION_CONF_F;
+    static const std::string SETPLAY_OUR_FORMATION_CONF_F;
+    static const std::string INDIRECT_FREEKICK_OPP_FORMATION_CONF_F;
+    static const std::string INDIRECT_FREEKICK_OUR_FORMATION_CONF_F;
+
     enum BallArea {
         BA_CrossBlock, BA_DribbleBlock, BA_DribbleAttack, BA_Cross,
         BA_Stopper,    BA_DefMidField,  BA_OffMidField,   BA_ShootChance,
@@ -88,6 +102,14 @@ public:
 
         BA_None
     };
+
+    //RoboCIn: include move state to choose the move bhv at the roles
+    enum MoveState {
+        MS_BASIC_MOVE,
+        MS_MARLIK_MOVE
+    };
+
+    int M_move_state;
 
 private:
     //
@@ -122,6 +144,20 @@ private:
     rcsc::Formation::Ptr M_indirect_freekick_opp_formation;
     rcsc::Formation::Ptr M_indirect_freekick_our_formation;
 
+    // RoboCIn: new formation
+    rcsc::Formation::Ptr M_normal_formation_f;
+    rcsc::Formation::Ptr M_defense_formation_f;
+    rcsc::Formation::Ptr M_offense_formation_f;
+
+    rcsc::Formation::Ptr M_goal_kick_opp_formation_f;
+    rcsc::Formation::Ptr M_goal_kick_our_formation_f;
+    rcsc::Formation::Ptr M_goalie_catch_opp_formation_f;
+    rcsc::Formation::Ptr M_goalie_catch_our_formation_f;
+    rcsc::Formation::Ptr M_kickin_our_formation_f;
+    rcsc::Formation::Ptr M_setplay_opp_formation_f;
+    rcsc::Formation::Ptr M_setplay_our_formation_f;
+    rcsc::Formation::Ptr M_indirect_freekick_opp_formation_f;
+    rcsc::Formation::Ptr M_indirect_freekick_our_formation_f;
 
     int M_goalie_unum;
 

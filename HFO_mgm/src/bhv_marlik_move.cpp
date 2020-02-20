@@ -56,6 +56,555 @@
 using namespace rcsc;
 
 
+bool Bhv_MarlikMove::cool_execute( PlayerAgent * agent, Vector2D & homePos )
+{
+    dlog.addText( Logger::TEAM,
+                  __FILE__": Bhv_MarlikMove" );
+
+    
+    const WorldModel & wm = agent->world();
+
+    // tackle
+    if ( Bhv_BasicTackle( 0.8, 80.0 ).execute( agent ) && !wm.existKickableTeammate() )
+    {
+        return true;
+    }
+
+    Vector2D ball = wm.ball().pos();
+    Vector2D me = wm.self().pos();
+
+    int num = wm.self().unum();
+
+    double dash_power = getDashPower( agent, homePos );
+
+    const int self_min = wm.interceptTable()->selfReachCycle();
+    const int mate_min = wm.interceptTable()->teammateReachCycle();
+    const int opp_min = wm.interceptTable()->opponentReachCycle();
+
+
+
+    Vector2D myInterceptPos = wm.ball().inertiaPoint( self_min );
+
+
+
+
+
+{
+    int goalCycles = 100;
+
+    for( int z=1; z<15; z++ )
+      if( wm.ball().inertiaPoint( z ).x < -52.5 && wm.ball().inertiaPoint( z ).absY() < 8.0 )
+      {
+         goalCycles = z;
+         break;
+      }
+
+    if( (wm.self().unum() == 2 || wm.self().unum() == 3) && goalCycles != 100 &&
+        mate_min >= goalCycles && me.x < -45.0 && !wm.existKickableTeammate() )
+    {
+
+      if( wm.ball().inertiaPoint( self_min ).x < -52.0 )
+        Body_GoToPoint( wm.ball().inertiaPoint( goalCycles - 1 ),
+                              0.5, ServerParam::i().maxDashPower() ).execute( agent );
+
+      agent->setNeckAction( new Neck_OffensiveInterceptNeck() );
+      return true;
+    }
+}
+
+
+{
+   if( me.x < -37.0 && opp_min < mate_min && opp_min > 2 &&
+       homePos.x > -37.0 && wm.ourDefenseLineX() > me.x - 2.5 )
+   {
+        Body_GoToPoint( rcsc::Vector2D( me.x + 15.0, me.y ),
+                        0.5, ServerParam::i().maxDashPower(), // maximum dash power
+                        ServerParam::i().maxDashPower(),     // preferred dash speed
+                        2,                                  // preferred reach cycle
+                        true,                              // save recovery
+                        5.0 ).execute( agent );
+
+       if( wm.existKickableOpponent()
+           && wm.ball().distFromSelf() < 12.0 )
+             agent->setNeckAction( new Neck_TurnToBall() );
+       else
+             agent->setNeckAction( new Neck_TurnToBallOrScan() );
+       return true;
+   }
+
+}
+
+{
+    if( crossMarkSideBack( agent ) )
+      return true;
+
+    if( crossMarkCenterBack( agent ) )
+      return true;
+
+    if( crossMarkDefensiveHalf( agent ) )
+      return true;
+
+    if( crossMarkOffensiveHalf( agent ) )
+      return true;
+}
+
+{
+  if( num == 6 && wm.self().stamina() > 3500.0 && ball.x > 33.0 )
+  {
+      Vector2D opp = wm.opponentsFromSelf().front()->pos();
+      float oDist = wm.opponentsFromSelf().front()->pos().dist(homePos);
+
+      if( oDist < 8.0 && opp.x > homePos.x )
+        homePos = opp + Vector2D::polar2vector( 2.5 , (ball-opp).th() );
+
+      if( homePos.x > 22.0 )
+           homePos.x = 22.0;
+
+  }
+
+}
+
+{
+    if( wm.self().unum() == 6 && ball.x < 10.0 && ball.absY() > 12.0 && opp_min < mate_min && ball.x > -36.0)
+    {
+      Vector2D opp = wm.opponentsFromSelf().front()->pos();
+      float oDist = wm.opponentsFromSelf().front()->pos().dist(homePos);
+
+        if( oDist < 8.0 )
+        {
+          homePos = opp + Vector2D::polar2vector( 1.0 , (ball-opp).th() );
+          homePos.x -= 1.0;
+          isSoftMarking = true;
+        }
+    }
+}
+
+    Vector2D tempHomePos = homePos;
+
+{
+    const PlayerPtrCont & opps = wm.opponentsFromSelf();
+    const PlayerObject * nearestOpp =
+                ( opps.empty() ? static_cast< PlayerObject * >( 0 ) : opps.front() );
+    const Vector2D opp = ( nearestOpp ? nearestOpp->pos() :
+                                 Vector2D( -1000.0, 0.0 ) );
+
+    double oppDist = opp.dist(homePos);
+
+    if( ball.x > 34.0 && ball.absY() > 9.0 )
+    {
+      Vector2D markPoint = me + Vector2D::polar2vector(0.5, (ball-me).dir());
+
+      if( wm.self().unum() == 11 && me.dist(homePos) < 10.0 )
+      {
+          if( opp.dist(markPoint) < 4.0 )
+          {
+            if( opp.x > me.x + 0.2 )
+                homePos.x -= 2.5;
+            else if( opp.x < me.x - 0.0 && homePos.x + 2.5 < wm.offsideLineX() )
+                homePos.x += 2.5;
+            else if( opp.dist(ball) < me.dist(ball) &&
+                     opp.dist(ball) > me.dist(ball) - 2.0 )
+                homePos += Vector2D::polar2vector(oppDist+2.0, (ball-me).dir());
+          }
+      }
+      else if( wm.self().unum() == 9 || wm.self().unum() == 10 && me.dist(homePos) < 13.0)
+      {
+          if( opp.dist(markPoint) < 4.0 )
+          {
+            if( opp.x > me.x + 0.0 )
+                homePos.x -= 3.0;
+            else if( opp.x < me.x - 0.0 && homePos.x + 2.5 < wm.offsideLineX() )
+                homePos.x += 2.5;
+            else if( opp.dist(ball) < me.dist(ball) &&
+                     opp.dist(ball) > me.dist(ball) - 3.0 )
+                homePos += Vector2D::polar2vector(oppDist+2.0, (ball-me).dir());
+          }
+      }
+      else if( wm.self().unum() == 7 || wm.self().unum() == 8 && me.dist(homePos) < 10.0)
+      {
+          if( opp.dist(markPoint) < 4.0 )
+          {
+            if( opp.x > me.x + 0.7 )
+                homePos.x -= 3.0;
+            else if( opp.x < me.x - 0.7 && homePos.x + 3.0 < wm.offsideLineX() )
+                homePos.x += 3.0;
+            else if( opp.dist(ball) < me.dist(ball) &&
+                     opp.dist(ball) > me.dist(ball) - 3.0 )
+                homePos += Vector2D::polar2vector(oppDist+2.0, (ball-me).dir());
+          }
+      }
+    }
+
+    if( num > 8 && mate_min < opp_min && mate_min < 5 && wm.self().stamina() > 3500.0 &&
+        ball.x > -36.0 && wm.offsideLineX() < 36.0 && me.dist(homePos) < 6.0 )
+    {
+      Vector2D backPoint = me + Vector2D::polar2vector(2.0, (ball-me).dir());
+
+      if( opp.dist(backPoint) < 2.0 )
+      {
+        if( homePos.x + 2.0 > wm.offsideLineX() )
+           homePos.x -= 3.0;
+        else
+           homePos.x += 2.0;
+      }
+    }
+
+    if( num > 5 && num < 9 && mate_min < opp_min && mate_min < 5 && wm.self().stamina() > 3000.0 &&
+        ball.x > -36.0 && ball.x < 36.0 && me.dist(homePos) < 9.0 )
+    {
+      Vector2D markPoint = me + Vector2D::polar2vector(2.0, (ball-me).dir());
+
+      if( opp.dist(markPoint) < 2.0 )
+      {
+         homePos += Vector2D::polar2vector(oppDist+2.0, (ball-me).dir());
+      }
+    }
+
+    if( num > 5 && num < 9 && opp_min < mate_min && opp_min < 6 && wm.self().stamina() > 3000.0 &&
+        ball.x > -36.0 && ball.x < 36.0 && me.dist(homePos) < 9.0 )
+    {
+      Vector2D markPoint = me + Vector2D::polar2vector(3.0, (ball-me).dir());
+
+      if( opp.dist(markPoint) < 3.0 )
+      {
+         homePos += Vector2D::polar2vector(oppDist+1.5, (ball-me).dir());
+      }
+    }
+
+}
+
+{
+
+    if( wm.self().unum() > 8 && mate_min < 10 )
+    {
+       if( ball.x > wm.offsideLineX() - 22.0 && std::fabs(ball.y - homePos.y) < 8.5 && ball.x < 36.0 )
+       {
+          if( wm.self().unum() == 11 )
+          {
+            if( ball.y < me.y )
+                 homePos.y += 7.0;
+            else
+                 homePos.y -= 7.0;
+          }
+          else if ( wm.self().unum() == 9 )
+                 homePos.y -= 7.0;
+          else if ( wm.self().unum() == 10 )
+                 homePos.y += 7.0;
+
+          if( homePos.y > 33.0 )  homePos.y = 33.0;
+          if( homePos.y < -33.0 ) homePos.y = -33.0;
+       }
+
+    }
+
+}
+
+{
+
+    if( num == 2 || num == 3 )
+       softMarkCenterBack( agent, homePos);
+
+    if( num == 4 || num == 5 )
+       softMarkSideBack2( agent, homePos);
+
+
+    if( num < 6 && homePos.x < -35.0 && homePos.x > -37.0 && opp_min < 11 )
+       homePos.x = -37.0;
+
+    if( isSoftMarking && (num == 4 || num == 5) )
+    {
+      const PlayerPtrCont & opps = wm.opponentsFromSelf();
+      const PlayerObject * nearest_opp = ( opps.empty() ? static_cast< PlayerObject * >( 0 ) : opps.front() );
+      const Vector2D opp = ( nearest_opp ? nearest_opp->pos() : Vector2D( -1000.0, 0.0 ) );
+
+      int oppConf = wm.opponentsFromSelf().front()->posCount();
+
+      if( std::fabs(me.y - homePos.y) > 2.0 && me.x > homePos.x + 2.0 &&
+          me.absY() < homePos.absY() )
+      {
+        homePos = rcsc::Vector2D(me.x-12.0, me.y);
+      }
+
+    }
+
+}
+
+
+{
+    if( num < 6 && opp_min < mate_min && opp_min < 8 && wm.ourDefenseLineX() < homePos.x - 1.0 &&
+        ball.x < 0.0 && ball.x > -35.0 )
+    {
+       homePos.x = std::max( -35.0, wm.ourDefenseLineX() );
+    }
+
+   if( num < 6 && opp_min < mate_min && opp_min < 15 && me.x > homePos.x + 2.5 && wm.ourDefenseLineX() < me.x - 0.5 &&
+       ball.x < 0.0 && ball.x > -40.0 && std::fabs( me.absY() - homePos.absY() ) < 5.0 )
+   {
+       homePos.x = me.x - 10;
+       homePos.y = me.y;
+   }
+
+   if( num < 9 && num > 5 && opp_min < mate_min && opp_min < 15 && me.x > homePos.x + 4 && wm.ourDefenseLineX() < me.x - 0.5 &&
+       ball.x < 0.0 && ball.x > -40.0 && std::fabs( me.absY() - homePos.absY() ) < 7.5 )
+   {
+       homePos.x = me.x - 10;
+       homePos.y = me.y;
+   }
+
+
+   if( ball.x < -30.0 && ball.x > -40.0 && ball.absY() < 20.0 && opp_min < mate_min && opp_min < 4 && homePos.x > me.x &&
+       wm.ourDefenseLineX() < me.x - 1 )
+   {
+     if( num == 2 )
+       homePos = rcsc::Vector2D(-46.0, -2.0);
+     if( num == 3 )
+       homePos = rcsc::Vector2D(-46.0, 2.0);
+     if( num == 4 )
+       homePos = rcsc::Vector2D(-46.0, -5.0);
+     if( num == 5 )
+       homePos = rcsc::Vector2D(-46.0, 5.0);
+       
+       
+//     homePos.x = me.x;
+     
+     const PlayerPtrCont & opps = wm.opponentsFromSelf();
+     const PlayerObject * nearestOpp =
+                ( opps.empty() ? static_cast< PlayerObject * >( 0 ) : opps.front() );
+     const Vector2D opp = ( nearestOpp ? nearestOpp->pos() :
+                                 Vector2D( -1000.0, 0.0 ) );
+
+     double oppDist = opp.dist(homePos);
+    
+     if( oppDist < 2.0 )
+     {
+//        homePos.x = opp.x - 0.5;
+       homePos.y = opp.y;
+     }
+     
+   }
+
+    
+}
+
+
+{
+  
+  if( homePos.dist(ball) < 2.5 && wm.existKickableTeammate() && wm.teammatesFromBall().front()->distFromSelf() < 4.0 )
+  {
+    if( num <= 8 )
+      homePos = homePos + rcsc::Vector2D::polar2vector( 4.0, (ball-homePos).dir() );
+    if( num > 8 )
+      homePos = homePos + rcsc::Vector2D::polar2vector( 5.0, (ball-homePos).dir() );
+    
+    
+    if( homePos.x < wm.ourDefenseLineX() )
+      homePos.x = wm.ourDefenseLineX();
+    
+    if( homePos.x > wm.offsideLineX() )
+      homePos.x = wm.offsideLineX();
+  }
+  
+}
+
+//     if( num < 6 && homePos.x < -29.0 && homePos.x > -33.0 && opp_min < 12 )
+//        homePos.x = -34.0;
+//     if( num < 6 && homePos.x < -33.0 && homePos.x > -36.9 && opp_min < 12 )
+//        homePos.x = -36.9;
+
+
+///-------------------------------------------------------------------------------///
+
+    double dist_thr = wm.ball().distFromSelf() * 0.1;
+    if ( dist_thr < 1.0 ) dist_thr = 1.0;
+
+      if( wm.self().unum() < 6 && isSoftMarking && homePos.x < -30.0 && homePos.absY() < 25.0 &&
+          homePos.x > -39.0 && ball.dist(me) < 35.0 )
+            dist_thr = 0.2;
+
+    bool isUnmarking = false;
+
+    if( tempHomePos.x != homePos.x || tempHomePos.y != homePos.y )
+       isUnmarking = true;
+
+    if( isUnmarking )
+       dash_power = ServerParam::i().maxDashPower();
+
+    AngleDeg bodyAngle = 0.0;
+
+    if( wm.self().unum() > 8 &&
+        wm.self().pos().x > wm.offsideLineX() - 0.2 && wm.self().pos().x < wm.offsideLineX() + 3.0 &&
+        homePos.x > wm.offsideLineX() - 2.5 &&
+        wm.self().body().abs() < 20.0 &&
+        mate_min < opp_min && self_min > mate_min )
+    {
+         agent->doDash(-100, 0.0);
+         if ( wm.existKickableOpponent()
+              && wm.ball().distFromSelf() < 18.0 )
+               agent->setNeckAction( new Neck_TurnToBall() );
+         else
+               agent->setNeckAction( new Neck_TurnToBallOrScan() );
+         return true;
+    }
+
+    if( wm.self().unum() > 8 && ball.x < 30 && ball.x > -20 && me.dist(homePos) < 5 &&
+        wm.self().pos().x < wm.offsideLineX() - 0.2 && // wm.self().pos().x > wm.offsideLineX() - 3.0 &&
+        homePos.x > wm.offsideLineX() - 4.0 &&
+        wm.self().body().abs() < 15.0 &&
+        mate_min < opp_min && self_min > mate_min && wm.self().stamina() > 4500 )
+    {
+         agent->doDash(100, 0.0);
+         agent->setNeckAction( new Neck_TurnToBallOrScan() );
+         return true;
+    }
+
+
+
+    if( wm.self().unum() < 6 && homePos.x < -47.0 && fabs(homePos.y) < 6.0 )
+    {
+       if( !Body_GoToPoint( homePos, 0.8, ServerParam::i().maxDashPower() ).execute( agent ) )
+       {
+         AngleDeg bodyAngle = agent->world().ball().angleFromSelf();
+        if( bodyAngle.degree() < 0.0 )
+               bodyAngle -= 90.0;
+        else
+               bodyAngle += 90.0;
+
+         Body_TurnToAngle( bodyAngle ).execute( agent );
+         if ( wm.existKickableOpponent()
+              || wm.ball().distFromSelf() < 18.0 )
+               agent->setNeckAction( new Neck_TurnToBall() );
+         else
+               agent->setNeckAction( new Neck_TurnToBallOrScan() );
+       }
+     return true;
+    }
+
+    if( wm.self().unum() < 6 && opp_min < mate_min && opp_min < self_min &&
+        (me.x > homePos.x + 1.0 || fabs(me.y - homePos.x) > 1.3) &&
+        ball.x < homePos.x + 15.0 )
+    {
+         Body_GoToPoint( homePos,
+                               0.8, ServerParam::i().maxDashPower() ).execute( agent );
+         if ( wm.existKickableOpponent()
+              && wm.ball().distFromSelf() < 18.0 )
+               agent->setNeckAction( new Neck_TurnToBall() );
+         else
+               agent->setNeckAction( new Neck_TurnToBallOrScan() );
+         return true;
+    }
+
+    if( ball.x > -36.0 && me.x < -40.0 && homePos.x > -40.0 )
+    {
+         Body_GoToPoint( Vector2D(me.x+10.0, me.y),
+                               0.5, ServerParam::i().maxDashPower() ).execute( agent );
+         if ( wm.existKickableOpponent()
+              && wm.ball().distFromSelf() < 18.0 )
+               agent->setNeckAction( new Neck_TurnToBall() );
+         else
+               agent->setNeckAction( new Neck_TurnToBallOrScan() );
+         return true;
+    }
+
+    if( me.x > wm.offsideLineX() + 0.2 )
+    {
+         Body_GoToPoint( Vector2D(me.x-10.0, me.y),
+                               0.5, ServerParam::i().maxDashPower() ).execute( agent );
+         if ( wm.existKickableOpponent()
+              && wm.ball().distFromSelf() < 18.0 )
+               agent->setNeckAction( new Neck_TurnToBall() );
+         else
+               agent->setNeckAction( new Neck_TurnToBallOrScan() );
+         return true;
+    }
+
+    if( num > 8 && mate_min < opp_min && ball.x > -15.0 &&
+        homePos.x > wm.offsideLineX() - 3.0 && homePos.x < 36.0 && wm.self().stamina() > 4000.0 )
+    {
+
+       if( ! Body_GoToPoint( homePos,
+                             0.5, ServerParam::i().maxDashPower(), // maximum dash power
+                             ServerParam::i().maxDashPower(),     // preferred dash speed
+                             2,                                  // preferred reach cycle
+                             true,                              // save recovery
+                             30.0 ).execute( agent ) )         // turn angle threshold
+           Body_TurnToPoint( Vector2D(me.x + 10.0, me.y) ).execute( agent );
+
+
+       if ( wm.existKickableOpponent()
+            && wm.ball().distFromSelf() < 12.0 )
+             agent->setNeckAction( new Neck_TurnToBall() );
+       else
+             agent->setNeckAction( new Neck_TurnToBallOrScan() );
+       return true;
+
+    }
+
+
+    if ( ! Body_GoToPoint( homePos, dist_thr, dash_power
+                           ).execute( agent ) )
+    {
+       if( wm.self().unum() < 6 && homePos.x < -30.0 && homePos.x > -38.0 && homePos.absY() < 20.0 &&
+           opp_min < mate_min && opp_min < 10 && ball.dist(me) < 30.0 )
+       {
+         AngleDeg bodyAngle = agent->world().ball().angleFromSelf();
+         if( bodyAngle.degree() < 0.0 )
+               bodyAngle -= 90.0;
+         else
+               bodyAngle += 90.0;
+
+         Body_TurnToAngle( bodyAngle ).execute( agent );
+// 2011            Body_TurnToPoint( Vector2D(-49.0, 0.0) ).execute( agent );
+       }
+       else if( mate_min < opp_min &&
+           homePos.x > wm.offsideLineX() - 15.0 &&
+           wm.ball().pos().x > wm.offsideLineX() - 25.0 &&
+//            wm.offsideLineX() < 30.0 &&
+           (wm.self().unum() > 8 || (wm.self().unum() > 5 && wm.ball().pos().x > 30.0  )) )
+       {
+            Body_TurnToPoint( Vector2D(wm.self().pos().x + 20.0, wm.self().pos().y) ).execute( agent );
+       }
+       else if( wm.self().unum() < 6 && ball.x < wm.ourDefenseLineX() + 25.0 && mate_min > opp_min && opp_min < 10 )
+       {
+         AngleDeg bodyAngle = agent->world().ball().angleFromSelf();
+
+         if( homePos.x < -34.0 && homePos.x > -37.0 )
+             Body_TurnToPoint( rcsc::Vector2D(-37.0, 0.0) ).execute( agent );
+//          else if ( bodyAngle.degree() < 0.0 )
+//                 bodyAngle -= 90.0;
+//          else
+//                 bodyAngle += 90.0;
+//             Body_TurnToAngle( bodyAngle ).execute( agent );
+        else if( num == 4 || num == 5 )
+             Body_TurnToPoint( rcsc::Vector2D(-50.0, 0.0) ).execute( agent );
+        else
+             Body_TurnToPoint( rcsc::Vector2D(-50.0, 0.0) ).execute( agent );
+
+       }
+       else if( espBodyTurns( agent, bodyAngle ) )
+            Body_TurnToAngle( bodyAngle ).execute( agent );
+       else
+            Body_TurnToBall().execute( agent );
+
+    }
+
+    if( isSoftMarking || amIMarking )
+    {
+        agent->setNeckAction( new Neck_ForMark() );
+        return true;
+    }
+    if( wm.existKickableOpponent()
+        && wm.ball().distFromSelf() < 18.0 )
+    {
+        agent->setNeckAction( new Neck_TurnToBall() );
+    }
+    else
+    {
+        agent->setNeckAction( new Neck_TurnToBallOrScan() );
+    }
+
+    return true;
+}
+
 bool Bhv_MarlikMove::execute( PlayerAgent * agent )
 {
     dlog.addText( Logger::TEAM,

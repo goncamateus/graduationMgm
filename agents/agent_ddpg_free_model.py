@@ -110,7 +110,7 @@ class DDPGAgent(Agent):
                 if done:
                     state = self.hfo_env.get_state()
                     frame = self.ddpg.stack_frames(state, done)
-                if not state[0]:
+                if not state[0] or state[4] > 3.5:
                     # If the size of experiences is under max_size*8 runs gen_mem
                     # eps = self.config.epsilon_by_frame(self.frame_idx)
                     if self.gen_mem and len(self.ddpg.memory) < self.config.EXP_REPLAY_SIZE:
@@ -134,7 +134,7 @@ class DDPGAgent(Agent):
                     action, is_offensive=True)
                 episode_rewards += reward
 
-                if not self.gen_mem and not self.test:
+                if len(self.ddpg.memory) > self.ddpg.batch_size:
                     self.ddpg.update()
 
                 if done:

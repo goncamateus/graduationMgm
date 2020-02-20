@@ -44,7 +44,12 @@ FMFeatureExtractor::ExtractFeatures(const rcsc::WorldModel &wm,
   Vector2D homePos = Strategy::i().getPosition(wm.self().unum());
 
   // Feature[0]: Able to kick
-  addFeature(self.isKickable());
+  bool kickable = self.isKickable();
+  if (wm.existKickableTeammate() && wm.teammatesFromBall().front()->distFromBall() < wm.ball().distFromSelf())
+  {
+    kickable = false;
+  }
+  addFeature(kickable);
 
   // Feature[1]: X-postion
   addFeature(self_pos.x);
@@ -121,9 +126,9 @@ FMFeatureExtractor::ExtractFeatures(const rcsc::WorldModel &wm,
   }
 
   // Feature 9+T+O home pos x
-  addFeature(homePos.x/pitchHalfLength);
+  addFeature(homePos.x / pitchHalfLength);
   // Feature 10+T+O home pos y
-  addFeature(homePos.y/pitchHalfWidth);
+  addFeature(homePos.y / pitchHalfWidth);
 
   assert(feature_vec.size() == numFeatures);
   // checkFeatures();

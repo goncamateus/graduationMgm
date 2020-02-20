@@ -8,6 +8,9 @@
 /*
  *Copyright:
 
+ Gliders2d
+ Modified by Mikhail Prokopenko, Peter Wang
+
  Copyright (C) Hidehisa AKIYAMA
 
  This code is free software; you can redistribute it and/or modify
@@ -60,6 +63,8 @@
 #include <rcsc/player/intercept_table.h>
 #include <rcsc/player/world_model.h>
 
+#include <rcsc/geom/voronoi_diagram.h>
+
 #include <rcsc/common/logger.h>
 #include <rcsc/common/server_param.h>
 #include <rcsc/param/cmd_line_parser.h>
@@ -86,6 +91,28 @@ const std::string Strategy::SETPLAY_OPP_FORMATION_CONF = "setplay-opp-formation.
 const std::string Strategy::SETPLAY_OUR_FORMATION_CONF = "setplay-our-formation.conf";
 const std::string Strategy::INDIRECT_FREEKICK_OPP_FORMATION_CONF = "indirect-freekick-opp-formation.conf";
 const std::string Strategy::INDIRECT_FREEKICK_OUR_FORMATION_CONF = "indirect-freekick-our-formation.conf";
+
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+namespace {
+struct MyCompare {
+
+    const Vector2D pos_;
+
+    MyCompare( const Vector2D & pos )
+        : pos_( pos )
+      { }
+
+    bool operator()( const Vector2D & lhs,
+                     const Vector2D & rhs ) const
+      {
+          return (lhs - pos_).length() < (rhs - pos_).length();
+      }
+};
+}
 
 
 /*-------------------------------------------------------------------*/
@@ -131,6 +158,8 @@ Strategy::Strategy()
     {
         M_role_number[i] = i + 1;
     }
+
+    M_move_state = Strategy::MoveState::MS_MARLIK_MOVE;
 }
 
 /*-------------------------------------------------------------------*/
@@ -140,11 +169,7 @@ Strategy::Strategy()
 Strategy &
 Strategy::instance()
 {
-#ifdef __APPLE__
     static Strategy s_instance;
-#else
-    static thread_local Strategy s_instance;
-#endif
     return s_instance;
 }
 
@@ -155,7 +180,7 @@ Strategy::instance()
 bool
 Strategy::init( CmdLineParser & cmd_parser )
 {
-    ParamMap param_map( "HELIOS_base options" );
+    ParamMap param_map( "RoboCIn options" );
 
     // std::string fconf;
     //param_map.add()
@@ -187,11 +212,7 @@ Strategy::init( CmdLineParser & cmd_parser )
 bool
 Strategy::read( const std::string & formation_dir )
 {
-#ifdef __APPLE__
     static bool s_initialized = false;
-#else
-    static thread_local bool s_initialized = false;
-#endif
 
     if ( s_initialized )
     {
@@ -442,11 +463,7 @@ Strategy::createFormation( const std::string & type_name ) const
 void
 Strategy::update( const WorldModel & wm )
 {
-#ifdef __APPLE__
     static GameTime s_update_time( -1, 0 );
-#else
-    static thread_local GameTime s_update_time( -1, 0 );
-#endif
 
     if ( s_update_time == wm.time() )
     {
@@ -634,14 +651,11 @@ Strategy::updateSituation( const WorldModel & wm )
 /*!
 
  */
+
 void
-Strategy::updatePosition( const WorldModel & wm )
+Strategy::updatePosition( const WorldModel & wm)
 {
-#ifdef __APPLE__
     static GameTime s_update_time( 0, 0 );
-#else
-    static thread_local GameTime s_update_time( 0, 0 );
-#endif
     if ( s_update_time == wm.time() )
     {
         return;
@@ -676,6 +690,52 @@ Strategy::updatePosition( const WorldModel & wm )
     M_positions.clear();
     f->getPositions( ball_pos, M_positions );
 
+// G2d: various states
+    bool indFK = false;
+    if ( ( wm.gameMode().type() == GameMode::BackPass_
+           && wm.gameMode().side() == wm.theirSide() )
+         || ( wm.gameMode().type() == GameMode::IndFreeKick_
+              && wm.gameMode().side() == wm.ourSide() ) 
+         || ( wm.gameMode().type() == GameMode::FoulCharge_
+              && wm.gameMode().side() == wm.theirSide() )
+         || ( wm.gameMode().type() == GameMode::FoulPush_
+              && wm.gameMode().side() == wm.theirSide() )
+        )
+        indFK = true;
+
+    bool dirFK = false;
+    if ( 
+          ( wm.gameMode().type() == GameMode::FreeKick_
+              && wm.gameMode().side() == wm.ourSide() ) 
+         || ( wm.gameMode().type() == GameMode::FoulCharge_
+              && wm.gameMode().side() == wm.theirSide() )
+         || ( wm.gameMode().type() == GameMode::FoulPush_
+              && wm.gameMode().side() == wm.theirSide() )
+        )
+        dirFK = true;
+
+    bool cornerK = false;
+    if ( 
+          ( wm.gameMode().type() == GameMode::CornerKick_
+              && wm.gameMode().side() == wm.ourSide() ) 
+        )
+        cornerK = true;
+
+    bool kickin = false;
+    if ( 
+          ( wm.gameMode().type() == GameMode::KickIn_
+              && wm.gameMode().side() == wm.ourSide() ) 
+        )
+        kickin = true;
+
+	bool heliosbase = false;
+	bool helios2018 = false;
+	if (wm.opponentTeamName().find("HELIOS_base") != std::string::npos)
+		heliosbase = true;
+	else if (wm.opponentTeamName().find("HELIOS2018") != std::string::npos)
+		helios2018 = true;
+
+
     if ( ServerParam::i().useOffside() )
     {
         double max_x = wm.offsideLineX();
@@ -697,8 +757,355 @@ Strategy::updatePosition( const WorldModel & wm )
             max_x -= 1.0;
         }
 
+// G2d: Voronoi diagram
+//Vou tentar melhorar o uso do diagrama de Voronoi, pois no momento ele so ta sendo usado para situacao de ataque.
+//A ideia agora vai ser usar a construcao do diagrama de Voronoi para a situacao de defesa. Para saber qual dos dois
+//diagramas (de defesa ou de ataque) eu vou utilizar, eu uso um if para saber qual time detem a posse de bola.
+    bool kickable = true; //assumo inicialmente que nosso time ta com a posse de bola.
+    //se n eh possivel chutar a bola
+    //e
+    //se n existe um amigo para chutar a bola e distancia...
+    if ( !wm.self().isKickable() && !(wm.existKickableTeammate() && wm.teammatesFromBall().front()->distFromBall() < wm.ball().distFromSelf()) )
+    {
+        kickable = false;
+    }
+    bool newvel = false;
+
+    VoronoiDiagram vd;
+    const ServerParam & SP = ServerParam::i();
+
+    std::vector<Vector2D> vd_cont;
+    std::vector<Vector2D> NOL_cont;  // Near Offside Line
+    std::vector<Vector2D> NOL_tmp;  // Near Offside Line tmp
+    std::vector<Vector2D> OffsideSegm_cont;
+    std::vector<Vector2D> OffsideSegm_tmpcont;
+    Vector2D y1( wm.offsideLineX(), -34.0);
+    Vector2D y2( wm.offsideLineX(), 34.0);
+//Basicamente, a logica eh a seguinte: se kickable for true, quer dizer que nosso time ta com a posse
+//de bola, ou seja, devemos construir o diagrama de forma ofensiva 
+    if(kickable == true){ //CONDICAO DE DIAGRAMA DE VORONOI OFENSIVO
+                        if (wm.ball().pos().x > 25.0)
+                        {
+                                if (wm.ball().pos().y < 0.0)
+                                        y2.y = 20.0;
+                                if (wm.ball().pos().y > 0.0)
+                                        y1.y = -20.0;
+                        }
+                        if (wm.ball().pos().x > 36.0)
+                        {
+                                if (wm.ball().pos().y < 0.0)
+                                        y2.y = 8.0;
+                                if (wm.ball().pos().y > 0.0)
+                                        y1.y = -8.0;
+                        }
+                        if (wm.ball().pos().x > 49.0)
+                        {
+                                y1.x = y1.x - 4.0;
+                                y2.x = y2.x - 4.0;
+                        }
+                        for ( PlayerPtrCont::const_iterator o = wm.opponentsFromSelf().begin();
+                                o != wm.opponentsFromSelf().end();
+                                ++o )
+                        {
+                                if (newvel)
+                                           vd.addPoint((*o)->pos() + (*o)->vel());
+                                else
+                                           vd.addPoint((*o)->pos());
+                        }
+                        if (y1.x < 37.0)
+                        {
+                                   vd.addPoint(y1);
+                                   vd.addPoint(y2);
+                        }
+                                vd.compute();
+                        Line2D offsideLine (y1, y2);
+                            for ( VoronoiDiagram::Segment2DCont::const_iterator p = vd.segments().begin(),
+                                      end = vd.segments().end();
+                                          p != end;
+                                          ++p )
+                            {
+                                Vector2D si = (*p).intersection( offsideLine );
+                                if (si.isValid() && fabs(si.y) < 34.0 && fabs(si.x) < 52.5)
+                                {
+                                        OffsideSegm_tmpcont.push_back(si);
+
+                                }
+                            }
+                            std::sort( OffsideSegm_tmpcont.begin(), OffsideSegm_tmpcont.end(), MyCompare( wm.ball().pos() ) );
+                            double prevY = -1000.0;
+                                for ( std::vector<Vector2D>::iterator p = OffsideSegm_tmpcont.begin(),
+                                      end = OffsideSegm_tmpcont.end();
+                                          p != end;
+                                          ++p )
+                                {
+                                    if ( p == OffsideSegm_tmpcont.begin() )
+                                    {
+                                        OffsideSegm_cont.push_back((*p));
+                                        prevY = (*p).y;
+                                        continue;
+                                    }
+                                    if ( fabs ( (*p).y - prevY ) > 2.0  )
+                                    {
+                                        prevY = (*p).y;
+                                        OffsideSegm_cont.push_back((*p));
+                                    }
+                                }
+                            int n_points = 0;
+                            for ( VoronoiDiagram::Vector2DCont::const_iterator p = vd.vertices().begin(),
+                                      end = vd.vertices().end();
+                                          p != end;
+                                          ++p )
+                            {
+                                if ( (*p).x < wm.offsideLineX() - 5.0  && (*p).x > 0.0 )
+                                {
+                                        vd_cont.push_back((*p));
+
+                                }
+                            }
+    }else if(kickable == false){ //Nesse caso tem que buildar o diagrama de Voronoy de forma defensiva
+    //usando a posicao de nossos agentes como base (sitio das celulas de Voronoi)
+        if (wm.ball().pos().x > 25.0)
+        {
+            if (wm.ball().pos().y < 0.0)
+                y2.y = 20.0;
+            if (wm.ball().pos().y > 0.0)
+                    y1.y = -20.0;
+        }
+        if (wm.ball().pos().x > 36.0)
+        {
+            if (wm.ball().pos().y < 0.0)
+                y2.y = 8.0;
+            if (wm.ball().pos().y > 0.0)
+                y1.y = -8.0;
+        }
+        if (wm.ball().pos().x > 49.0)
+        {
+            y1.x = y1.x - 4.0;
+            y2.x = y2.x - 4.0;
+        }
+        //Nesse caso, a gente vai ir adicionando os pontos de nossos jogadores e nao os pontos do
+        //time adversario.
+        for ( PlayerPtrCont::const_iterator o = wm.teammatesFromSelf().begin();
+            o != wm.teammatesFromSelf().end();
+            ++o )
+        {
+            if (newvel)
+                vd.addPoint((*o)->pos() + (*o)->vel());
+            else
+                vd.addPoint((*o)->pos());
+        }
+        if (y1.x < 37.0)
+        {
+            vd.addPoint(y1);
+            vd.addPoint(y2);
+        }
+        vd.compute();
+        Line2D offsideLine (y1, y2);
+        for ( VoronoiDiagram::Segment2DCont::const_iterator p = vd.segments().begin(),
+            end = vd.segments().end();
+            p != end;
+            ++p )
+        {
+            Vector2D si = (*p).intersection( offsideLine );
+            if (si.isValid() && fabs(si.y) < 34.0 && fabs(si.x) < 52.5)
+            {
+                OffsideSegm_tmpcont.push_back(si);
+            }
+        }
+        std::sort( OffsideSegm_tmpcont.begin(), OffsideSegm_tmpcont.end(), MyCompare( wm.ball().pos() ) );
+        double prevY = -1000.0;
+        for ( std::vector<Vector2D>::iterator p = OffsideSegm_tmpcont.begin(),
+            end = OffsideSegm_tmpcont.end();
+            p != end;
+            ++p )
+        {
+            if ( p == OffsideSegm_tmpcont.begin() )
+            {
+                OffsideSegm_cont.push_back((*p));
+                prevY = (*p).y;
+                continue;
+            }
+            if ( fabs ( (*p).y - prevY ) > 2.0  )
+            {
+                prevY = (*p).y;
+                OffsideSegm_cont.push_back((*p));
+            }
+        }
+        int n_points = 0;
+        for ( VoronoiDiagram::Vector2DCont::const_iterator p = vd.vertices().begin(),
+            end = vd.vertices().end();
+            p != end;
+            ++p )
+        {
+            if ( (*p).x < wm.offsideLineX() - 5.0  && (*p).x > 0.0 )
+            {
+                vd_cont.push_back((*p));
+            }
+        }
+    }
+// end of Voronoi
+
+// G2d: assign players to Voronoi points
+
+                            Vector2D rank (y1.x, -34.0);
+
+                            Vector2D first_pt (-100.0, -100.0);
+                            Vector2D mid_pt (-100.0, -100.0);
+                            Vector2D third_pt (-100.0, -100.0);
+
+                            if (wm.ball().pos().y > 0.0)
+                                rank.y = 34.0;
+
+                            std::sort( OffsideSegm_cont.begin(), OffsideSegm_cont.end(), MyCompare( rank ) );
+
+                            int shift = 0;
+
+                            if (OffsideSegm_cont.size() > 4)
+                                shift = 1;
+
+                            if (OffsideSegm_cont.size() > 0)
+                                first_pt = OffsideSegm_cont[0];
+
+                            if (OffsideSegm_cont.size() > 1)
+                                third_pt = OffsideSegm_cont[OffsideSegm_cont.size() - 1];
+
+                            if (OffsideSegm_cont.size() > 2)
+                                mid_pt = OffsideSegm_cont[2];
+
+
+                                int first_unum = -1;
+                                int sec_unum = -1;
+                                int third_unum = -1;
+
+                            if (wm.ball().pos().y <= 0.0)
+                            {
+                                double tmp = 100.0;
+                                for ( int ch = 9; ch <= 11; ch++ )
+                                {
+                                        if ( wm.ourPlayer(ch) == NULL ) 
+                                                continue;
+
+                                        if (wm.ourPlayer(ch)->pos().y < tmp)
+                                        {
+                                                tmp = wm.ourPlayer(ch)->pos().y;
+                                                first_unum = ch;
+                                        }
+                                }
+
+                                tmp = 100.0;
+
+                                for ( int ch = 9; ch <= 11; ch++ )
+                                {
+                                        if ( wm.ourPlayer(ch) == NULL ) 
+                                                continue;
+
+                                        if (ch == first_unum)
+                                                continue;
+
+                                        if (wm.ourPlayer(ch)->pos().y < tmp)
+                                        {
+                                                tmp = wm.ourPlayer(ch)->pos().y;
+                                                sec_unum = ch;
+                                        }
+                                }
+
+                                for ( int ch = 9; ch <= 11; ch++ )
+                                {
+                                        if (ch == first_unum || ch == sec_unum)
+                                                continue;
+
+                                        if (first_unum > 0 && sec_unum > 0)
+                                                third_unum = ch;
+                                }
+                            }
+
+                            if (wm.ball().pos().y > 0.0)
+                            {
+                                double tmp = -100.0;
+                                for ( int ch = 9; ch <= 11; ch++ )
+                                {
+                                        if ( wm.ourPlayer(ch) == NULL ) 
+                                                continue;
+
+                                        if (wm.ourPlayer(ch)->pos().y > tmp)
+                                        {
+                                                tmp = wm.ourPlayer(ch)->pos().y;
+                                                first_unum = ch;
+                                        }
+                                }
+
+                                tmp = -100.0;
+
+                                for ( int ch = 9; ch <= 11; ch++ )
+                                {
+                                        if ( wm.ourPlayer(ch) == NULL ) 
+                                                continue;
+
+                                        if (ch == first_unum)
+                                                continue;
+
+                                        if (wm.ourPlayer(ch)->pos().y > tmp)
+                                        {
+                                                tmp = wm.ourPlayer(ch)->pos().y;
+                                                sec_unum = ch;
+                                        }
+                                }
+
+                                for ( int ch = 9; ch <= 11; ch++ )
+                                {
+                                        if (ch == first_unum || ch == sec_unum)
+                                                continue;
+
+                                        if (first_unum > 0 && sec_unum > 0)
+                                                third_unum = ch;
+                                }
+
+                            }
+
+                        bool first = false;
+                        bool sec = false;
+                        bool third = false;
+
+			double voron_depth = 42.0;
+			if (helios2018)
+				voron_depth = 36.0;
+			if (heliosbase)
+				voron_depth = 0.2;
+
+                        if ( wm.gameMode().type() == GameMode::PlayOn && wm.ball().pos().x > voron_depth)
+                        {
+                            if (first_pt.x > -1.0 && first_unum > 0)
+                            {
+                                first = true;
+                                M_positions[first_unum-1] = first_pt;
+                            }
+                            if (mid_pt.x > -1.0  && sec_unum > 0)
+                            {
+                                sec = true;
+                                M_positions[sec_unum-1] = mid_pt;
+                            }
+                            if (third_pt.x > -1.0 && third_unum > 0)
+                            {
+                                third = true;
+                                M_positions[third_unum-1] = third_pt;
+                            }
+                        }
+// end of assignment
+
         for ( int unum = 1; unum <= 11; ++unum )
         {
+
+// G2d: skip assigned players
+
+            if ( unum == first_unum && first )
+                continue;
+
+            if ( unum == sec_unum && sec )
+                continue;
+
+            if ( unum == third_unum && third )
+                continue;
+
             if ( M_positions[unum-1].x > max_x )
             {
                 dlog.addText( Logger::TEAM,
@@ -804,20 +1211,39 @@ Strategy::getPosition( const int unum ) const
 Formation::Ptr
 Strategy::getFormation( const WorldModel & wm ) const
 {
+    // RoboCIn
+    bool fcp = false;
+    if (wm.opponentTeamName().find("FCP") != std::string::npos ||
+        wm.opponentTeamName().find("fcp") != std::string::npos)
+        fcp = true;
+
     //
     // play on
     //
     if ( wm.gameMode().type() == GameMode::PlayOn )
     {
-        switch ( M_current_situation ) {
-        case Defense_Situation:
-            return M_defense_formation;
-        case Offense_Situation:
-            return M_offense_formation;
-        default:
-            break;
+        // RoboCIn
+        if(fcp){
+            switch ( M_current_situation ) {
+            case Defense_Situation:
+                return M_defense_formation_f;
+            case Offense_Situation:
+                return M_offense_formation_f;
+            default:
+                break;
+            }
+            return M_normal_formation_f;
+        } else {
+            switch ( M_current_situation ) {
+            case Defense_Situation:
+                return M_defense_formation;
+            case Offense_Situation:
+                return M_offense_formation;
+            default:
+                break;
+            }
+            return M_normal_formation;
         }
-        return M_normal_formation;
     }
 
     //
@@ -828,11 +1254,15 @@ Strategy::getFormation( const WorldModel & wm ) const
     {
         if ( wm.ourSide() == wm.gameMode().side() )
         {
+            // RoboCIn
+            if(fcp) return M_kickin_our_formation_f;
             // our kick-in or corner-kick
             return M_kickin_our_formation;
         }
         else
         {
+            // RoboCIn
+            if(fcp) return M_setplay_opp_formation_f;
             return M_setplay_opp_formation;
         }
     }
@@ -845,6 +1275,8 @@ Strategy::getFormation( const WorldModel & wm ) const
          || ( wm.gameMode().type() == GameMode::IndFreeKick_
               && wm.gameMode().side() == wm.ourSide() ) )
     {
+        // RoboCIn
+        if(fcp) return M_indirect_freekick_our_formation_f;
         return M_indirect_freekick_our_formation;
     }
 
@@ -856,6 +1288,8 @@ Strategy::getFormation( const WorldModel & wm ) const
          || ( wm.gameMode().type() == GameMode::IndFreeKick_
               && wm.gameMode().side() == wm.theirSide() ) )
     {
+        // RoboCIn
+        if(fcp) return M_indirect_freekick_opp_formation_f;
         return M_indirect_freekick_opp_formation;
     }
 
@@ -873,10 +1307,14 @@ Strategy::getFormation( const WorldModel & wm ) const
             if ( wm.ball().pos().x < ServerParam::i().ourPenaltyAreaLineX() + 1.0
                  && wm.ball().pos().absY() < ServerParam::i().penaltyAreaHalfWidth() + 1.0 )
             {
+                // RoboCIn
+                if(fcp) return M_indirect_freekick_opp_formation_f;
                 return M_indirect_freekick_opp_formation;
             }
             else
             {
+                // RoboCIn
+                if(fcp) return M_setplay_opp_formation_f;
                 return M_setplay_opp_formation;
             }
         }
@@ -888,10 +1326,14 @@ Strategy::getFormation( const WorldModel & wm ) const
             if ( wm.ball().pos().x > ServerParam::i().theirPenaltyAreaLineX()
                  && wm.ball().pos().absY() < ServerParam::i().penaltyAreaHalfWidth() )
             {
+                // RoboCIn
+                if(fcp) return M_indirect_freekick_our_formation_f;
                 return M_indirect_freekick_our_formation;
             }
             else
             {
+                // RoboCIn
+                if(fcp) return M_setplay_our_formation_f;
                 return M_setplay_our_formation;
             }
         }
@@ -904,10 +1346,14 @@ Strategy::getFormation( const WorldModel & wm ) const
     {
         if ( wm.gameMode().side() == wm.ourSide() )
         {
+            // RoboCIn
+            if(fcp) return M_goal_kick_our_formation_f;
             return M_goal_kick_our_formation;
         }
         else
         {
+            // RoboCIn
+            if(fcp) return M_goal_kick_opp_formation_f;
             return M_goal_kick_opp_formation;
         }
     }
@@ -919,10 +1365,14 @@ Strategy::getFormation( const WorldModel & wm ) const
     {
         if ( wm.gameMode().side() == wm.ourSide() )
         {
+            // RoboCIn
+            if(fcp) return M_goalie_catch_our_formation_f;
             return M_goalie_catch_our_formation;
         }
         else
         {
+            // RoboCIn
+            if(fcp) return M_goalie_catch_opp_formation_f;
             return M_goalie_catch_opp_formation;
         }
     }
@@ -941,27 +1391,44 @@ Strategy::getFormation( const WorldModel & wm ) const
     //
     if ( wm.gameMode().isOurSetPlay( wm.ourSide() ) )
     {
+        // RoboCIn
+        if(fcp) return M_setplay_our_formation_f;
         return M_setplay_our_formation;
     }
 
     if ( wm.gameMode().type() != GameMode::PlayOn )
     {
+        // RoboCIn
+        if(fcp) return M_setplay_opp_formation_f;
         return M_setplay_opp_formation;
     }
 
     //
     // unknown
     //
-    switch ( M_current_situation ) {
-    case Defense_Situation:
-        return M_defense_formation;
-    case Offense_Situation:
-        return M_offense_formation;
-    default:
-        break;
-    }
 
-    return M_normal_formation;
+    // RoboCIn
+    if(fcp){
+        switch ( M_current_situation ) {
+        case Defense_Situation:
+            return M_defense_formation_f;
+        case Offense_Situation:
+            return M_offense_formation_f;
+        default:
+            break;
+        }
+        return M_normal_formation_f;
+    } else {
+        switch ( M_current_situation ) {
+        case Defense_Situation:
+            return M_defense_formation;
+        case Offense_Situation:
+            return M_offense_formation;
+        default:
+            break;
+        }
+        return M_normal_formation;
+    }
 }
 
 /*-------------------------------------------------------------------*/
@@ -1145,11 +1612,10 @@ Strategy::get_ball_area( const Vector2D & ball_pos )
 double
 Strategy::get_normal_dash_power( const WorldModel & wm )
 {
-#ifdef __APPLE__
     static bool s_recover_mode = false;
-#else
-    static thread_local bool s_recover_mode = false;
-#endif
+
+// G2d: role
+    int role = Strategy::i().roleNumber( wm.self().unum() );
 
     if ( wm.self().staminaModel().capacityIsEmpty() )
     {
@@ -1197,6 +1663,35 @@ Strategy::get_normal_dash_power( const WorldModel & wm )
         dlog.addText( Logger::TEAM,
                       __FILE__": (get_normal_dash_power) recovering" );
     }
+
+
+// G2d: run to offside line
+    else if ( wm.ball().pos().x > 0.0
+              && wm.self().pos().x < wm.offsideLineX()
+              && fabs(wm.ball().pos().x - wm.self().pos().x) < 25.0
+             )
+        dash_power = ServerParam::i().maxDashPower();
+
+// G2d: defenders
+    else if ( wm.ball().pos().x < 10.0
+              && (role == 4 || role == 5 || role == 2 || role == 3)
+            )
+        dash_power = ServerParam::i().maxDashPower();
+
+// G2d: midfielders
+    else if ( wm.ball().pos().x < -10.0
+              && (role == 6 || role == 7 || role ==8)
+            )
+      dash_power = ServerParam::i().maxDashPower();
+
+// G2d: run in opp penalty area
+    else if ( wm.ball().pos().x > 36.0
+              && wm.self().pos().x > 36.0
+              && mate_min < opp_min - 4
+        )
+        dash_power = ServerParam::i().maxDashPower();
+
+
     // exist kickable teammate
     else if ( wm.existKickableTeammate()
               && wm.ball().distFromSelf() < 20.0 )

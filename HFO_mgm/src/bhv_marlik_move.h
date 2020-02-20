@@ -41,6 +41,7 @@ public:
       { isSoftMarking = false; }
 
     bool execute( rcsc::PlayerAgent * agent );
+    bool cool_execute( rcsc::PlayerAgent * agent, rcsc::Vector2D & homePos );
 
 private:
 
