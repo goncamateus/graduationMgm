@@ -193,7 +193,7 @@ class Cyrus(Team):
         binaryPath = os.path.join(baseDir, binaryName)
         options = '--player-config %s/player.conf --config_dir %s/formations-dt --log_dir %s '\
                   '-h %s -t %s -p %i '\
-                  % (name, port, baseDir, logDir, baseDir, host)
+                  % (baseDir, baseDir, logDir, host, name, port)
         if record:
             options += ' --record'
         offenseOrder = [11, 7, 8, 9, 10, 6, 3, 2, 4, 5]

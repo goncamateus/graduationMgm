@@ -117,7 +117,7 @@ def main(args):
       '\nTry: \"killall -9 rcssserver\"' \
       %(serverCommand + serverOptions)
     if not args.headless:
-      monitorCommand = os.path.join(binary_dir, MONITOR_BIN)
+      monitorCommand = MONITOR_BIN
       monitorOptions = ' --connect --port=%i'%(server_port)
       launch(monitorCommand + monitorOptions, name='monitor')
     # Launch the Trainer
