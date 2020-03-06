@@ -65,7 +65,7 @@ class Agent2d(Team):
                   % (name, port, baseDir, logDir, baseDir)
         if record:
             options += ' --record'
-        offenseOrder = [7, 8, 11, 9, 10, 6, 3, 2, 4, 5]
+        offenseOrder = [11, 7, 8, 9, 10, 6, 3, 2, 4, 5]
         defenseOrder = [2, 3, 4, 5, 6, 7, 8, 11, 9, 10]
         super(Agent2d, self).__init__(name, binaryPath, libDir, options,
                                       offenseOrder, defenseOrder)
@@ -87,10 +87,10 @@ class Fractals(Team):
                   % (name, port, baseDir, logDir, baseDir)
         if record:
             options += ' --record'
-        offenseOrder = [7, 8, 11, 9, 10, 6, 3, 2, 4, 5]
+        offenseOrder = [11, 7, 8, 9, 10, 6, 3, 2, 4, 5]
         defenseOrder = [2, 3, 4, 5, 6, 7, 8, 11, 9, 10]
         super(Fractals, self).__init__(name, binaryPath, libDir, options,
-                                      offenseOrder, defenseOrder)
+                                       offenseOrder, defenseOrder)
 
     def launch_npc(self, player_num):
         launchOpts = None
@@ -115,7 +115,7 @@ class Helios(Team):
                   '--opponent-data-dir %s/data/opponent_data/ -p %d'\
                   % (baseDir, host, name, baseDir, baseDir, baseDir, baseDir,
                      baseDir, baseDir, baseDir, port)
-        offenseOrder = [7, 8, 11, 9, 10, 6, 3, 2, 4, 5]
+        offenseOrder = [11, 7, 8, 9, 10, 6, 3, 2, 4, 5]
         defenseOrder = [2, 3, 4, 5, 6, 7, 8, 11, 9, 10]
         super(Helios, self).__init__(name, binaryPath, libDir, options,
                                      offenseOrder, defenseOrder)
@@ -152,7 +152,7 @@ class Helios19(Team):
                                                                                   baseDir, baseDir,
                                                                                   baseDir, baseDir,
                                                                                   port)
-        offenseOrder = [7, 8, 11, 9, 10, 6, 3, 2, 4, 5]
+        offenseOrder = [11, 7, 8, 9, 10, 6, 3, 2, 4, 5]
         defenseOrder = [2, 3, 4, 5, 6, 7, 8, 11, 9, 10]
         super(Helios19, self).__init__(name, binaryPath, libDir, options,
                                        offenseOrder, defenseOrder)
@@ -174,10 +174,32 @@ class RoboCIn(Team):
                   % (name, port, baseDir, logDir, baseDir)
         if record:
             options += ' --record'
-        offenseOrder = [7, 8, 11, 9, 10, 6, 3, 2, 4, 5]
+        offenseOrder = [11, 7, 8, 9, 10, 6, 3, 2, 4, 5]
         defenseOrder = [2, 3, 4, 5, 6, 7, 8, 11, 9, 10]
         super(RoboCIn, self).__init__(name, binaryPath, libDir, options,
                                       offenseOrder, defenseOrder)
+
+    def launch_npc(self, player_num):
+        launchOpts = None
+        if player_num == 1:
+            launchOpts = '-g'
+        print('Launch npc %s-%d' % (self._name, player_num))
+        return self.start_npc_proc(launchOpts)
+
+
+class Cyrus(Team):
+    def __init__(self, name, baseDir, libDir, binaryName, logDir, record,
+                 host='127.0.0.1', port=6000):
+        binaryPath = os.path.join(baseDir, binaryName)
+        options = '--player-config %s/player.conf --config_dir %s/formations-dt --log_dir %s '\
+                  '-h %s -t %s -p %i '\
+                  % (name, port, baseDir, logDir, baseDir, host)
+        if record:
+            options += ' --record'
+        offenseOrder = [11, 7, 8, 9, 10, 6, 3, 2, 4, 5]
+        defenseOrder = [2, 3, 4, 5, 6, 7, 8, 11, 9, 10]
+        super(Cyrus, self).__init__(name, binaryPath, libDir, options,
+                                    offenseOrder, defenseOrder)
 
     def launch_npc(self, player_num):
         launchOpts = None

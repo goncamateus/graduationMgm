@@ -131,6 +131,15 @@ class Trainer(object):
                                  binaryName='sample_player', logDir=self._logDir,
                                  record=self._record, host='localhost',
                                  port=self._serverPort)
+        elif requested_team_name == 'cyrus':
+            print('Creating team Cyrus')
+            team_name = 'Cyrus_' + ('left' if play_offense else 'right')
+            team_dir = os.path.join(teams_dir, 'cyrus/src')
+            lib_dir = os.path.join(teams_dir, 'cyrus/lib')
+            return Teams.Agent2d(team_name, team_dir, lib_dir,
+                                 binaryName='sample_player', logDir=self._logDir,
+                                 record=self._record, host='localhost',
+                                 port=self._serverPort)
         elif requested_team_name == 'robocin':
             print('Creating team RoboCIN2d')
             team_name = 'RoboCIn_' + ('left' if play_offense else 'right')
