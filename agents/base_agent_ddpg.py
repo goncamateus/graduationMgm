@@ -30,15 +30,14 @@ class DDPGAgent(Agent):
         self.goals = 0
 
     def config_env(self, team, port):
-        BLOCK = hfo.CATCH
-        self.actions = [hfo.MOVE, hfo.GO_TO_BALL, BLOCK]
+        self.actions = [hfo.MOVE, hfo.GO_TO_BALL, hfo.BLOCK]
         self.rewards = [0, 0, 0]
         self.hfo_env = HFOEnv(is_offensive=False, play_goalie=False,
                              port=port, continuous=True,
                              team=team)
         self.hfo_env.set_env(self.actions, self.rewards, strict=True)
-        self.test = False
-        self.gen_mem = True
+        self.test = True
+        self.gen_mem = False
         self.unum = self.hfo_env.getUnum()
 
     def load_model(self, model):
