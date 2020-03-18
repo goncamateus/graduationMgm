@@ -42,7 +42,7 @@ class ActionStatePair;
 class SampleFieldEvaluator
     : public FieldEvaluator {
 private:
-
+    //Variable to save a RCNeural network
 public:
     SampleFieldEvaluator();
 
@@ -51,7 +51,8 @@ public:
 
     virtual
     double operator()( const PredictState & state,
-                       const std::vector< ActionStatePair > & path ) const;
+                       const std::vector< ActionStatePair > & path,
+		       const rcsc::WorldModel & wm ) const;
 };
 
 #endif

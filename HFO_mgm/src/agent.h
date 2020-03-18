@@ -80,6 +80,7 @@ protected:
   inline bool getLastActionStatus() { return last_action_status; }
 
   inline void setFeatureSet(hfo::feature_set_t fset) { feature_set = fset; }
+  inline void setLastActionStatus(bool act_status) { last_action_status = act_status; }
   inline std::vector<float>* mutable_params() { return &params; }
   inline void setAction(hfo::action_t a) { requested_action = a; }
   inline void setSayMsg(const std::string& message) { say_msg = message; }

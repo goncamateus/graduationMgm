@@ -164,6 +164,10 @@ Agent* HFOEnvironment::getAgent(){
   return agent;
 }
 
+bool HFOEnvironment::getLastActionSuccess() {
+  return agent->getLastActionStatus;
+}
+
 void HFOEnvironment::setAgent(Agent* actor){
   agent = actor;
 }

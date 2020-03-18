@@ -30,7 +30,7 @@ class DDPGAgent(Agent):
         self.goals = 0
 
     def config_env(self, team, port):
-        self.actions = [hfo.MOVE_TO]
+        self.actions = [hfo.FM_POS]
         self.rewards = [0]
         self.hfo_env = HFOEnv(is_offensive=True, play_goalie=False,
                              port=port, continuous=True,
@@ -106,11 +106,12 @@ class DDPGAgent(Agent):
             episode_rewards = 0
             step = 0
             while status == hfo.IN_GAME:
+                print(self.hfo_env)
                 # Every time when game resets starts a zero frame
                 if done:
                     state = self.hfo_env.get_state()
                     frame = self.ddpg.stack_frames(state, done)
-                if not state[0] or state[4] > 3.5:
+                if not state[0]:
                     # If the size of experiences is under max_size*8 runs gen_mem
                     # eps = self.config.epsilon_by_frame(self.frame_idx)
                     if self.gen_mem and len(self.ddpg.memory) < self.config.EXP_REPLAY_SIZE:
@@ -122,12 +123,12 @@ class DDPGAgent(Agent):
                             self.gen_mem_end(episode+1)
                         # Gets the action
                         action = self.ddpg.get_action(frame)
-                        action = (action + np.random.normal(0, 0.1, size=self.hfo_env.action_space.shape[0])).clip(
+                        action = (action + np.random.normal(0, 0.001, size=self.hfo_env.action_space.shape[0])).clip(
                             self.hfo_env.action_space.low, self.hfo_env.action_space.high)
                         action = action.astype(np.float32)[0]
                         step += 1
                 else:
-                    action = hfo.CHAIN_ACTION
+                    action = state[-2:]
 
                 # Calculates results from environment
                 next_state, reward, done, status = self.hfo_env.step(

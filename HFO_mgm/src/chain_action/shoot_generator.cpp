@@ -76,11 +76,7 @@ ShootGenerator::ShootGenerator()
 ShootGenerator &
 ShootGenerator::instance()
 {
-#ifdef __APPLE__
     static ShootGenerator s_instance;
-#else
-    static thread_local ShootGenerator s_instance;
-#endif
     return s_instance;
 }
 
@@ -100,13 +96,9 @@ ShootGenerator::clear()
 
  */
 void
-ShootGenerator::generate( const WorldModel & wm, bool consider_shot_distance )
+ShootGenerator::generate( const WorldModel & wm )
 {
-#ifdef __APPLE__
     static GameTime s_update_time( 0, 0 );
-#else
-    static thread_local GameTime s_update_time( 0, 0 );
-#endif
 
     if ( s_update_time == wm.time() )
     {
@@ -132,14 +124,13 @@ ShootGenerator::generate( const WorldModel & wm, bool consider_shot_distance )
 
     const ServerParam & SP = ServerParam::i();
 
-    if ( consider_shot_distance &&
-         wm.self().pos().dist2( SP.theirTeamGoalPos() ) > std::pow( 30.0, 2 ) )
+    if ( wm.self().pos().dist2( SP.theirTeamGoalPos() ) > std::pow( 30.0, 2 ) )
     {
 #ifdef DEBUG_PRINT
-      dlog.addText( Logger::SHOOT,
-                    __FILE__": over shootable distance" );
+        dlog.addText( Logger::SHOOT,
+                      __FILE__": over shootable distance" );
 #endif
-      return;
+        return;
     }
 
     M_first_ball_pos = ( wm.self().isKickable()

@@ -72,11 +72,7 @@ FieldAnalyzer::FieldAnalyzer()
 FieldAnalyzer &
 FieldAnalyzer::instance()
 {
-#ifdef __APPLE__
     static FieldAnalyzer s_instance;
-#else
-    static thread_local FieldAnalyzer s_instance;
-#endif
     return s_instance;
 }
 
@@ -1208,11 +1204,7 @@ FieldAnalyzer::get_blocker( const WorldModel & wm,
 void
 FieldAnalyzer::update( const WorldModel & wm )
 {
-#ifdef __APPLE__
     static GameTime s_update_time( 0, 0 );
-#else
-    static thread_local GameTime s_update_time( 0, 0 );
-#endif
 
     if ( s_update_time == wm.time() )
     {

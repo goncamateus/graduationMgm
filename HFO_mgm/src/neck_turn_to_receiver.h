@@ -24,52 +24,32 @@
 
 /////////////////////////////////////////////////////////////////////
 
-#ifndef ROLE_CENTER_FORWARD_H
-#define ROLE_CENTER_FORWARD_H
+#ifndef NECK_TURN_TO_RECEIVER_H
+#define NECK_TURN_TO_RECEIVER_H
 
-#include "soccer_role.h"
-#include "agent.h"
+#include <rcsc/player/soccer_action.h>
 
-class RoleCenterForward
-    : public SoccerRole {
+class ActionChainGraph;
+
+class Neck_TurnToReceiver
+    : public rcsc::NeckAction {
 private:
+    const ActionChainGraph & M_chain_graph;
 
 public:
 
-    static const std::string NAME;
+    Neck_TurnToReceiver( const ActionChainGraph & chain_graph );
 
-    RoleCenterForward()
-      { }
-
-    ~RoleCenterForward()
-      { }
-
-    virtual
     bool execute( rcsc::PlayerAgent * agent );
-    bool execute( Agent * agent );
 
-
-    static
-    const
-    std::string & name()
+    rcsc::NeckAction * clone() const
       {
-          return NAME;
+          return new Neck_TurnToReceiver( M_chain_graph );
       }
 
-    static
-    SoccerRole::Ptr create()
-      {
-          SoccerRole::Ptr ptr( new RoleCenterForward() );
-          return ptr;
-      }
 private:
 
-    void doKick( rcsc::PlayerAgent * agent );
-    void doMove( rcsc::PlayerAgent * agent );
-
-    void doKick( Agent * agent );
-    void doMove( Agent * agent );
+    bool executeImpl( rcsc::PlayerAgent * agent );
 };
-
 
 #endif

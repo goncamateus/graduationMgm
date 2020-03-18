@@ -132,15 +132,10 @@ SampleTrainer::sampleAction()
 {
     // sample training to test a ball interception.
 
-#ifdef __APPLE__
     static int s_state = 0;
     static int s_wait_counter = 0;
+
     static Vector2D s_last_player_move_pos;
-#else
-    static thread_local int s_state = 0;
-    static thread_local int s_wait_counter = 0;
-    static thread_local Vector2D s_last_player_move_pos;
-#endif
 
     if ( world().existKickablePlayer() )
     {
@@ -176,11 +171,7 @@ SampleTrainer::sampleAction()
         }
         // change player type
         {
-#ifdef __APPLE__
             static int type = 0;
-#else
-            static thread_local int type = 0;
-#endif
             doChangePlayerType( world().teamNameLeft(), 1, type );
             type = ( type + 1 ) % PlayerParam::i().playerTypes();
         }
@@ -242,11 +233,7 @@ SampleTrainer::recoverForever()
 void
 SampleTrainer::doSubstitute()
 {
-#ifdef __APPLE__
     static bool s_substitute = false;
-#else
-    static thread_local bool s_substitute = false;
-#endif
     if ( ! s_substitute
          && world().time().cycle() == 0
          && world().time().stopped() >= 10 )
@@ -270,11 +257,7 @@ SampleTrainer::doSubstitute()
          && world().time().cycle() % 100 == 1
          && ! world().teamNameLeft().empty() )
     {
-#ifdef __APPLE__
         static int type = 0;
-#else
-        static thread_local int type = 0;
-#endif
         doChangePlayerType( world().teamNameLeft(), 1, type );
         type = ( type + 1 ) % PlayerParam::i().playerTypes();
     }

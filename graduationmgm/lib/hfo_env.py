@@ -89,14 +89,12 @@ class HFOEnv(hfo.HFOEnvironment):
         #     action = self.action_space.actions[action[0]]
         # else:
         state = self.get_state()
-        if self.is_offensive and state[0]:
-            self.act(action)
+        if self.is_offensive:
+            self.act(hfo.FM_POS, action[0], action[1])
             status = super(HFOEnv, self).step()
         else:
             if not self.continuous:
                 action = self.action_space.actions[action]
-            elif self.is_offensive:
-                self.act(hfo.MOVE_TO, action[0], action[1])
             else:
                 action= action[0]
                 if action < -0.68:

@@ -33,6 +33,8 @@
 #include "bhv_chain_action.h"
 #include "bhv_basic_offensive_kick.h"
 #include "bhv_basic_move.h"
+#include "bhv_marlik_move.h"
+#include "strategy.h"
 
 #include <rcsc/player/player_agent.h>
 #include <rcsc/player/debug_client.h>
@@ -104,5 +106,17 @@ RoleSideBack::doKick( PlayerAgent * agent )
 void
 RoleSideBack::doMove( PlayerAgent * agent )
 {
-    Bhv_BasicMove().execute( agent );
+    //RoboCIn
+    switch (Strategy::i().M_move_state)
+    {
+    case Strategy::MoveState::MS_BASIC_MOVE:
+        Bhv_BasicMove().execute( agent );   
+        break;
+    case Strategy::MoveState::MS_MARLIK_MOVE:
+        Bhv_MarlikMove().execute( agent );
+        break;
+    default:
+        Bhv_BasicMove().execute( agent );
+        break;
+    }
 }

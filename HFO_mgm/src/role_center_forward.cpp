@@ -30,10 +30,11 @@
 
 #include "role_center_forward.h"
 
-
 #include "bhv_chain_action.h"
 #include "bhv_basic_offensive_kick.h"
 #include "bhv_basic_move.h"
+#include "bhv_marlik_move.h"
+#include "strategy.h"
 
 #include <rcsc/player/player_agent.h>
 #include <rcsc/player/debug_client.h>
@@ -42,39 +43,41 @@
 
 using namespace rcsc;
 
-const std::string RoleCenterForward::NAME( "CenterForward" );
+const std::string RoleCenterForward::NAME("CenterForward");
 
 /*-------------------------------------------------------------------*/
 /*!
 
  */
-namespace {
-rcss::RegHolder role = SoccerRole::creators().autoReg( &RoleCenterForward::create,
-                                                       RoleCenterForward::NAME );
+namespace
+{
+rcss::RegHolder role = SoccerRole::creators().autoReg(&RoleCenterForward::create,
+                                                      RoleCenterForward::NAME);
 }
 
 /*-------------------------------------------------------------------*/
 /*!
 
  */
-bool
-RoleCenterForward::execute( PlayerAgent * agent )
+bool RoleCenterForward::execute(PlayerAgent *agent)
 {
     bool kickable = agent->world().self().isKickable();
-    if ( agent->world().existKickableTeammate()
-         && agent->world().teammatesFromBall().front()->distFromBall()
-         < agent->world().ball().distFromSelf() )
+    if (agent->world().existKickableTeammate() && agent->world().teammatesFromBall().front()->distFromBall() < agent->world().ball().distFromSelf())
     {
         kickable = false;
     }
 
-    if ( kickable )
+    if (kickable)
     {
-        doKick( agent );
+        if (agent->world().self().unum() == 11)
+            std::cout << "CHAIN -> " << agent->world().time().cycle() << std::endl;
+        doKick(agent);
     }
     else
     {
-        doMove( agent );
+        if (agent->world().self().unum() == 11)
+            std::cout << "MOVE -> " << agent->world().time().cycle() << std::endl;
+        doMove(agent);
     }
 
     return true;
@@ -84,26 +87,100 @@ RoleCenterForward::execute( PlayerAgent * agent )
 /*!
 
  */
-void
-RoleCenterForward::doKick( PlayerAgent * agent )
+bool RoleCenterForward::execute(Agent *agent)
 {
-    if ( Bhv_ChainAction().execute( agent ) )
+    bool kickable = agent->world().self().isKickable();
+    if (agent->world().existKickableTeammate() && agent->world().teammatesFromBall().front()->distFromBall() < agent->world().ball().distFromSelf())
     {
-        dlog.addText( Logger::TEAM,
-                      __FILE__": (execute) do chain action" );
-        agent->debugClient().addMessage( "ChainAction" );
-        return;
+        kickable = false;
     }
 
-    Bhv_BasicOffensiveKick().execute( agent );
+    if (kickable)
+    {
+        doKick(agent);
+    }
+    else
+    {
+        doMove(agent);
+    }
+
+    return true;
 }
 
 /*-------------------------------------------------------------------*/
 /*!
 
  */
-void
-RoleCenterForward::doMove( PlayerAgent * agent )
+void RoleCenterForward::doKick(PlayerAgent *agent)
 {
-    Bhv_BasicMove().execute( agent );
+    if (Bhv_ChainAction().execute(agent))
+    {
+        dlog.addText(Logger::TEAM,
+                     __FILE__ ": (execute) do chain action");
+        agent->debugClient().addMessage("ChainAction");
+        return;
+    }
+
+    Bhv_BasicOffensiveKick().execute(agent);
+}
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+void RoleCenterForward::doMove(PlayerAgent *agent)
+{
+    //RoboCIn
+    switch (Strategy::i().M_move_state)
+    {
+    case Strategy::MoveState::MS_BASIC_MOVE:
+        Bhv_BasicMove().execute(agent);
+        break;
+    case Strategy::MoveState::MS_MARLIK_MOVE:
+        Bhv_MarlikMove().execute(agent);
+        break;
+    default:
+        Bhv_BasicMove().execute(agent);
+        break;
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+void RoleCenterForward::doKick(Agent *agent)
+{
+    if (Bhv_ChainAction().execute(agent))
+    {
+        dlog.addText(Logger::TEAM,
+                     __FILE__ ": (execute) do chain action");
+        agent->debugClient().addMessage("ChainAction");
+        agent->setLastActionStatus(true);
+        return;
+    }
+
+    bool res = Bhv_BasicOffensiveKick().execute(agent);
+    agent->setLastActionStatus(res);
+}
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+void RoleCenterForward::doMove(Agent *agent)
+{
+    //RoboCIn
+    switch (Strategy::i().M_move_state)
+    {
+    case Strategy::MoveState::MS_BASIC_MOVE:
+        Bhv_BasicMove().execute(agent);
+        break;
+    case Strategy::MoveState::MS_MARLIK_MOVE:
+        Bhv_MarlikMove().execute(agent);
+        break;
+    default:
+        Bhv_BasicMove().execute(agent);
+        break;
+    }
 }

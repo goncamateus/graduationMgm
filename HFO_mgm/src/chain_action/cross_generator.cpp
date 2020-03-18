@@ -91,11 +91,7 @@ CrossGenerator::CrossGenerator()
 CrossGenerator &
 CrossGenerator::instance()
 {
-#ifdef __APPLE__
     static CrossGenerator s_instance;
-#else
-    static thread_local CrossGenerator s_instance;
-#endif
     return s_instance;
 }
 
@@ -121,11 +117,7 @@ CrossGenerator::clear()
 void
 CrossGenerator::generate( const WorldModel & wm )
 {
-#ifdef __APPLE__
     static GameTime s_update_time( -1, 0 );
-#else
-    static thread_local GameTime s_update_time( -1, 0 );
-#endif
     if ( s_update_time == wm.time() )
     {
         return;

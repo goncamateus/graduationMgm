@@ -140,16 +140,16 @@ public:
     static
     ShootGenerator & instance();
 
-    void generate( const rcsc::WorldModel & wm, bool consider_shot_distance=true );
+    void generate( const rcsc::WorldModel & wm );
 
     /*!
       \brief calculate the shoot and return the container
       \param agent const pointer to the agent
       \return const reference to the shoot container
      */
-    const Container & courses( const rcsc::WorldModel & wm, bool consider_shot_distance=true )
+    const Container & courses( const rcsc::WorldModel & wm )
       {
-          generate( wm, consider_shot_distance );
+          generate( wm );
           return M_courses;
       }
 

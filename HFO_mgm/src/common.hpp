@@ -41,7 +41,8 @@ enum action_t
   GO_TO_BALL,
   REORIENT,  // [High-Level] Handle lost position of self/ball, misc other situations; variant of doPreprocess called in DRIBBLE
   BLOCK,
-  CHAIN_ACTION
+  CHAIN_ACTION,
+  FM_POS
 };
 
 // Status of an HFO game
@@ -127,6 +128,8 @@ inline int NumParams(const action_t action) {
      return 0;
    case REORIENT:
      return 0;
+   case FM_POS:
+     return 2;
  }
  std::cerr << "Unrecognized Action: " << action << std::endl;
  return -1;
@@ -181,6 +184,8 @@ inline std::string ActionToString(action_t action) {
      return "Block";
     case CHAIN_ACTION:
      return "Chain_Action";
+    case FM_POS:
+     return "FreeModel";
     default:
       return "Unknown";
   }

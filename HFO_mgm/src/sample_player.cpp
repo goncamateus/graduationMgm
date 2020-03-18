@@ -29,7 +29,6 @@
 #endif
 
 #include "sample_player.h"
-#include "agent.h"
 
 #include "strategy.h"
 #include "field_analyzer.h"
@@ -53,10 +52,6 @@
 #include "view_tactical.h"
 
 #include "intention_receive.h"
-#include "lowlevel_feature_extractor.h"
-#include "highlevel_feature_extractor.h"
-#include "fm_feature_extractor.h"
-
 
 #include <rcsc/action/basic_actions.h>
 #include <rcsc/action/bhv_emergency.h>
@@ -90,6 +85,7 @@
 #include <string>
 #include <cstdlib>
 
+
 using namespace rcsc;
 
 /*-------------------------------------------------------------------*/
@@ -100,12 +96,7 @@ SamplePlayer::SamplePlayer()
     : PlayerAgent(),
       M_communication(),
       M_field_evaluator( createFieldEvaluator() ),
-      M_action_generator( createActionGenerator() ),
-      feature_extractor(NULL),
-      lastTrainerMessageTime(-1),
-      num_teammates(-1),
-      num_opponents(-1),
-      playing_offense(false)
+      M_action_generator( createActionGenerator() )
 {
     boost::shared_ptr< AudioMemory > audio_memory( new AudioMemory );
 
@@ -167,9 +158,7 @@ SamplePlayer::SamplePlayer()
  */
 SamplePlayer::~SamplePlayer()
 {
-  if (feature_extractor != NULL) {
-    delete feature_extractor;
-  }
+
 }
 
 /*-------------------------------------------------------------------*/
@@ -235,36 +224,6 @@ SamplePlayer::initImpl( CmdLineParser & cmd_parser )
 void
 SamplePlayer::actionImpl()
 {
-#ifdef ELOG
-  if (config().record()) {
-    if (audioSensor().trainerMessageTime().cycle() > lastTrainerMessageTime) {
-      const std::string& message = audioSensor().trainerMessage();
-      if (feature_extractor == NULL) {
-        hfo::Config hfo_config;
-        if (hfo::ParseConfig(message, hfo_config)) {
-          bool playing_offense = world().ourSide() == rcsc::LEFT;
-          int num_teammates = playing_offense ?
-              hfo_config.num_offense - 1 : hfo_config.num_defense - 1;
-          int num_opponents = playing_offense ?
-              hfo_config.num_defense : hfo_config.num_offense;
-          feature_extractor = new LowLevelFeatureExtractor(
-              num_teammates, num_opponents, playing_offense);
-        }
-      }
-      hfo::status_t game_status;
-      if (hfo::ParseGameStatus(message, game_status)) {
-        elog.addText(Logger::WORLD, "GameStatus %d", game_status);
-        elog.flush();
-      }
-      lastTrainerMessageTime = audioSensor().trainerMessageTime().cycle();
-    }
-    if (feature_extractor != NULL) {
-      feature_extractor->ExtractFeatures(this->world(), true);
-      feature_extractor->LogFeatures();
-    }
-  }
-#endif
-
     //
     // update strategy and analyzer
     //
@@ -313,7 +272,6 @@ SamplePlayer::actionImpl()
             return;
         }
     }
-
 
     //
     // override execute if role accept
@@ -800,7 +758,7 @@ SamplePlayer::getFieldEvaluator() const
 FieldEvaluator::ConstPtr
 SamplePlayer::createFieldEvaluator() const
 {
-    return FieldEvaluator::ConstPtr( new SampleFieldEvaluator );
+    return FieldEvaluator::ConstPtr( new SampleFieldEvaluator() );
 }
 
 
@@ -844,8 +802,8 @@ SamplePlayer::createActionGenerator() const
     // direct pass
     //
     // g->addGenerator( new ActGen_RangeActionChainLengthFilter
-    //                  ( new ActGen_DirectPass(),
-    //                    2, ActGen_RangeActionChainLengthFilter::MAX ) );
+                    //  ( new ActGen_DirectPass(),
+                    //    2, ActGen_RangeActionChainLengthFilter::MAX ) );
 
     //
     // short dribble

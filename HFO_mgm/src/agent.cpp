@@ -47,6 +47,17 @@
 #include "actgen_shoot.h"
 #include "actgen_action_chain_length_filter.h"
 
+#include "role_sample.h"
+
+#include "role_center_back.h"
+#include "role_center_forward.h"
+#include "role_defensive_half.h"
+#include "role_goalie.h"
+#include "role_offensive_half.h"
+#include "role_side_back.h"
+#include "role_side_forward.h"
+#include "role_side_half.h"
+
 #include "neck_offensive_intercept_neck.h"
 #include "bhv_basic_tackle.h"
 #include <typeinfo>
@@ -78,6 +89,7 @@
 #include <rcsc/common/audio_memory.h>
 #include <rcsc/common/say_message_parser.h>
 // #include <rcsc/common/free_message_parser.h>
+#include <boost/shared_ptr.hpp>
 
 #include <rcsc/param/param_map.h>
 #include <rcsc/param/cmd_line_parser.h>
@@ -290,25 +302,15 @@ void Agent::actionImpl()
               << " parameters, given " << params.size() << std::endl;
     exit(1);
   }
-
-  // For now let's not worry about turning the neck or setting the vision.
-  // But do the settings now, so that doesn't override any set by the actions below.
-  // TODO: Add setViewActionDefault, setNeckActionDefault to librcsc that only set if not already set.
-
+  //
+  // update strategy and analyzer
+  //
   const WorldModel &wm = this->world();
-
-  this->setViewAction(new View_Tactical());
-
-  if (wm.ball().posValid())
-  {
-    this->setNeckAction(new Neck_TurnToBallOrScan()); // if not ball().posValid(), requests possibly-invalid queuedNextBallPos()
-  }
-  else
-  {
-    this->setNeckAction(new Neck_ScanField()); // equivalent to Neck_TurnToBall()
-  }
-  Strategy::instance().update(wm);
-  FieldAnalyzer::instance().update(wm);
+  //
+  // update strategy and analyzer
+  //
+  Strategy::instance().update( world() );
+  FieldAnalyzer::instance().update( world() );
 
   //
   // prepare action chain
@@ -316,124 +318,196 @@ void Agent::actionImpl()
   M_field_evaluator = createFieldEvaluator();
   M_action_generator = createActionGenerator();
 
-  ActionChainHolder::instance().setFieldEvaluator(M_field_evaluator);
-  ActionChainHolder::instance().setActionGenerator(M_action_generator);
+  ActionChainHolder::instance().setFieldEvaluator( M_field_evaluator );
+  ActionChainHolder::instance().setActionGenerator( M_action_generator );
 
   //
   // special situations (tackle, objects accuracy, intention...)
   //
-  if (doPreprocess())
+  if ( doPreprocess() )
   {
-    dlog.addText(Logger::TEAM,
-                 __FILE__ ": preprocess done");
-    return;
+      dlog.addText( Logger::TEAM,
+                    __FILE__": preprocess done" );
+      return;
   }
 
   //
   // update action chain
   //
-  ActionChainHolder::instance().update(wm);
+  ActionChainHolder::instance().update( world() );
 
-  switch (requested_action)
+
+  //
+  // create current role
+  //
+  SoccerRole::Ptr role_ptr;
   {
-  case DASH:
-    last_action_status = this->doDash(params[0], params[1]);
-    break;
-  case TURN:
-    last_action_status = this->doTurn(params[0]);
-    break;
-  case TACKLE:
-    last_action_status = this->doTackle(params[0], false);
-    break;
-  case KICK:
-    last_action_status = this->doKick(params[0], params[1]);
-    break;
-  case KICK_TO:
-    if (feature_extractor != NULL)
-    {
-      last_action_status = Body_SmartKick(Vector2D(feature_extractor->absoluteXPos(params[0]),
-                                                   feature_extractor->absoluteYPos(params[1])),
-                                          params[2], params[2] * 0.99, 3)
-                               .execute(this);
-    }
-    break;
-  case MOVE_TO:
-    if (feature_extractor != NULL)
-    {
-      Strategy::instance().update(world());
-      Vector2D homepos(feature_extractor->absoluteXPos(params[0]),
-						     feature_extractor->absoluteYPos(params[1]));
-      last_action_status =  Bhv_MarlikMove().cool_execute(this, homepos);
-	last_action_status |= wm.self().collidesWithPost(); // can get out of collision w/post
-    }
-    break;
-  case DRIBBLE_TO:
-    if (feature_extractor != NULL)
-    {
-      last_action_status = Body_Dribble(Vector2D(feature_extractor->absoluteXPos(params[0]),
-                                                 feature_extractor->absoluteYPos(params[1])),
-                                        1.0,
-                                        ServerParam::i().maxDashPower(), 2)
-                               .execute(this);
-      last_action_status |= wm.self().collidesWithPost(); // ditto
-    }
-    break;
-  case INTERCEPT:
-    last_action_status = Body_Intercept().execute(this);
-    last_action_status |= wm.self().collidesWithPost(); // ditto
-    break;
-  case MOVE:
-    last_action_status = this->doMove();
-    break;
-  case SHOOT:
-    last_action_status = this->doSmartKick();
-    break;
-  case PASS:
-    last_action_status = this->doPassTo(int(params[0]));
-    break;
-  case DRIBBLE:
-    last_action_status = this->doDribble();
-    break;
-  case CATCH:
-    last_action_status = this->doCatch();
-    break;
-  case NOOP:
-    last_action_status = false;
-    break;
-  case QUIT:
-    std::cout << "Got quit from agent." << std::endl;
-    handleExit();
-    return;
-  case REDUCE_ANGLE_TO_GOAL:
-    last_action_status = this->doReduceAngleToGoal();
-    break;
-  case MARK_PLAYER:
-    last_action_status = this->doMarkPlayer(int(params[0]));
-    break;
-  case DEFEND_GOAL:
-    last_action_status = this->doDefendGoal();
-    break;
-  case GO_TO_BALL:
-    last_action_status = this->doGoToBall();
-    break;
-  case REORIENT:
-    last_action_status = this->doReorient();
-    break;
-  case BLOCK:
-    last_action_status = Bhv_MarlikBlock().execute(this);
-    if (!last_action_status)
-      last_action_status = this->doMove();
-    break;
-  case CHAIN_ACTION:
-    last_action_status = Bhv_ChainAction().execute(this);
-    if (!last_action_status)
-      last_action_status = Bhv_BasicOffensiveKick().execute( this );
-    break;
-  default:
-    std::cerr << "ERROR: Unsupported Action: "
-              << requested_action << std::endl;
-    exit(1);
+      role_ptr = Strategy::i().createRole( world().self().unum(), world() );
+
+      if ( ! role_ptr )
+      {
+          std::cerr << config().teamName() << ": "
+                    << world().self().unum()
+                    << " Error. Role is not registerd.\nExit ..."
+                    << std::endl;
+          M_client->setServerAlive( false );
+          return;
+      }
   }
+
+  //
+  // override execute if role accept
+  //
+  if ( role_ptr->acceptExecution( world() ) )
+  {
+      role_ptr->execute( this );
+      return;
+  }
+
+
+  //
+  // play_on mode
+  //
+  if ( world().gameMode().type() == GameMode::PlayOn )
+  {
+      role_ptr->execute( this );
+      return;
+  }
+
+
+  //
+  // penalty kick mode
+  //
+  if ( world().gameMode().isPenaltyKickMode() )
+  {
+      dlog.addText( Logger::TEAM,
+                    __FILE__": penalty kick" );
+      Bhv_PenaltyKick().execute( this );
+      return;
+  }
+
+  //
+  // other set play mode
+  //
+  Bhv_SetPlay().execute( this );
+
+  // // // For now let's not worry about turning the neck or setting the vision.
+  // // // But do the settings now, so that doesn't override any set by the actions below.
+  // // // TODO: Add setViewActionDefault, setNeckActionDefault to librcsc that only set if not already set.
+
+  // // this->setViewAction(new View_Tactical());
+
+  // // if (wm.ball().posValid())
+  // // {
+  // //   this->setNeckAction(new Neck_TurnToBallOrScan()); // if not ball().posValid(), requests possibly-invalid queuedNextBallPos()
+  // // }
+  // // else
+  // // {
+  // //   this->setNeckAction(new Neck_ScanField()); // equivalent to Neck_TurnToBall()
+  // // }
+
+  // switch (requested_action)
+  // {
+  // case DASH:
+  //   last_action_status = this->doDash(params[0], params[1]);
+  //   break;
+  // case TURN:
+  //   last_action_status = this->doTurn(params[0]);
+  //   break;
+  // case TACKLE:
+  //   last_action_status = this->doTackle(params[0], false);
+  //   break;
+  // case KICK:
+  //   last_action_status = this->doKick(params[0], params[1]);
+  //   break;
+  // case KICK_TO:
+  //   if (feature_extractor != NULL)
+  //   {
+  //     last_action_status = Body_SmartKick(Vector2D(feature_extractor->absoluteXPos(params[0]),
+  //                                                  feature_extractor->absoluteYPos(params[1])),
+  //                                         params[2], params[2] * 0.99, 3)
+  //                              .execute(this);
+  //   }
+  //   break;
+  // case MOVE_TO:
+  //   if (feature_extractor != NULL)
+  //   {
+  //     Strategy::instance().update(world());
+  //     Vector2D homepos(feature_extractor->absoluteXPos(params[0]),
+  //                      feature_extractor->absoluteYPos(params[1]));
+  //     last_action_status = Bhv_MarlikMove().cool_execute(this, homepos);
+  //     last_action_status |= wm.self().collidesWithPost(); // can get out of collision w/post
+  //   }
+  //   break;
+  // case DRIBBLE_TO:
+  //   if (feature_extractor != NULL)
+  //   {
+  //     last_action_status = Body_Dribble(Vector2D(feature_extractor->absoluteXPos(params[0]),
+  //                                                feature_extractor->absoluteYPos(params[1])),
+  //                                       1.0,
+  //                                       ServerParam::i().maxDashPower(), 2)
+  //                              .execute(this);
+  //     last_action_status |= wm.self().collidesWithPost(); // ditto
+  //   }
+  //   break;
+  // case INTERCEPT:
+  //   last_action_status = Body_Intercept().execute(this);
+  //   last_action_status |= wm.self().collidesWithPost(); // ditto
+  //   break;
+  // case MOVE:
+  //   last_action_status = this->doMove();
+  //   break;
+  // case SHOOT:
+  //   last_action_status = this->doSmartKick();
+  //   break;
+  // case PASS:
+  //   last_action_status = this->doPassTo(int(params[0]));
+  //   break;
+  // case DRIBBLE:
+  //   last_action_status = this->doDribble();
+  //   break;
+  // case CATCH:
+  //   last_action_status = this->doCatch();
+  //   break;
+  // case NOOP:
+  //   last_action_status = false;
+  //   break;
+  // case QUIT:
+  //   std::cout << "Got quit from agent." << std::endl;
+  //   handleExit();
+  //   return;
+  // case REDUCE_ANGLE_TO_GOAL:
+  //   last_action_status = this->doReduceAngleToGoal();
+  //   break;
+  // case MARK_PLAYER:
+  //   last_action_status = this->doMarkPlayer(int(params[0]));
+  //   break;
+  // case DEFEND_GOAL:
+  //   last_action_status = this->doDefendGoal();
+  //   break;
+  // case GO_TO_BALL:
+  //   last_action_status = this->doGoToBall();
+  //   break;
+  // case REORIENT:
+  //   last_action_status = this->doReorient();
+  //   break;
+  // case BLOCK:
+  //   last_action_status = Bhv_MarlikBlock().execute(this);
+  //   if (!last_action_status)
+  //     last_action_status = this->doMove();
+  //   break;
+  // case CHAIN_ACTION:
+  //   last_action_status = Bhv_ChainAction().execute(this);
+  //   if (!last_action_status)
+  //     last_action_status = Bhv_BasicOffensiveKick().execute(this);
+  //   break;
+  // case FM_POS:
+  //   break;
+  // default:
+  //   std::cerr << "ERROR: Unsupported Action: "
+  //             << requested_action << std::endl;
+  //   exit(1);
+  // }
 }
 
 void Agent::ProcessTrainerMessages()
@@ -679,7 +753,7 @@ void Agent::communicationImpl()
     addSayMessage(new CustomMessage(say_msg));
     say_msg.clear();
   }
-  // Disabled since it adds default communication messages which
+  // // Disabled since it adds default communication messages which
   // can conflict with our comm messages.
   // if ( M_communication )
   // {
@@ -704,7 +778,7 @@ bool Agent::doPreprocess()
                __FILE__ ": (doPreProcess)");
 
   //
-  // frozen by tackle effect
+  // freezed by tackle effect
   //
   if (wm.self().isFrozen())
   {
@@ -713,14 +787,7 @@ bool Agent::doPreprocess()
                  wm.self().tackleExpires());
     // face neck to ball
     this->setViewAction(new View_Tactical());
-    if (wm.ball().posValid())
-    {
-      this->setNeckAction(new Neck_TurnToBallOrScan());
-    }
-    else
-    {
-      this->setNeckAction(new Neck_TurnToBall());
-    }
+    this->setNeckAction(new Neck_TurnToBallOrScan());
     return true;
   }
 
@@ -744,7 +811,8 @@ bool Agent::doPreprocess()
   {
     dlog.addText(Logger::TEAM,
                  __FILE__ ": invalid my pos");
-    return Bhv_Emergency().execute(this); // includes change view
+    Bhv_Emergency().execute(this); // includes change view
+    return true;
   }
 
   //
@@ -758,7 +826,8 @@ bool Agent::doPreprocess()
     dlog.addText(Logger::TEAM,
                  __FILE__ ": search ball");
     this->setViewAction(new View_Tactical());
-    return Bhv_NeckBodyToBall().execute(this);
+    Bhv_NeckBodyToBall().execute(this);
+    return true;
   }
 
   //
@@ -942,7 +1011,7 @@ bool Agent::doShoot()
 bool Agent::doSmartKick()
 {
   const ShootGenerator::Container &cont =
-      ShootGenerator::instance().courses(this->world(), false);
+      ShootGenerator::instance().courses(this->world());
   ShootGenerator::Container::const_iterator best_shoot = std::min_element(cont.begin(), cont.end(), ShootGenerator::ScoreCmp());
   return Body_SmartKick(best_shoot->target_point_,
                         best_shoot->first_ball_speed_,

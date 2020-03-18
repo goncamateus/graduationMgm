@@ -171,6 +171,7 @@ private:
     // current home positions
     std::vector< PositionType > M_position_types;
     std::vector< rcsc::Vector2D > M_positions;
+    std::vector< rcsc::Vector2D > M_positions_origi;
 
     // private for singleton
     Strategy();
@@ -203,6 +204,8 @@ public:
     //
 
     void update( const rcsc::WorldModel & wm );
+    void update( const rcsc::WorldModel & wm, rcsc::Vector2D & fm_pos);
+
 
 
     void exchangeRole( const int unum0,
@@ -233,6 +236,7 @@ private:
     void updateSituation( const rcsc::WorldModel & wm );
     // update the current position table
     void updatePosition( const rcsc::WorldModel & wm );
+    void updatePosition( const rcsc::WorldModel & wm, rcsc::Vector2D & fm_pos);
 
     rcsc::Formation::Ptr readFormation( const std::string & filepath );
     rcsc::Formation::Ptr createFormation( const std::string & type_name ) const;

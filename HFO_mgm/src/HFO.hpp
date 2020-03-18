@@ -66,6 +66,8 @@ class HFOEnvironment {
   // progress. Returns the game status after the step
   virtual status_t step();
 
+  bool getLastActionStatus();
+
   Agent* getAgent();
   void setAgent(Agent* actor);
 

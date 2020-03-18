@@ -28,8 +28,8 @@ An enum of the possible HFO actions, including:
   NOOP(): Do Nothing
   QUIT(): Quit the game
 """
-NUM_HFO_ACTIONS = 22
-DASH, TURN, TACKLE, KICK, KICK_TO, MOVE_TO, DRIBBLE_TO, INTERCEPT, MOVE, SHOOT, PASS, DRIBBLE, CATCH, NOOP, QUIT, REDUCE_ANGLE_TO_GOAL, MARK_PLAYER, DEFEND_GOAL, GO_TO_BALL, REORIENT, BLOCK, CHAIN_ACTION = list(
+NUM_HFO_ACTIONS = 23
+DASH, TURN, TACKLE, KICK, KICK_TO, MOVE_TO, DRIBBLE_TO, INTERCEPT, MOVE, SHOOT, PASS, DRIBBLE, CATCH, NOOP, QUIT, REDUCE_ANGLE_TO_GOAL, MARK_PLAYER, DEFEND_GOAL, GO_TO_BALL, REORIENT, BLOCK, CHAIN_ACTION, FM_POS = list(
     range(NUM_HFO_ACTIONS))
 ACTION_STRINGS = {DASH: "Dash",
                   TURN: "Turn",
@@ -52,7 +52,8 @@ ACTION_STRINGS = {DASH: "Dash",
                   GO_TO_BALL: "Go_To_Ball",
                   REORIENT: "Reorient",
                   BLOCK: "Block",
-                  CHAIN_ACTION: "Chain_Action"}
+                  CHAIN_ACTION: "Chain_Action",
+                  FM_POS: "FreeModel"}
 
 """
 Possible game statuses:

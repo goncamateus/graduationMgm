@@ -68,7 +68,7 @@ const int ANGLE_DIVS = 40;
 
  */
 struct DeflectingEvaluator {
-    constexpr static const double not_shoot_ball_eval = 10000;
+    double not_shoot_ball_eval = 10000;
 
     double operator()( const WorldModel & wm,
                        TackleGenerator::TackleResult & result ) const
@@ -184,11 +184,7 @@ TackleGenerator::TackleGenerator()
 TackleGenerator &
 TackleGenerator::instance()
 {
-#ifdef __APPLE__
     static TackleGenerator s_instance;
-#else
-    static thread_local TackleGenerator s_instance;
-#endif
     return s_instance;
 }
 
@@ -210,11 +206,7 @@ TackleGenerator::clear()
 void
 TackleGenerator::generate( const WorldModel & wm )
 {
-#ifdef __APPLE__
     static GameTime s_update_time( 0, 0 );
-#else
-    static thread_local GameTime s_update_time( 0, 0 );
-#endif
 
     if ( s_update_time == wm.time() )
     {

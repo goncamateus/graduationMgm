@@ -8,6 +8,9 @@
 /*
  *Copyright:
 
+ Gliders2d
+ Modified by Mikhail Prokopenko, Peter Wang
+
  Copyright (C) Hidehisa AKIYAMA
 
  This code is free software; you can redistribute it and/or modify
@@ -153,11 +156,7 @@ StrictCheckPassGenerator::StrictCheckPassGenerator()
 StrictCheckPassGenerator &
 StrictCheckPassGenerator::instance()
 {
-#ifdef __APPLE__
     static StrictCheckPassGenerator s_instance;
-#else
-    static thread_local StrictCheckPassGenerator s_instance;
-#endif
     return s_instance;
 }
 
@@ -1264,9 +1263,34 @@ StrictCheckPassGenerator::createPassCommon( const WorldModel & wm,
                                                 &opponent );
 
         bool failed = false;
+
+
+// G2d: risk passes
+
+        bool heliosbase = false;
+        bool helios2018 = false;
+        if (wm.opponentTeamName().find("HELIOS_base") != std::string::npos)
+            heliosbase = true;
+        else if (wm.opponentTeamName().find("HELIOS2018") != std::string::npos)
+            helios2018 = true;
+
+        int risk = 0;
+
+        if ( wm.ball().pos().x < wm.offsideLineX()
+             && receive_point.x >  wm.offsideLineX() + 3.0
+             && wm.offsideLineX() - receiver.player_->pos().x < 5.0 )
+	{
+		if (heliosbase)
+	                risk = 5;
+		else if (helios2018)
+	                risk = 0;
+		else
+	                risk = 2;
+	}
+
         if ( M_pass_type == 'T' )
         {
-            if ( o_step <= step )
+            if ( o_step + risk <= step )
             {
 #ifdef DEBUG_THROUGH_PASS
                  dlog.addText( Logger::PASS,
@@ -1296,7 +1320,7 @@ StrictCheckPassGenerator::createPassCommon( const WorldModel & wm,
         }
         else
         {
-            if ( o_step <= step + ( kick_count - 1 ) )
+            if ( o_step + risk <= step + ( kick_count - 1 ) )
             {
                 failed = true;
             }
@@ -1769,8 +1793,37 @@ StrictCheckPassGenerator::predictOpponentReachStep( const WorldModel & wm,
                                                                    control_area,
                                                                    true ));
 
+// G2d: risk in opponent check
+
+        bool heliosbase = false;
+        if (wm.opponentTeamName().find("HELIOS_base") != std::string::npos)
+            heliosbase = true;
+
+        double oppDir = (opponent.player_->pos() - wm.ball().pos()).dir().degree();
+
+        double pass_cut = 10.0;
+        double pass_angle = 49.0;
+        double pass_depth = 3.0;
+        double pass_max_x = 47.5;
+        double pass_min_y = 20.0;
+
+        int risk = 0;
+
+        if (    ( receive_point.x < pass_max_x || fabs(receive_point.y) > pass_min_y )
+                && (M_pass_type == 'T' || M_pass_type == 'L')
+                && fabs(ball_move_angle.degree() - oppDir) > pass_cut
+                && fabs(ball_move_angle.degree()) < pass_angle
+                && wm.ball().pos().x < wm.offsideLineX()
+                && receive_point.x >  wm.offsideLineX() + pass_depth )
+	{
+		if (heliosbase)
+	                risk =  2;
+		else
+	                risk =  1;
+	}
+
         int n_step = ( n_turn == 0
-                       ? n_turn + n_dash
+                       ? n_turn + n_dash + risk
                        : n_turn + n_dash + 1 ); // 1 step penalty for observation delay
 
         int bonus_step = 0;

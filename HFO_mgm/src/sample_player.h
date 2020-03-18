@@ -27,11 +27,9 @@
 #ifndef SAMPLE_PLAYER_H
 #define SAMPLE_PLAYER_H
 
-#include "HFO.hpp"
 #include "action_generator.h"
 #include "field_evaluator.h"
 #include "communication.h"
-#include "feature_extractor.h"
 
 #include <rcsc/player/player_agent.h>
 #include <vector>
@@ -94,15 +92,12 @@ private:
     bool doForceKick();
     bool doHeardPassReceive();
 
+
+    bool init_models;
+
 public:
     virtual
     FieldEvaluator::ConstPtr getFieldEvaluator() const;
-
-protected:
-  FeatureExtractor* feature_extractor;
-  long lastTrainerMessageTime;
-  int num_teammates, num_opponents;
-  bool playing_offense;
 };
 
 #endif

@@ -56,11 +56,7 @@
 SoccerRole::Creators &
 SoccerRole::creators()
 {
-#ifdef __APPLE__
     static Creators s_instance;
-#else
-    static thread_local Creators s_instance;
-#endif
     return s_instance;
 }
 
