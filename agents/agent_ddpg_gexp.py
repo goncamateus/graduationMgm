@@ -253,13 +253,12 @@ class DDPGAgent(Agent):
                         print('Episode reward sum:', epi_rewards)
                         print('Total goals taken:', self.goals)
                         self.goals = 0
-                    # print('Action balance:')
-                    # print('Move:',
-                    #       self.taken_action[0],
-                    #       '- Intercept:',
-                    #       self.taken_action[1],
-                    #       '- Block:',
-                    #       self.taken_action[2])
+                    print('Move:',
+                          self.taken_action[0],
+                          '- Intercept:',
+                          self.taken_action[1],
+                          '- Block:',
+                          self.taken_action[2], '\n')
 
                 if status == hfo.GOAL:
                     self.goals += 1
