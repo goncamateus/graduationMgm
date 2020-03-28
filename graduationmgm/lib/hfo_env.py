@@ -149,10 +149,6 @@ class HFOEnv(hfo.HFOEnvironment):
                 reward = 10
                 if self.observation_space.taken % 5 == 0:
                     reward = 100
-            else:
-                if abs(next_state[10]) <= 1.2:
-                    reward = -0.8  # punishes collisions of teammates
-                # reward += actual_pot*self.w_ball_grad
         return reward
 
     def get_reward_goalie(self, act, next_state, done, status):

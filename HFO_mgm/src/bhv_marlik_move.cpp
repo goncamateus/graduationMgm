@@ -65,10 +65,10 @@ bool Bhv_MarlikMove::execute( PlayerAgent * agent )
     const WorldModel & wm = agent->world();
 
     // tackle
-    if ( Bhv_BasicTackle( 0.8, 80.0 ).execute( agent ) && !wm.existKickableTeammate() )
-    {
-        return true;
-    }
+    // if ( Bhv_BasicTackle( 0.8, 80.0 ).execute( agent ) && !wm.existKickableTeammate() )
+    // {
+    //     return true;
+    // }
 
     Vector2D ball = wm.ball().pos();
     Vector2D me = wm.self().pos();

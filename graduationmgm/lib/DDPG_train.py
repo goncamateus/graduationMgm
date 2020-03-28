@@ -1,3 +1,4 @@
+import datetime
 import os.path
 
 import numpy as np
@@ -10,8 +11,8 @@ from tensorboardX import SummaryWriter
 from torch.autograd import Variable
 
 from graduationmgm.lib.base_train import BaseTrain
-from graduationmgm.lib.utils import MemoryDeque
 from graduationmgm.lib.prioritized_experience_replay import Memory
+from graduationmgm.lib.utils import MemoryDeque
 
 Variable = lambda *args, **kwargs: autograd.Variable(*args, **kwargs).cuda()
 
@@ -35,8 +36,9 @@ class DDPGTrain(BaseTrain):
         self.static_policy = static_policy
         self.num_feats = env.observation_space.shape
         self.env = env
-        # self.writer = SummaryWriter(
-        #     f'./saved_agents/DDPG/agent_{self.env.getUnum()}')
+        date = datetime.datetime.now().strftime('%m%d-%H-%M-%S')
+        self.writer = SummaryWriter(
+            f'./saved_agents/DDPG/{date}/{self.env.getUnum()}')
         self.declare_networks()
         actor_learning_rate = 1e-4
         critic_learning_rate = 1e-3
@@ -176,9 +178,8 @@ class DDPGTrain(BaseTrain):
         if self.priority_replay:
             mem_loss = mem_loss.detach().cpu().numpy()
             memory.batch_update(mem_idxs, mem_loss)
-        # self.writer.add_scalar('Loss/ddpg/critic_loss', critic_loss,
-        #                     global_step=self.num_critic_update_iteration)
-        # self.critic_loss.append(critic_loss)
+        self.writer.add_scalar('Loss/ddpg/critic_loss', critic_loss,
+                            global_step=self.num_critic_update_iteration)
 
         # Compute actor loss
         acts = self.actor(state)
@@ -188,9 +189,8 @@ class DDPGTrain(BaseTrain):
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
         self.actor_optimizer.step()
-        # self.writer.add_scalar(
-        #     'Loss/ddpg/actor_loss', actor_loss, global_step=self.num_actor_update_iteration)
-        # self.actor_loss.append(actor_loss)
+        self.writer.add_scalar(
+            'Loss/ddpg/actor_loss', actor_loss, global_step=self.num_actor_update_iteration)
 
         self.num_actor_update_iteration += 1
         self.num_critic_update_iteration += 1

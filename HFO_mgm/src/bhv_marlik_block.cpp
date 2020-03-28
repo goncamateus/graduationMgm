@@ -53,10 +53,10 @@ bool Bhv_MarlikBlock::execute( rcsc::PlayerAgent * agent )
 
   rcsc::Vector2D opp = wm.opponentsFromBall().front()->pos();
 
-  if( doInterceptBall2011( agent ) )
-     return true;
-  if( Bhv_BasicTackle( 0.85, 60.0 ).execute( agent ) )
-     return true;
+  // if( doInterceptBall2011( agent ) )
+  //    return true;
+//   if( Bhv_BasicTackle( 0.85, 60.0 ).execute( agent ) )
+//      return true;
 
   if( (wm.self().unum() == 2 || wm.self().unum() == 3) && ball.x < -30.0 && ball.absY() > 18.0 )
      return false;
@@ -132,10 +132,10 @@ bool Bhv_MarlikBlock::execute2010( rcsc::PlayerAgent * agent )
         if( doBlockMove( agent ) )
           return true;
 
-  if( doInterceptBall( agent ) )
-     return true;
-  if( Bhv_BasicTackle( 0.85, 60.0 ).execute( agent ) )
-     return true;
+  // if( doInterceptBall( agent ) )
+  //    return true;
+//   if( Bhv_BasicTackle( 0.85, 60.0 ).execute( agent ) )
+//      return true;
 
   if( (wm.self().unum() == 2 || wm.self().unum() == 3) && ball.x < -30.0 && ball.absY() > 18.0 )
      return false;
@@ -189,33 +189,33 @@ return false;
 bool Bhv_MarlikBlock::doInterceptBall( rcsc::PlayerAgent * agent )
 {
 
-    const rcsc::WorldModel & wm = agent->world();
+//     const rcsc::WorldModel & wm = agent->world();
 
-    rcsc::Vector2D ball = wm.ball().pos();
-    rcsc::Vector2D me = wm.self().pos();
+//     rcsc::Vector2D ball = wm.ball().pos();
+//     rcsc::Vector2D me = wm.self().pos();
 
-    int myCycles = wm.interceptTable()->selfReachCycle();
-    int tmmCycles = wm.interceptTable()->teammateReachCycle();
-    int oppCycles = wm.interceptTable()->opponentReachCycle();
+//     int myCycles = wm.interceptTable()->selfReachCycle();
+//     int tmmCycles = wm.interceptTable()->teammateReachCycle();
+//     int oppCycles = wm.interceptTable()->opponentReachCycle();
 
-    if ( myCycles < oppCycles && myCycles < tmmCycles )
-    {
-        rcsc::Body_Intercept().execute( agent );
-        agent->setNeckAction( new rcsc::Neck_TurnToBall() );
-        return true;
-    }
+//     if ( myCycles < oppCycles && myCycles < tmmCycles )
+//     {
+//         rcsc::Body_Intercept().execute( agent );
+//         agent->setNeckAction( new rcsc::Neck_TurnToBall() );
+//         return true;
+//     }
 
-    rcsc::Vector2D myInterceptPos = wm.ball().inertiaPoint( myCycles );
-    rcsc::Vector2D opp_reach_pos = wm.ball().inertiaPoint( oppCycles );
+//     rcsc::Vector2D myInterceptPos = wm.ball().inertiaPoint( myCycles );
+//     rcsc::Vector2D opp_reach_pos = wm.ball().inertiaPoint( oppCycles );
 
-    if ( ( (myCycles <= 4 && oppCycles >= 4) || myCycles <= 2 ) &&
-         me.x < myInterceptPos.x && me.x < ball.x - 0.5 &&
-         ( std::fabs( ball.y - me.y ) < 1.5 || ball.absY() < me.absY() ) )
-    {
-        rcsc::Body_Intercept().execute( agent );
-        agent->setNeckAction( new rcsc::Neck_TurnToBall() );
-        return true;
-    }
+//     if ( ( (myCycles <= 4 && oppCycles >= 4) || myCycles <= 2 ) &&
+//          me.x < myInterceptPos.x && me.x < ball.x - 0.5 &&
+//          ( std::fabs( ball.y - me.y ) < 1.5 || ball.absY() < me.absY() ) )
+//     {
+//         rcsc::Body_Intercept().execute( agent );
+//         agent->setNeckAction( new rcsc::Neck_TurnToBall() );
+//         return true;
+//     }
 
 
 return false;
@@ -225,24 +225,24 @@ return false;
 bool Bhv_MarlikBlock::doInterceptBall2011( rcsc::PlayerAgent * agent )
 {
 
-    const rcsc::WorldModel & wm = agent->world();
+//     const rcsc::WorldModel & wm = agent->world();
 
-    rcsc::Vector2D ball = wm.ball().pos();
-    rcsc::Vector2D me = wm.self().pos();
+//     rcsc::Vector2D ball = wm.ball().pos();
+//     rcsc::Vector2D me = wm.self().pos();
 
-    int myCycles = wm.interceptTable()->selfReachCycle();
-    int tmmCycles = wm.interceptTable()->teammateReachCycle();
-    int oppCycles = wm.interceptTable()->opponentReachCycle();
+//     int myCycles = wm.interceptTable()->selfReachCycle();
+//     int tmmCycles = wm.interceptTable()->teammateReachCycle();
+//     int oppCycles = wm.interceptTable()->opponentReachCycle();
 
-    if ( myCycles < oppCycles && myCycles < tmmCycles )
-    {
-        rcsc::Body_Intercept().execute( agent );
-        agent->setNeckAction( new rcsc::Neck_TurnToBall() );
-        return true;
-    }
+//     if ( myCycles < oppCycles && myCycles < tmmCycles )
+//     {
+//         rcsc::Body_Intercept().execute( agent );
+//         agent->setNeckAction( new rcsc::Neck_TurnToBall() );
+//         return true;
+//     }
 
-    rcsc::Vector2D myInterceptPos = wm.ball().inertiaPoint( myCycles );
-    rcsc::Vector2D opp_reach_pos = wm.ball().inertiaPoint( oppCycles );
+//     rcsc::Vector2D myInterceptPos = wm.ball().inertiaPoint( myCycles );
+//     rcsc::Vector2D opp_reach_pos = wm.ball().inertiaPoint( oppCycles );
 
 /*
     if ( ( (myCycles <= 4 && oppCycles >= 4) || myCycles <= 2 ) &&
@@ -316,34 +316,34 @@ bool Bhv_MarlikBlock::doBlockMove( rcsc::PlayerAgent * agent )
 
   static rcsc::Vector2D opp_static_pos = opp;
 
-    if ( myCycles <= 2 )
-    {
-      rcsc::Body_Intercept().execute( agent );
-      agent->setNeckAction( new rcsc::Neck_TurnToBallOrScan() );
-      return true;
-    }
+    // if ( myCycles <= 2 )
+    // {
+    //   rcsc::Body_Intercept().execute( agent );
+    //   agent->setNeckAction( new rcsc::Neck_TurnToBallOrScan() );
+    //   return true;
+    // }
 
-    if ( myCycles < 20 && ( myCycles < tmmCycles || ( myCycles < tmmCycles + 3 && tmmCycles > 3 ) ) &&
-         myCycles <= oppCycles + 1 )
-    {
-      rcsc::Body_Intercept().execute( agent );
-      agent->setNeckAction( new rcsc::Neck_TurnToBallOrScan() );
-      return true;
-    }
+    // if ( myCycles < 20 && ( myCycles < tmmCycles || ( myCycles < tmmCycles + 3 && tmmCycles > 3 ) ) &&
+    //      myCycles <= oppCycles + 1 )
+    // {
+    //   rcsc::Body_Intercept().execute( agent );
+    //   agent->setNeckAction( new rcsc::Neck_TurnToBallOrScan() );
+    //   return true;
+    // }
 
-    if ( myCycles < tmmCycles && oppCycles >= 2 && myCycles <= oppCycles + 1 )
-    {
-      rcsc::Body_Intercept().execute( agent );
-      agent->setNeckAction( new rcsc::Neck_TurnToBallOrScan() );
-      return true;
-    }
+    // if ( myCycles < tmmCycles && oppCycles >= 2 && myCycles <= oppCycles + 1 )
+    // {
+    //   rcsc::Body_Intercept().execute( agent );
+    //   agent->setNeckAction( new rcsc::Neck_TurnToBallOrScan() );
+    //   return true;
+    // }
 
    if( me.dist( blockPos ) < 1.7 && targetLine.dist(me) < 1.0 && myCycles <= minInterceptCycles &&
        targetLine.dist(opp_static_pos) < 0.7 )
    {
-      rcsc::Body_Intercept().execute( agent );
-      agent->setNeckAction( new rcsc::Neck_TurnToBallOrScan() );
-      return true;
+      // rcsc::Body_Intercept().execute( agent );
+      // agent->setNeckAction( new rcsc::Neck_TurnToBallOrScan() );
+      // return true;
    }
    else if( me.dist( blockPos ) < 3.5 /* < 2.5 */&& me.dist( opp ) < minOppDist && ball.dist( opp ) < 1.3 &&
             me.dist(goal) < opp.dist(goal) && targetLine.dist(me) < 1.0 &&
@@ -454,35 +454,35 @@ bool Bhv_MarlikBlock::doBlockMove2011( rcsc::PlayerAgent * agent )
 
   static rcsc::Vector2D opp_static_pos = opp;
 
-    if ( myCycles <= 1 )
-    {
-      rcsc::Body_Intercept(true,ball).execute( agent );
-      agent->setNeckAction( new rcsc::Neck_TurnToBallOrScan() );
-      return true;
-    }
+    // if ( myCycles <= 1 )
+    // {
+    //   rcsc::Body_Intercept(true,ball).execute( agent );
+    //   agent->setNeckAction( new rcsc::Neck_TurnToBallOrScan() );
+    //   return true;
+    // }
 
-    if ( myCycles < 20 && ( myCycles < tmmCycles || ( myCycles < tmmCycles + 2 && tmmCycles > 3 ) ) &&
-         myCycles <= oppCycles )
-    {
-      rcsc::Body_Intercept(true,ball).execute( agent );
-      agent->setNeckAction( new rcsc::Neck_TurnToBallOrScan() );
-      return true;
-    }
+    // if ( myCycles < 20 && ( myCycles < tmmCycles || ( myCycles < tmmCycles + 2 && tmmCycles > 3 ) ) &&
+    //      myCycles <= oppCycles )
+    // {
+    //   rcsc::Body_Intercept(true,ball).execute( agent );
+    //   agent->setNeckAction( new rcsc::Neck_TurnToBallOrScan() );
+    //   return true;
+    // }
 
-    if ( myCycles < tmmCycles && oppCycles >= 2 && myCycles <= oppCycles  )
-    {
-      rcsc::Body_Intercept(true,ball).execute( agent );
-      agent->setNeckAction( new rcsc::Neck_TurnToBallOrScan() );
-      return true;
-    }
+    // if ( myCycles < tmmCycles && oppCycles >= 2 && myCycles <= oppCycles  )
+    // {
+    //   rcsc::Body_Intercept(true,ball).execute( agent );
+    //   agent->setNeckAction( new rcsc::Neck_TurnToBallOrScan() );
+    //   return true;
+    // }
 
    if( me.dist( blockPos ) < 1.7 && targetLine.dist(me) < 1.0 && myCycles <= minInterceptCycles &&
        targetLine.dist(opp_static_pos) < 0.2 )
    {
       timeAtBlockPoint = 0;
-      rcsc::Body_Intercept(true,ball).execute( agent );
-      agent->setNeckAction( new rcsc::Neck_TurnToBallOrScan() );
-      return true;
+      // rcsc::Body_Intercept(true,ball).execute( agent );
+      // agent->setNeckAction( new rcsc::Neck_TurnToBallOrScan() );
+      // return true;
    }
    else if( me.dist( blockPos ) < 3.5 /* < 2.5 */&& me.dist( opp ) < minOppDist && ball.dist( opp ) < 1.3 &&
             me.dist(goal) < opp.dist(goal) && targetLine.dist(me) < 1.0 &&
