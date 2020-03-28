@@ -160,7 +160,7 @@ class DDPGAgent(Agent):
                 reward = (abs(dist_success) / max_success) - \
                     (abs(dist_fail) / max_fail)
                 reward = -np.exp(reward)
-            reward = reward * np.exp(i/len(ibuffer)) / math.e
+            reward = reward * np.exp(i/len(ibuffer))
             buffer.append(
                 (state, ibuffer[i][1], reward, ibuffer[i][3], ibuffer[i][4]))
         return buffer
@@ -191,8 +191,7 @@ class DDPGAgent(Agent):
             while status == hfo.IN_GAME:
                 # Every time when game resets starts a zero frame
                 if done:
-                    state_ori = self.hfo_env.get_state()
-                    state = state_ori
+                    state = self.hfo_env.get_state()
                     frame = self.ddpg.stack_frames(state, done)
                 # If the size of experiences is under max_size*8 runs gen_mem
                 if self.gen_mem and len(self.ddpg.memory) <\
@@ -211,10 +210,11 @@ class DDPGAgent(Agent):
                         self.hfo_env.action_space.high)
                     action = action.astype(np.float32)
                     step += 1
-
-                if action < -0.68:
+                
+                action[0] = action[0] if not bool(state[-1]) else 0.
+                if action[0] < -0.68:
                     self.taken_action[0] += 1
-                elif action < 0.36:
+                elif action[0] < 0.36:
                     self.taken_action[1] += 1
                 else:
                     self.taken_action[2] += 1
@@ -240,9 +240,9 @@ class DDPGAgent(Agent):
                     next_state = np.zeros(state.shape)
                     next_frame = np.zeros(frame.shape)
                     ibuffer = self.calc_rewards(good_buffer,
-                                                bad_buffer,
-                                                intermed_buffer,
-                                                status != hfo.GOAL)
+                                                         bad_buffer,
+                                                         intermed_buffer,
+                                                         status != hfo.GOAL)
                     ibuffer = ibuffer + \
                         [(frame, action, reward, next_frame, int(done))]
                     epi_rewards = np.sum([x[2] for x in ibuffer])
@@ -253,13 +253,13 @@ class DDPGAgent(Agent):
                         print('Episode reward sum:', epi_rewards)
                         print('Total goals taken:', self.goals)
                         self.goals = 0
-                    print('Action balance:')
-                    print('Move:',
-                          self.taken_action[0],
-                          '- Intercept:',
-                          self.taken_action[1],
-                          '- Block:',
-                          self.taken_action[2])
+                    # print('Action balance:')
+                    # print('Move:',
+                    #       self.taken_action[0],
+                    #       '- Intercept:',
+                    #       self.taken_action[1],
+                    #       '- Block:',
+                    #       self.taken_action[2])
 
                 if status == hfo.GOAL:
                     self.goals += 1

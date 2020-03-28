@@ -128,6 +128,7 @@ class DDPGAgent(Agent):
                     action = action.astype(np.float32)
                     step += 1
 
+                action = action if not state[-1] else 0.
                 if action < -0.68:
                     self.taken_action[0] += 1
                 elif action < 0.36:
